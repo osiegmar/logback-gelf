@@ -110,6 +110,7 @@ Advanced UDP configuration:
             <includeCallerData>false</includeCallerData>
             <includeRootException>false</includeRootException>
             <includeLevelName>false</includeLevelName>
+            <includeRootException>false</includeRootException>
             <shortPatternLayout class="ch.qos.logback.classic.PatternLayout">
                 <pattern>%m%nopex</pattern>
             </shortPatternLayout>
@@ -150,6 +151,7 @@ Advanced TCP configuration:
             <includeCallerData>false</includeCallerData>
             <includeRootException>false</includeRootException>
             <includeLevelName>false</includeLevelName>
+            <includeRootException>false</includeRootException>
             <shortPatternLayout class="ch.qos.logback.classic.PatternLayout">
                 <pattern>%m%nopex</pattern>
             </shortPatternLayout>
@@ -218,6 +220,7 @@ Configuration
 * **includeRootException**: If true, root cause exception of the exception passed with the log
    message will be exposed in the exception field. Default: false.
 * **includeLevelName**: If true, the log level name (e.g. DEBUG) will be sent, too. Default: false.
+* **includeRootException**: If true, the root cause exception class name will be sent, too. Default: false
 * **shortPatternLayout**: Short message format. Default: `"%m%nopex"`. 
 * **fullPatternLayout**: Full message format (Stacktrace). Default: `"%m"`.
 * **staticFields**: Additional, static fields to send to graylog. Defaults: none.
