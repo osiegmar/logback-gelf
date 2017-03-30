@@ -69,7 +69,7 @@ class GelfMessage {
             jsonEncoder.appendToJSON('_' + entry.getKey(), entry.getValue());
         }
 
-        return jsonEncoder.toString();
+        return jsonEncoder.toString() + "\n";
     }
 
 }
