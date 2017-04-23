@@ -43,7 +43,7 @@ public class GelfMessageTest {
             + "\"timestamp\":123.456,"
             + "\"level\":6,"
             + "\"_foo\":\"bar\""
-            + "}",
+            + "}\n",
             message.toJSON());
     }
 
@@ -62,7 +62,7 @@ public class GelfMessageTest {
             + "\"timestamp\":123.456,"
             + "\"level\":6,"
             + "\"_foo\":\"bar\""
-            + "}",
+            + "}\n",
             message.toJSON());
     }
 
