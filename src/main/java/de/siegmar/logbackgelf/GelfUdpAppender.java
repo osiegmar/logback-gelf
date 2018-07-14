@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.zip.DeflaterOutputStream;
@@ -40,7 +41,7 @@ public class GelfUdpAppender extends AbstractGelfAppender {
      */
     private boolean useCompression = true;
 
-    private DatagramChannel channel;
+    private RobustChannel robustChannel;
 
     private GelfUdpChunker chunker;
 
@@ -64,7 +65,7 @@ public class GelfUdpAppender extends AbstractGelfAppender {
 
     @Override
     protected void startAppender() throws IOException {
-        channel = DatagramChannel.open();
+        robustChannel = new RobustChannel();
         chunker = new GelfUdpChunker(maxChunkSize);
         addressResolver = new AddressResolver(getGraylogHost());
     }
@@ -78,7 +79,7 @@ public class GelfUdpAppender extends AbstractGelfAppender {
 
         for (final ByteBuffer chunk : chunker.chunks(messageToSend)) {
             while (chunk.hasRemaining()) {
-                channel.send(chunk, remote);
+                robustChannel.send(chunk, remote);
             }
         }
     }
@@ -95,7 +96,42 @@ public class GelfUdpAppender extends AbstractGelfAppender {
 
     @Override
     protected void close() throws IOException {
-        channel.close();
+        robustChannel.close();
+    }
+
+    private static final class RobustChannel {
+
+        private volatile DatagramChannel channel;
+        private volatile boolean stopped;
+
+        RobustChannel() throws IOException {
+            this.channel = DatagramChannel.open();
+        }
+
+        void send(final ByteBuffer src, final SocketAddress target) throws IOException {
+            getChannel().send(src, target);
+        }
+
+        private DatagramChannel getChannel() throws IOException {
+            DatagramChannel tmp = channel;
+
+            if (!tmp.isOpen()) {
+                synchronized (this) {
+                    tmp = channel;
+                    if (!tmp.isOpen() && !stopped) {
+                        tmp = DatagramChannel.open();
+                        channel = tmp;
+                    }
+                }
+            }
+
+            return tmp;
+        }
+
+        synchronized void close() throws IOException {
+            channel.close();
+            stopped = true;
+        }
     }
 
 }
