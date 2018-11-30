@@ -182,6 +182,35 @@ public class GelfLayoutTest {
     }
 
     @Test
+    public void complexStaticFieldArray() throws IOException {
+        layout.setIncludeRawMessage(true);
+        layout.setIncludeLevelName(true);
+        layout.addStaticField("foo:[bar,barr]");
+        layout.setIncludeCallerData(true);
+        layout.setIncludeRootCauseData(true);
+        layout.start();
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+
+        final LoggingEvent event = simpleLoggingEvent(logger, null);
+
+        event.setMDCPropertyMap(ImmutableMap.of("mdc_key", "mdc_value"));
+
+        final String logMsg = layout.doLayout(event);
+
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        basicValidation(jsonNode);
+        assertEquals("DEBUG", jsonNode.get("_level_name").textValue());
+        assertEquals("bar", jsonNode.get("_foo").get(0).textValue());
+        assertEquals("barr", jsonNode.get("_foo").get(1).textValue());
+        assertEquals("mdc_value", jsonNode.get("_mdc_key").textValue());
+        assertEquals("message {}", jsonNode.get("_raw_message").textValue());
+        assertNull(jsonNode.get("_exception"));
+    }
+
+    @Test
     public void rootExceptionTurnedOff() throws IOException {
         layout.start();
 

@@ -25,6 +25,8 @@ package de.siegmar.logbackgelf;
 class SimpleJsonEncoder {
 
     private static final char QUOTE = '"';
+    private static final String COMMA = ",";
+    private static final String EMPTY = "";
 
     /**
      * Internal buffer.
@@ -58,6 +60,14 @@ class SimpleJsonEncoder {
             appendKey(key);
             if (value instanceof Number) {
                 sb.append(value.toString());
+            } else if (value instanceof String[]) {
+                final String[] values = (String[]) value;
+                sb.append("[");
+                for (int i = 0; i < values.length; i++) {
+                    final String endChar = i < values.length - 1 ? COMMA : EMPTY;
+                    sb.append(QUOTE).append(escapeString(values[i])).append(QUOTE).append(endChar);
+                }
+                sb.append("]");
             } else {
                 sb.append(QUOTE).append(escapeString(value.toString())).append(QUOTE);
             }

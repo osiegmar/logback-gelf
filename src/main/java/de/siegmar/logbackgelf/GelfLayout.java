@@ -215,7 +215,11 @@ public class GelfLayout extends LayoutBase<ILoggingEvent> {
             addWarn("staticField key '" + key + "' is illegal. "
                 + "Keys must apply to regex ^[\\w.-]*$");
         } else {
-            dst.put(key, value);
+            if (value.startsWith("[")) {
+                dst.put(key, value.substring(1, value.trim().length() - 1).split(","));
+            } else {
+                dst.put(key, value);
+            }
         }
     }
 

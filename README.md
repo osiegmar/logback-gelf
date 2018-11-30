@@ -229,6 +229,7 @@ Advanced TCP with TLS configuration:
             <staticField>os_arch:${os.arch}</staticField>
             <staticField>os_name:${os.name}</staticField>
             <staticField>os_version:${os.version}</staticField>
+            <staticField>tags:[tag01,tag02,tag03]</staticField>
         </layout>
     </appender>
 

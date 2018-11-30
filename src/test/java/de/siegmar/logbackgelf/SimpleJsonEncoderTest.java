@@ -94,6 +94,12 @@ public class SimpleJsonEncoderTest {
     }
 
     @Test
+    public void array() {
+        enc.appendToJSON("array", new String[] {"value1","value2"});
+        assertEquals("{\"array\":[\"value1\",\"value2\"]}", enc.toString());
+    }
+
+    @Test
     @SuppressWarnings("checkstyle:avoidescapedunicodecharacters")
     public void unicode() {
         enc.appendToJSON("\u0002", "\u0007\u0019");
