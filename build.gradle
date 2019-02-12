@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    compile 'ch.qos.logback:logback-classic:1.1.8'
+    compile 'ch.qos.logback:logback-classic:1.2.3'
     testCompile 'junit:junit:4.12'
     testCompile 'com.google.guava:guava:19.0'
     testCompile 'com.fasterxml.jackson.core:jackson-databind:2.7.2'
