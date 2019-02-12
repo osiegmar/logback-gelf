@@ -11,7 +11,7 @@ dependencies.
 Latest release
 --------------
 
-The most recent release is 1.1.0, released January 21, 2018.
+The most recent release is 2.0.0, released February 12, 2019.
 
 To add a dependency using Maven, use the following:
 
@@ -19,7 +19,7 @@ To add a dependency using Maven, use the following:
 <dependency>
     <groupId>de.siegmar</groupId>
     <artifactId>logback-gelf</artifactId>
-    <version>1.1.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -27,7 +27,7 @@ To add a dependency using Gradle:
 
 ```gradle
 dependencies {
-    compile 'de.siegmar:logback-gelf:1.1.0'
+    compile 'de.siegmar:logback-gelf:2.0.0'
 }
 ```
 
@@ -50,7 +50,7 @@ Requirements
 ------------
 
 - Java 7
-- Logback 1.1.8
+- Logback 1.2.3
 
 
 Example
@@ -320,7 +320,7 @@ Contribution
 Copyright
 ---------
 
-Copyright (C) 2016-2018 Oliver Siegmar
+Copyright (C) 2016-2019 Oliver Siegmar
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
