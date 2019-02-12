@@ -134,7 +134,7 @@ Advanced UDP configuration:
                 <pattern>%m%nopex</pattern>
             </shortPatternLayout>
             <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
-                <pattern>%m</pattern>
+                <pattern>%m%n</pattern>
             </fullPatternLayout>
             <staticField>app_name:backend</staticField>
             <staticField>os_arch:${os.arch}</staticField>
@@ -176,7 +176,7 @@ Advanced TCP configuration:
                 <pattern>%m%nopex</pattern>
             </shortPatternLayout>
             <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
-                <pattern>%m</pattern>
+                <pattern>%m%n</pattern>
             </fullPatternLayout>
             <staticField>app_name:backend</staticField>
             <staticField>os_arch:${os.arch}</staticField>
@@ -223,7 +223,7 @@ Advanced TCP with TLS configuration:
                 <pattern>%m%nopex</pattern>
             </shortPatternLayout>
             <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
-                <pattern>%m</pattern>
+                <pattern>%m%n</pattern>
             </fullPatternLayout>
             <staticField>app_name:backend</staticField>
             <staticField>os_arch:${os.arch}</staticField>
@@ -303,7 +303,7 @@ Configuration
   Don't use this in conjunction with TCP or UDP appenders, as this is only reasonable for
   console logging!
 * **shortPatternLayout**: Short message format. Default: `"%m%nopex"`.
-* **fullPatternLayout**: Full message format (Stacktrace). Default: `"%m"`.
+* **fullPatternLayout**: Full message format (Stacktrace). Default: `"%m%n"`.
 * **staticFields**: Additional, static fields to send to graylog. Defaults: none.
 
 
