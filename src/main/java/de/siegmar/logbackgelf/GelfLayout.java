@@ -98,7 +98,7 @@ public class GelfLayout extends LayoutBase<ILoggingEvent> {
     private PatternLayout shortPatternLayout;
 
     /**
-     * Full message format (Stacktrace). Default: `"%m"`.
+     * Full message format (Stacktrace). Default: `"%m%n"`.
      */
     private PatternLayout fullPatternLayout;
 
