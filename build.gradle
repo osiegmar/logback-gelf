@@ -1,12 +1,14 @@
-apply plugin: 'java'
-apply plugin: 'findbugs'
-apply plugin: 'checkstyle'
-apply plugin: 'maven'
-apply plugin: 'signing'
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+    id 'checkstyle'
+    id 'com.github.spotbugs' version '1.6.9'
+}
 
 group = "de.siegmar"
 archivesBaseName = "logback-gelf"
-version = "1.1.1-SNAPSHOT"
+version = "2.0.0-SNAPSHOT"
 
 sourceCompatibility = 1.7
 
@@ -15,20 +17,20 @@ repositories {
 }
 
 dependencies {
-    compile 'ch.qos.logback:logback-classic:1.2.3'
-    testCompile 'junit:junit:4.12'
-    testCompile 'com.google.guava:guava:19.0'
-    testCompile 'com.fasterxml.jackson.core:jackson-databind:2.7.2'
-}
-
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
+    api 'ch.qos.logback:logback-classic:1.2.3'
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'com.google.guava:guava:27.0.1-jre'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
+    from sourceSets.main.allJava
+    archiveClassifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+    archiveClassifier = 'javadoc'
 }
 
 artifacts {
@@ -40,61 +42,61 @@ checkstyle {
     configProperties = [samedir: "${rootDir}/config/checkstyle", project_loc: "${rootDir}"]
 }
 
-tasks.withType(FindBugs) {
+tasks.withType(com.github.spotbugs.SpotBugsTask) {
     reports {
         xml.enabled = false
         html.enabled = true
     }
 }
 
-if (hasProperty('signing.keyId')) {
-    signing {
-        sign configurations.archives
-    }
-}
-
 if (hasProperty('ossrhUsername')) {
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                artifactId = jar.archiveBaseName
 
-                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
-                }
+                from components.java
+                artifact sourcesJar
+                artifact javadocJar
 
-                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
-                }
-
-                pom.project {
-                    name 'Logback GELF'
-                    packaging 'jar'
-                    description 'Logback appender for sending GELF messages with zero additional dependencies.'
-                    url 'https://github.com/osiegmar/logback-gelf'
-
-                    scm {
-                        connection 'scm:git:https://github.com/osiegmar/logback-gelf.git'
-                        developerConnection 'scm:git:https://github.com/osiegmar/logback-gelf.git'
-                        url 'https://github.com/osiegmar/logback-gelf'
-                    }
-
+                pom {
+                    name = 'Logback GELF'
+                    description = 'Logback appender for sending GELF messages with zero additional dependencies.'
+                    url = 'https://github.com/osiegmar/logback-gelf'
                     licenses {
                         license {
-                            name 'GNU Lesser General Public License version 2.1'
-                            url 'http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt'
+                            name = 'GNU Lesser General Public License version 2.1'
+                            url = 'http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt'
                         }
                     }
-
+                    scm {
+                        url = 'https://github.com/osiegmar/logback-gelf'
+                        connection = 'scm:git:https://github.com/osiegmar/logback-gelf.git'
+                    }
                     developers {
                         developer {
-                            id 'osiegmar'
-                            name 'Oliver Siegmar'
-                            email 'oliver@siegmar.de'
+                            id = 'osiegmar'
+                            name = 'Oliver Siegmar'
+                            email = 'oliver@siegmar.de'
                         }
                     }
                 }
             }
         }
+        repositories {
+            maven {
+                credentials {
+                    username "$ossrhUsername"
+                    password "$ossrhPassword"
+                }
+                def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+                def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+                url version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            }
+        }
+    }
+
+    signing {
+        sign publishing.publications.mavenJava
     }
 }
