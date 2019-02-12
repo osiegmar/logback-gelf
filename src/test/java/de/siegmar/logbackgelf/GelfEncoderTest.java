@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -42,26 +43,26 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.LoggingEvent;
 
-public class GelfLayoutTest {
+public class GelfEncoderTest {
 
-    private static final String LOGGER_NAME = GelfLayoutTest.class.getCanonicalName();
+    private static final String LOGGER_NAME = GelfEncoderTest.class.getCanonicalName();
 
-    private final GelfLayout layout = new GelfLayout();
+    private final GelfEncoder encoder = new GelfEncoder();
 
     @Before
     public void before() {
-        layout.setContext(new LoggerContext());
-        layout.setOriginHost("localhost");
+        encoder.setContext(new LoggerContext());
+        encoder.setOriginHost("localhost");
     }
 
     @Test
     public void simple() throws IOException {
-        layout.start();
+        encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         final Logger logger = lc.getLogger(LOGGER_NAME);
 
-        final String logMsg = layout.doLayout(simpleLoggingEvent(logger, null));
+        final String logMsg = encodeToStr(simpleLoggingEvent(logger, null));
 
         final ObjectMapper om = new ObjectMapper();
         final JsonNode jsonNode = om.readTree(logMsg);
@@ -74,26 +75,26 @@ public class GelfLayoutTest {
 
     @Test
     public void newline() {
-        layout.setAppendNewline(true);
-        layout.start();
+        encoder.setAppendNewline(true);
+        encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         final Logger logger = lc.getLogger(LOGGER_NAME);
 
-        final String logMsg = layout.doLayout(simpleLoggingEvent(logger, null));
+        final String logMsg = encodeToStr(simpleLoggingEvent(logger, null));
 
         assertTrue(logMsg.endsWith(System.lineSeparator()));
     }
 
     @Test(timeout = 400L)
     public void nestedExceptionShouldNotFail() {
-        layout.setIncludeRootCauseData(true);
-        layout.start();
+        encoder.setIncludeRootCauseData(true);
+        encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         final Logger logger = lc.getLogger(LOGGER_NAME);
 
-        final String logMsg = layout.doLayout(simpleLoggingEvent(logger,
+        final String logMsg = encodeToStr(simpleLoggingEvent(logger,
             new IOException(new IOException(new IOException()))));
 
         assertNotNull(logMsg);
@@ -120,7 +121,7 @@ public class GelfLayoutTest {
 
     @Test
     public void exception() throws IOException {
-        layout.start();
+        encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         final Logger logger = lc.getLogger(LOGGER_NAME);
@@ -129,7 +130,7 @@ public class GelfLayoutTest {
         try {
             throw new IllegalArgumentException("Example Exception");
         } catch (final IllegalArgumentException e) {
-            logMsg = layout.doLayout(new LoggingEvent(
+            logMsg = encodeToStr(new LoggingEvent(
                 LOGGER_NAME,
                 logger,
                 Level.DEBUG,
@@ -149,18 +150,18 @@ public class GelfLayoutTest {
         assertEquals("java.lang.IllegalArgumentException: Example Exception", msg.readLine());
         final String line = msg.readLine();
         assertTrue("Unexpected line: " + line, line.matches(
-            "^\tat de.siegmar.logbackgelf.GelfLayoutTest.exception"
-                + "\\(GelfLayoutTest.java:\\d+\\)$"));
+            "^\tat de.siegmar.logbackgelf.GelfEncoderTest.exception"
+                + "\\(GelfEncoderTest.java:\\d+\\)$"));
     }
 
     @Test
     public void complex() throws IOException {
-        layout.setIncludeRawMessage(true);
-        layout.setIncludeLevelName(true);
-        layout.addStaticField("foo:bar");
-        layout.setIncludeCallerData(true);
-        layout.setIncludeRootCauseData(true);
-        layout.start();
+        encoder.setIncludeRawMessage(true);
+        encoder.setIncludeLevelName(true);
+        encoder.addStaticField("foo:bar");
+        encoder.setIncludeCallerData(true);
+        encoder.setIncludeRootCauseData(true);
+        encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         final Logger logger = lc.getLogger(LOGGER_NAME);
@@ -169,7 +170,7 @@ public class GelfLayoutTest {
 
         event.setMDCPropertyMap(ImmutableMap.of("mdc_key", "mdc_value"));
 
-        final String logMsg = layout.doLayout(event);
+        final String logMsg = encodeToStr(event);
 
         final ObjectMapper om = new ObjectMapper();
         final JsonNode jsonNode = om.readTree(logMsg);
@@ -183,7 +184,7 @@ public class GelfLayoutTest {
 
     @Test
     public void rootExceptionTurnedOff() throws IOException {
-        layout.start();
+        encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         final Logger logger = lc.getLogger(LOGGER_NAME);
@@ -192,7 +193,7 @@ public class GelfLayoutTest {
         try {
             throw new IOException("Example Exception");
         } catch (final IOException e) {
-            logMsg = layout.doLayout(simpleLoggingEvent(logger, e));
+            logMsg = encodeToStr(simpleLoggingEvent(logger, e));
         }
 
         final ObjectMapper om = new ObjectMapper();
@@ -203,13 +204,13 @@ public class GelfLayoutTest {
 
     @Test
     public void noRootException() throws IOException {
-        layout.setIncludeRootCauseData(true);
-        layout.start();
+        encoder.setIncludeRootCauseData(true);
+        encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         final Logger logger = lc.getLogger(LOGGER_NAME);
 
-        final String logMsg = layout.doLayout(simpleLoggingEvent(logger, null));
+        final String logMsg = encodeToStr(simpleLoggingEvent(logger, null));
 
         final ObjectMapper om = new ObjectMapper();
         final JsonNode jsonNode = om.readTree(logMsg);
@@ -219,8 +220,8 @@ public class GelfLayoutTest {
 
     @Test
     public void rootExceptionWithoutCause() throws IOException {
-        layout.setIncludeRootCauseData(true);
-        layout.start();
+        encoder.setIncludeRootCauseData(true);
+        encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         final Logger logger = lc.getLogger(LOGGER_NAME);
@@ -229,7 +230,7 @@ public class GelfLayoutTest {
         try {
             throw new IOException("Example Exception");
         } catch (final IOException e) {
-            logMsg = layout.doLayout(simpleLoggingEvent(logger, e));
+            logMsg = encodeToStr(simpleLoggingEvent(logger, e));
         }
 
         final ObjectMapper om = new ObjectMapper();
@@ -241,8 +242,8 @@ public class GelfLayoutTest {
 
     @Test
     public void rootExceptionWithCause() throws IOException {
-        layout.setIncludeRootCauseData(true);
-        layout.start();
+        encoder.setIncludeRootCauseData(true);
+        encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         final Logger logger = lc.getLogger(LOGGER_NAME);
@@ -252,7 +253,7 @@ public class GelfLayoutTest {
             throw new IOException("Example Exception",
                 new IllegalStateException("Example Exception 2"));
         } catch (final IOException e) {
-            logMsg = layout.doLayout(simpleLoggingEvent(logger, e));
+            logMsg = encodeToStr(simpleLoggingEvent(logger, e));
         }
 
         final ObjectMapper om = new ObjectMapper();
@@ -264,6 +265,10 @@ public class GelfLayoutTest {
 
         assertEquals("Example Exception 2",
             jsonNode.get("_root_cause_message").textValue());
+    }
+
+    private String encodeToStr(final LoggingEvent event) {
+        return new String(encoder.encode(event), StandardCharsets.UTF_8);
     }
 
 }

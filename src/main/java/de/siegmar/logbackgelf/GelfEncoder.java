@@ -21,6 +21,7 @@ package de.siegmar.logbackgelf;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,13 +34,13 @@ import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.util.LevelToSyslogSeverity;
-import ch.qos.logback.core.LayoutBase;
+import ch.qos.logback.core.encoder.EncoderBase;
 
 
 /**
  * This class is responsible for transforming a Logback log event to a GELF message.
  */
-public class GelfLayout extends LayoutBase<ILoggingEvent> {
+public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     private static final Pattern VALID_ADDITIONAL_FIELD_PATTERN = Pattern.compile("^[\\w.-]*$");
     private static final double MSEC_DIVIDER = 1000D;
@@ -251,8 +252,14 @@ public class GelfLayout extends LayoutBase<ILoggingEvent> {
         return patternLayout;
     }
 
+
     @Override
-    public String doLayout(final ILoggingEvent event) {
+    public byte[] headerBytes() {
+        return null;
+    }
+
+    @Override
+    public byte[] encode(final ILoggingEvent event) {
         final String shortMessage = shortPatternLayout.doLayout(event);
         final String fullMessage = fullPatternLayout.doLayout(event);
         final double timestamp = event.getTimeStamp() / MSEC_DIVIDER;
@@ -262,8 +269,17 @@ public class GelfLayout extends LayoutBase<ILoggingEvent> {
             new GelfMessage(originHost, shortMessage, fullMessage, timestamp,
                 LevelToSyslogSeverity.convert(event), additionalFields);
 
-        final String jsonStr = gelfMessage.toJSON();
-        return appendNewline ? jsonStr + System.lineSeparator() : jsonStr;
+        String jsonStr = gelfMessage.toJSON();
+        if (appendNewline) {
+            jsonStr += System.lineSeparator();
+        }
+
+        return jsonStr.getBytes(StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public byte[] footerBytes() {
+        return null;
     }
 
     private Map<String, Object> mapAdditionalFields(final ILoggingEvent event) {

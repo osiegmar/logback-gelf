@@ -20,7 +20,6 @@
 package de.siegmar.logbackgelf;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
@@ -39,7 +38,7 @@ public abstract class AbstractGelfAppender extends UnsynchronizedAppenderBase<IL
      */
     private int graylogPort = DEFAULT_GELF_PORT;
 
-    private GelfLayout layout;
+    private GelfEncoder encoder;
 
     public String getGraylogHost() {
         return graylogHost;
@@ -57,12 +56,12 @@ public abstract class AbstractGelfAppender extends UnsynchronizedAppenderBase<IL
         this.graylogPort = graylogPort;
     }
 
-    public GelfLayout getLayout() {
-        return layout;
+    public GelfEncoder getEncoder() {
+        return encoder;
     }
 
-    public void setLayout(final GelfLayout layout) {
-        this.layout = layout;
+    public void setEncoder(final GelfEncoder encoder) {
+        this.encoder = encoder;
     }
 
     @SuppressWarnings("checkstyle:illegalcatch")
@@ -73,13 +72,13 @@ public abstract class AbstractGelfAppender extends UnsynchronizedAppenderBase<IL
             return;
         }
 
-        if (layout == null) {
-            layout = new GelfLayout();
-            layout.setContext(getContext());
-            layout.start();
+        if (encoder == null) {
+            encoder = new GelfEncoder();
+            encoder.setContext(getContext());
+            encoder.start();
         }
 
-        if (layout.isAppendNewline()) {
+        if (encoder.isAppendNewline()) {
             addError("Newline separator must not be enabled in layout");
             return;
         }
@@ -99,8 +98,7 @@ public abstract class AbstractGelfAppender extends UnsynchronizedAppenderBase<IL
     @SuppressWarnings("checkstyle:illegalcatch")
     @Override
     protected void append(final ILoggingEvent event) {
-        final String message = layout.doLayout(event);
-        final byte[] binMessage = message.getBytes(StandardCharsets.UTF_8);
+        final byte[] binMessage = encoder.encode(event);
 
         try {
             appendMessage(binMessage);

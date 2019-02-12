@@ -122,7 +122,7 @@ Advanced UDP configuration:
         <graylogPort>12201</graylogPort>
         <maxChunkSize>508</maxChunkSize>
         <useCompression>true</useCompression>
-        <layout class="de.siegmar.logbackgelf.GelfLayout">
+        <encoder class="de.siegmar.logbackgelf.GelfEncoder">
             <originHost>localhost</originHost>
             <includeRawMessage>false</includeRawMessage>
             <includeMarker>true</includeMarker>
@@ -140,7 +140,7 @@ Advanced UDP configuration:
             <staticField>os_arch:${os.arch}</staticField>
             <staticField>os_name:${os.name}</staticField>
             <staticField>os_version:${os.version}</staticField>
-        </layout>
+        </encoder>
     </appender>
 
     <root level="debug">
@@ -164,7 +164,7 @@ Advanced TCP configuration:
         <retryDelay>3000</retryDelay>
         <poolSize>2</poolSize>
         <poolMaxWaitTime>5000</poolMaxWaitTime>
-        <layout class="de.siegmar.logbackgelf.GelfLayout">
+        <encoder class="de.siegmar.logbackgelf.GelfEncoder">
             <originHost>localhost</originHost>
             <includeRawMessage>false</includeRawMessage>
             <includeMarker>true</includeMarker>
@@ -182,7 +182,7 @@ Advanced TCP configuration:
             <staticField>os_arch:${os.arch}</staticField>
             <staticField>os_name:${os.name}</staticField>
             <staticField>os_version:${os.version}</staticField>
-        </layout>
+        </encoder>
     </appender>
 
     <appender name="ASYNC GELF" class="ch.qos.logback.classic.AsyncAppender">
@@ -211,7 +211,7 @@ Advanced TCP with TLS configuration:
         <poolSize>2</poolSize>
         <poolMaxWaitTime>5000</poolMaxWaitTime>
         <trustAllCertificates>false</trustAllCertificates>
-        <layout class="de.siegmar.logbackgelf.GelfLayout">
+        <encoder class="de.siegmar.logbackgelf.GelfEncoder">
             <originHost>localhost</originHost>
             <includeRawMessage>false</includeRawMessage>
             <includeMarker>true</includeMarker>
@@ -229,7 +229,7 @@ Advanced TCP with TLS configuration:
             <staticField>os_arch:${os.arch}</staticField>
             <staticField>os_name:${os.name}</staticField>
             <staticField>os_version:${os.version}</staticField>
-        </layout>
+        </encoder>
     </appender>
 
     <appender name="ASYNC GELF" class="ch.qos.logback.classic.AsyncAppender">
@@ -253,7 +253,7 @@ Configuration
 * **graylogHost**: IP or hostname of graylog server.
   If the hostname resolves to multiple ip addresses, round robin will be used.
 * **graylogPort**: Port of graylog server. Default: 12201.
-* **layout**: See Layout configuration below.
+* **encoder**: See Encoder configuration below.
 * **maxChunkSize**: Maximum size of GELF chunks in bytes. Default chunk size is 508 - this prevents
   IP packet fragmentation. This is also the recommended minimum.
   Maximum supported chunk size is 65,467 bytes.
@@ -265,7 +265,7 @@ Configuration
 * **graylogHost**: IP or hostname of graylog server.
   If the hostname resolves to multiple ip addresses, round robin will be used.
 * **graylogPort**: Port of graylog server. Default: 12201.
-* **layout**: See Layout configuration below.
+* **encoder**: See Encoder configuration below.
 * **connectTimeout**: Maximum time (in milliseconds) to wait for establishing a connection. A value
   of 0 disables the connect timeout. Default: 15,000 milliseconds.
 * **reconnectInterval**: Time interval (in seconds) after an existing connection is closed and
@@ -284,9 +284,9 @@ Configuration
 * **trustAllCertificates**: If true, trust all TLS certificates (even self signed certificates).
   You should not use this in production! Default: false.
 
-## Layout
+## Encoder
 
-`de.siegmar.logbackgelf.GelfLayout`
+`de.siegmar.logbackgelf.GelfEncoder`
 
 * **originHost**: Origin hostname - will be auto detected if not specified.
 * **includeRawMessage**: If true, the raw message (with argument placeholders) will be sent, too.

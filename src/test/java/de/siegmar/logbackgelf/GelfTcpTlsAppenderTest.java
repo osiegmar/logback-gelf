@@ -84,23 +84,23 @@ public class GelfTcpTlsAppenderTest {
     private Logger setupLogger() {
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-        final GelfLayout gelfLayout = new GelfLayout();
-        gelfLayout.setContext(lc);
-        gelfLayout.setOriginHost("localhost");
-        gelfLayout.start();
+        final GelfEncoder gelfEncoder = new GelfEncoder();
+        gelfEncoder.setContext(lc);
+        gelfEncoder.setOriginHost("localhost");
+        gelfEncoder.start();
 
         final Logger logger = (Logger) LoggerFactory.getLogger(LOGGER_NAME);
-        logger.addAppender(buildAppender(lc, gelfLayout));
+        logger.addAppender(buildAppender(lc, gelfEncoder));
         logger.setAdditive(false);
 
         return logger;
     }
 
-    private GelfTcpTlsAppender buildAppender(final LoggerContext lc, final GelfLayout gelfLayout) {
+    private GelfTcpTlsAppender buildAppender(final LoggerContext lc, final GelfEncoder encoder) {
         final GelfTcpTlsAppender gelfAppender = new GelfTcpTlsAppender();
         gelfAppender.setContext(lc);
         gelfAppender.setName("GELF");
-        gelfAppender.setLayout(gelfLayout);
+        gelfAppender.setEncoder(encoder);
         gelfAppender.setGraylogHost("localhost");
         gelfAppender.setGraylogPort(server.getPort());
         gelfAppender.setTrustAllCertificates(true);
