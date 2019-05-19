@@ -53,6 +53,25 @@ Requirements
 - Logback 1.2.3
 
 
+Important notes
+---------------
+
+Version 2.0.0 of this library introduced a configuration change. If you were already using this library, update
+your configuration to keep it working!
+
+**Old** format:
+```xml
+<layout class="de.siegmar.logbackgelf.GelfLayout">
+```
+
+**New** format:
+```xml
+<encoder class="de.siegmar.logbackgelf.GelfEncoder">
+```
+
+This change was introduced, as the API of the Encoder interface changed in Logback 1.2.0.
+
+
 Example
 -------
 
