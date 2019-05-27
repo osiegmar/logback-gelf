@@ -86,7 +86,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private boolean includeLevelName;
 
     /**
-     * The key that should be used for the levelName
+     * The key that should be used for the levelName.
      */
     private String levelNameKey = "level_name";
 
@@ -173,7 +173,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         return levelNameKey;
     }
 
-    public void setLevelNameKey(String levelNameKey) {
+    public void setLevelNameKey(final String levelNameKey) {
         this.levelNameKey = levelNameKey;
     }
 
