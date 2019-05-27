@@ -86,6 +86,11 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private boolean includeLevelName;
 
     /**
+     * The key that should be used for the levelName
+     */
+    private String levelNameKey = "level_name";
+
+    /**
      * If true, a system depended newline separator will be added at the end of each message.
      * Don't use this in conjunction with TCP or UDP appenders, as this is only reasonable for
      * console logging!
@@ -162,6 +167,14 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     public void setIncludeLevelName(final boolean includeLevelName) {
         this.includeLevelName = includeLevelName;
+    }
+
+    public String getLevelNameKey() {
+        return levelNameKey;
+    }
+
+    public void setLevelNameKey(String levelNameKey) {
+        this.levelNameKey = levelNameKey;
     }
 
     public boolean isAppendNewline() {
@@ -300,7 +313,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
 
         if (includeLevelName) {
-            additionalFields.put("level_name", event.getLevel().levelStr);
+            additionalFields.put(levelNameKey, event.getLevel().levelStr);
         }
 
         if (includeMdcData) {
