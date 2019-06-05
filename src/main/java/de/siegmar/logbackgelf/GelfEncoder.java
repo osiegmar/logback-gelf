@@ -24,8 +24,10 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.slf4j.Marker;
@@ -103,6 +105,8 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      */
     private PatternLayout fullPatternLayout;
 
+    private Set<String> integerFields = new HashSet<>();
+
     /**
      * Additional, static fields to send to graylog. Defaults: none.
      */
@@ -172,6 +176,18 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         this.appendNewline = appendNewline;
     }
 
+    public Set<String> getIntegerFields() {
+        return integerFields;
+    }
+
+    public void setIntegerFields(final Set<String> integerFields) {
+        this.integerFields = integerFields;
+    }
+
+    public void addIntegerField(final String field) {
+        integerFields.add(field);
+    }
+
     public PatternLayout getShortPatternLayout() {
         return shortPatternLayout;
     }
@@ -216,8 +232,22 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
             addWarn("staticField key '" + key + "' is illegal. "
                 + "Keys must apply to regex ^[\\w.-]*$");
         } else {
-            dst.put(key, value);
+            final Object processedValue = processValue(key, value);
+            if (processedValue != null) {
+                dst.put(key, processedValue);
+            }
         }
+    }
+
+    private Object processValue(final String key, final String value) {
+        if (integerFields.contains(key)) {
+            if (value.matches("\\d+")) {
+                return Long.parseLong(value);
+            }
+            addWarn("field with key '" + key + "' has no valid integer value '" + value + "'");
+            return null;
+        }
+        return value;
     }
 
     @Override

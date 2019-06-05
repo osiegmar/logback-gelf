@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 
+import com.google.common.collect.Sets;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -265,6 +266,28 @@ public class GelfEncoderTest {
 
         assertEquals("Example Exception 2",
             jsonNode.get("_root_cause_message").textValue());
+    }
+
+    @Test
+    public void valueAsNumber() throws IOException {
+        encoder.setIntegerFields(Sets.newHashSet("http_status"));
+        encoder.start();
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+
+        final LoggingEvent event = simpleLoggingEvent(logger, null);
+
+        event.setMDCPropertyMap(ImmutableMap.of("http_status", "200"));
+
+        final String logMsg = encodeToStr(event);
+
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        basicValidation(jsonNode);
+        final JsonNode httpStatus = jsonNode.get("_http_status");
+        assertEquals(200L, httpStatus.asLong());
+        assertTrue(httpStatus.isNumber());
     }
 
     private String encodeToStr(final LoggingEvent event) {
