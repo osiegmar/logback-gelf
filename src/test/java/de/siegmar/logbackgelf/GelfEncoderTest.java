@@ -182,6 +182,27 @@ public class GelfEncoderTest {
         assertNull(jsonNode.get("_exception"));
     }
 
+
+    @Test
+    public void customLevelNameKey() throws IOException {
+        encoder.setIncludeLevelName(true);
+        encoder.setLevelNameKey("Severity");
+        encoder.start();
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+
+        final LoggingEvent event = simpleLoggingEvent(logger, null);
+
+        final String logMsg = encodeToStr(event);
+
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        basicValidation(jsonNode);
+        assertEquals("DEBUG", jsonNode.get("_Severity").textValue());
+        assertNull(jsonNode.get("_exception"));
+    }
+
     @Test
     public void rootExceptionTurnedOff() throws IOException {
         encoder.start();
