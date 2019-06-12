@@ -24,10 +24,8 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.slf4j.Marker;
@@ -105,7 +103,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      */
     private PatternLayout fullPatternLayout;
 
-    private Set<String> integerFields = new HashSet<>();
+    private boolean numbersAsString = true;
 
     /**
      * Additional, static fields to send to graylog. Defaults: none.
@@ -176,16 +174,12 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         this.appendNewline = appendNewline;
     }
 
-    public Set<String> getIntegerFields() {
-        return integerFields;
+    public boolean isNumbersAsString() {
+        return numbersAsString;
     }
 
-    public void setIntegerFields(final Set<String> integerFields) {
-        this.integerFields = integerFields;
-    }
-
-    public void addIntegerField(final String field) {
-        integerFields.add(field);
+    public void setNumbersAsString(final boolean numbersAsString) {
+        this.numbersAsString = numbersAsString;
     }
 
     public PatternLayout getShortPatternLayout() {
@@ -240,12 +234,12 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     }
 
     private Object processValue(final String key, final String value) {
-        if (integerFields.contains(key)) {
-            if (value.matches("\\d+")) {
-                return Long.parseLong(value);
+        if (!numbersAsString) {
+            try {
+                return Double.valueOf(value);
+            } catch (final NumberFormatException e) {
+                return value;
             }
-            addWarn("field with key '" + key + "' has no valid integer value '" + value + "'");
-            return null;
         }
         return value;
     }

@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.google.common.io.LineReader;
 
 import ch.qos.logback.classic.Level;
@@ -269,8 +268,8 @@ public class GelfEncoderTest {
     }
 
     @Test
-    public void valueAsNumber() throws IOException {
-        encoder.setIntegerFields(Sets.newHashSet("http_status"));
+    public void numericValueAsNumber() throws IOException {
+        encoder.setNumbersAsString(false);
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -286,8 +285,30 @@ public class GelfEncoderTest {
         final JsonNode jsonNode = om.readTree(logMsg);
         basicValidation(jsonNode);
         final JsonNode httpStatus = jsonNode.get("_http_status");
-        assertEquals(200L, httpStatus.asLong());
+        assertEquals(200, httpStatus.asDouble(), 0);
         assertTrue(httpStatus.isNumber());
+    }
+
+    @Test
+    public void numericValueAsString() throws IOException {
+        encoder.setNumbersAsString(true);
+        encoder.start();
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+
+        final LoggingEvent event = simpleLoggingEvent(logger, null);
+
+        event.setMDCPropertyMap(ImmutableMap.of("http_status", "200"));
+
+        final String logMsg = encodeToStr(event);
+
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        basicValidation(jsonNode);
+        final JsonNode httpStatus = jsonNode.get("_http_status");
+        assertEquals("200", httpStatus.asText());
+        assertFalse(httpStatus.isNumber());
     }
 
     private String encodeToStr(final LoggingEvent event) {
