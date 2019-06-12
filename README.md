@@ -155,6 +155,7 @@ Advanced UDP configuration:
             <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
                 <pattern>%m%n</pattern>
             </fullPatternLayout>
+            <numbersAsString>false</numbersAsString>
             <staticField>app_name:backend</staticField>
             <staticField>os_arch:${os.arch}</staticField>
             <staticField>os_name:${os.name}</staticField>
@@ -197,6 +198,7 @@ Advanced TCP configuration:
             <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
                 <pattern>%m%n</pattern>
             </fullPatternLayout>
+            <numbersAsString>false</numbersAsString>
             <staticField>app_name:backend</staticField>
             <staticField>os_arch:${os.arch}</staticField>
             <staticField>os_name:${os.name}</staticField>
@@ -244,6 +246,7 @@ Advanced TCP with TLS configuration:
             <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
                 <pattern>%m%n</pattern>
             </fullPatternLayout>
+            <numbersAsString>false</numbersAsString>
             <staticField>app_name:backend</staticField>
             <staticField>os_arch:${os.arch}</staticField>
             <staticField>os_name:${os.name}</staticField>
@@ -325,6 +328,7 @@ Configuration
   console logging!
 * **shortPatternLayout**: Short message format. Default: `"%m%nopex"`.
 * **fullPatternLayout**: Full message format (Stacktrace). Default: `"%m%n"`.
+* **numbersAsString**: Log numbers as String. Default: true (will be changed in next major release).
 * **staticFields**: Additional, static fields to send to graylog. Defaults: none.
 
 

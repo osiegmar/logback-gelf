@@ -108,6 +108,9 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      */
     private PatternLayout fullPatternLayout;
 
+    /**
+     * Log numbers as String. Default: true (will be changed in next major release).
+     */
     private boolean numbersAsString = true;
 
     /**
