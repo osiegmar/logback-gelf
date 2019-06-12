@@ -239,14 +239,13 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
             addWarn("staticField key '" + key + "' is illegal. "
                 + "Keys must apply to regex ^[\\w.-]*$");
         } else {
-            final Object processedValue = processValue(key, value);
-            if (processedValue != null) {
-                dst.put(key, processedValue);
+            if (value != null) {
+                dst.put(key, processValue(value));
             }
         }
     }
 
-    private Object processValue(final String key, final String value) {
+    private Object processValue(final String value) {
         if (!numbersAsString) {
             try {
                 return Double.valueOf(value);
