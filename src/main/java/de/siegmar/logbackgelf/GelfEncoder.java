@@ -108,6 +108,8 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      */
     private PatternLayout fullPatternLayout;
 
+    private boolean numbersAsString = true;
+
     /**
      * Additional, static fields to send to graylog. Defaults: none.
      */
@@ -185,6 +187,14 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         this.appendNewline = appendNewline;
     }
 
+    public boolean isNumbersAsString() {
+        return numbersAsString;
+    }
+
+    public void setNumbersAsString(final boolean numbersAsString) {
+        this.numbersAsString = numbersAsString;
+    }
+
     public PatternLayout getShortPatternLayout() {
         return shortPatternLayout;
     }
@@ -229,8 +239,22 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
             addWarn("staticField key '" + key + "' is illegal. "
                 + "Keys must apply to regex ^[\\w.-]*$");
         } else {
-            dst.put(key, value);
+            final Object processedValue = processValue(key, value);
+            if (processedValue != null) {
+                dst.put(key, processedValue);
+            }
         }
+    }
+
+    private Object processValue(final String key, final String value) {
+        if (!numbersAsString) {
+            try {
+                return Double.valueOf(value);
+            } catch (final NumberFormatException e) {
+                return value;
+            }
+        }
+        return value;
     }
 
     @Override
