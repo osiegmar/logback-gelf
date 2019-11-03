@@ -19,7 +19,6 @@
 
 package de.siegmar.logbackgelf;
 
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -276,7 +275,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     private String buildHostname() {
         try {
-            return InetAddress.getLocalHost().getCanonicalHostName();
+            return InetUtil.getLocalHostName();
         } catch (final UnknownHostException e) {
             addWarn("Could not determine local hostname", e);
             return "unknown";
@@ -290,7 +289,6 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         patternLayout.start();
         return patternLayout;
     }
-
 
     @Override
     public byte[] headerBytes() {

@@ -19,7 +19,6 @@
 
 package de.siegmar.logbackgelf;
 
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -109,7 +108,7 @@ class GelfUdpChunker {
 
     private String buildHostname() {
         try {
-            return InetAddress.getLocalHost().getCanonicalHostName();
+            return InetUtil.getLocalHostName();
         } catch (final UnknownHostException e) {
             return UUID.randomUUID().toString();
         }
