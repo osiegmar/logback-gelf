@@ -306,12 +306,19 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
             new GelfMessage(originHost, shortMessage, fullMessage, timestamp,
                 LevelToSyslogSeverity.convert(event), additionalFields);
 
-        String jsonStr = gelfMessage.toJSON();
+        String jsonStr = gelfMessageToJson(gelfMessage);
         if (appendNewline) {
             jsonStr += System.lineSeparator();
         }
 
         return jsonStr.getBytes(StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Allow subclasses to customize the message before it is converted to String.
+     */
+    protected String gelfMessageToJson(final GelfMessage gelfMessage) {
+        return gelfMessage.toJSON();
     }
 
     @Override

@@ -72,4 +72,28 @@ class GelfMessage {
         return jsonEncoder.toString();
     }
 
+    public String getHost() {
+        return host;
+    }
+
+    public String getShortMessage() {
+        return shortMessage;
+    }
+
+    public String getFullMessage() {
+        return fullMessage;
+    }
+
+    public double getTimestamp() {
+        return timestamp;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public Map<String, Object> getAdditionalFields() {
+        return additionalFields;
+    }
+
 }
