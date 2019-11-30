@@ -90,6 +90,16 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private String levelNameKey = "level_name";
 
     /**
+     * The key that should be used for the loggerName.
+     */
+    private String loggerNameKey = "logger_name";
+
+    /**
+     * The key that should be used for the threadName.
+     */
+    private String threadNameKey = "thread_name";
+
+    /**
      * If true, a system depended newline separator will be added at the end of each message.
      * Don't use this in conjunction with TCP or UDP appenders, as this is only reasonable for
      * console logging!
@@ -179,6 +189,22 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     public void setLevelNameKey(final String levelNameKey) {
         this.levelNameKey = levelNameKey;
+    }
+
+    public String getLoggerNameKey() {
+        return loggerNameKey;
+    }
+
+    public void setLoggerNameKey(final String loggerNameKey) {
+        this.loggerNameKey = loggerNameKey;
+    }
+
+    public String getThreadNameKey() {
+        return threadNameKey;
+    }
+
+    public void setThreadNameKey(final String threadNameKey) {
+        this.threadNameKey = threadNameKey;
     }
 
     public boolean isAppendNewline() {
@@ -322,8 +348,8 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private Map<String, Object> mapAdditionalFields(final ILoggingEvent event) {
         final Map<String, Object> additionalFields = new HashMap<>(staticFields);
 
-        additionalFields.put("logger_name", event.getLoggerName());
-        additionalFields.put("thread_name", event.getThreadName());
+        additionalFields.put(loggerNameKey, event.getLoggerName());
+        additionalFields.put(threadNameKey, event.getThreadName());
 
         if (includeRawMessage) {
             additionalFields.put("raw_message", event.getMessage());
