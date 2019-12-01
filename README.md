@@ -322,7 +322,11 @@ Configuration
    Default: false.
 * **includeLevelName**: If true, the log level name (e.g. DEBUG) will be sent, too. Default: false.
 * **levelNameKey**: The key (i.e. the field name) that should be used for the log level name. 
-  This is only relevant when includeLevelName is trueö. Default: level_name.
+  This is only relevant when includeLevelName is true. Default: level_name.
+* **loggerNameKey**: The key (i.e. the field name) that should be used for the logger name. 
+  Default: logger_name.
+* **threadNameKey**: The key (i.e. the field name) that should be used for the thread name. 
+  Default: thread_name.
 * **appendNewline**: If true, a system depended newline separator will be added at the end of each message.
   Don't use this in conjunction with TCP or UDP appenders, as this is only reasonable for
   console logging!

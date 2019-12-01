@@ -110,11 +110,15 @@ public class GelfEncoderTest {
             new Object[]{1});
     }
 
-    private void basicValidation(final JsonNode jsonNode) {
+    private void coreValidation(final JsonNode jsonNode) {
         assertEquals("1.1", jsonNode.get("version").textValue());
         assertEquals("localhost", jsonNode.get("host").textValue());
         assertEquals("message 1", jsonNode.get("short_message").textValue());
         assertEquals(7, jsonNode.get("level").intValue());
+    }
+
+    private void basicValidation(final JsonNode jsonNode) {
+        coreValidation(jsonNode);
         assertNotNull(jsonNode.get("_thread_name").textValue());
         assertEquals(LOGGER_NAME, jsonNode.get("_logger_name").textValue());
     }
@@ -182,7 +186,6 @@ public class GelfEncoderTest {
         assertNull(jsonNode.get("_exception"));
     }
 
-
     @Test
     public void customLevelNameKey() throws IOException {
         encoder.setIncludeLevelName(true);
@@ -200,6 +203,46 @@ public class GelfEncoderTest {
         final JsonNode jsonNode = om.readTree(logMsg);
         basicValidation(jsonNode);
         assertEquals("DEBUG", jsonNode.get("_Severity").textValue());
+        assertNull(jsonNode.get("_exception"));
+    }
+
+    @Test
+    public void customLoggerNameKey() throws IOException {
+        encoder.setLoggerNameKey("Logger");
+        encoder.start();
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+
+        final LoggingEvent event = simpleLoggingEvent(logger, null);
+
+        final String logMsg = encodeToStr(event);
+
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        coreValidation(jsonNode);
+        assertNotNull(jsonNode.get("_thread_name").textValue());
+        assertEquals(LOGGER_NAME, jsonNode.get("_Logger").textValue());
+        assertNull(jsonNode.get("_exception"));
+    }
+
+    @Test
+    public void customThreadNameKey() throws IOException {
+        encoder.setThreadNameKey("Thread");
+        encoder.start();
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+
+        final LoggingEvent event = simpleLoggingEvent(logger, null);
+
+        final String logMsg = encodeToStr(event);
+
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        coreValidation(jsonNode);
+        assertNotNull(jsonNode.get("_Thread").textValue());
+        assertEquals(LOGGER_NAME, jsonNode.get("_logger_name").textValue());
         assertNull(jsonNode.get("_exception"));
     }
 
