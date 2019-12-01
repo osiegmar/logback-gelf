@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -358,7 +359,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         if (includeMarker) {
             final Marker marker = event.getMarker();
             if (marker != null) {
-                additionalFields.put("marker", marker.getName());
+                additionalFields.put("marker", buildMarkerStr(marker));
             }
         }
 
@@ -379,6 +380,21 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
 
         return additionalFields;
+    }
+
+    private static String buildMarkerStr(final Marker marker) {
+        if (!marker.hasReferences()) {
+            return marker.getName();
+        }
+
+        final StringBuilder sb = new StringBuilder(marker.getName());
+
+        final Iterator<Marker> it = marker.iterator();
+        do {
+            sb.append(", ").append(it.next().getName());
+        } while (it.hasNext());
+
+        return sb.toString();
     }
 
     private Map<String, Object> buildMdcData(final Map<String, String> mdcProperties) {
