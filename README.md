@@ -11,7 +11,7 @@ dependencies.
 Latest release
 --------------
 
-The most recent release is 2.1.2, released November 4, 2019.
+The most recent release is 2.2.0, released December 14, 2019.
 
 To add a dependency using Maven, use the following:
 
@@ -19,7 +19,7 @@ To add a dependency using Maven, use the following:
 <dependency>
     <groupId>de.siegmar</groupId>
     <artifactId>logback-gelf</artifactId>
-    <version>2.1.2</version>
+    <version>2.2.0</version>
 </dependency>
 ```
 
@@ -27,7 +27,7 @@ To add a dependency using Gradle:
 
 ```gradle
 dependencies {
-    compile 'de.siegmar:logback-gelf:2.1.2'
+    compile 'de.siegmar:logback-gelf:2.2.0'
 }
 ```
 
