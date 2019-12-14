@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.2.0] - 2019-12-14
 ### Added
 - Add customizable keys for the logger name and thread name (#41)
   [\#41](https://github.com/osiegmar/logback-gelf/issues/41)
@@ -78,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release
 
 [Unreleased]: https://github.com/osiegmar/logback-gelf/compare/v2.1.2...HEAD
+[2.2.0]: https://github.com/osiegmar/logback-gelf/compare/v2.1.2...v2.2.0
 [2.1.2]: https://github.com/osiegmar/logback-gelf/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/osiegmar/logback-gelf/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/osiegmar/logback-gelf/compare/v2.0.1...v2.1.0
