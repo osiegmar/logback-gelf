@@ -6,5 +6,6 @@
 
     <suppress files=".*Test.java" checks="MagicNumber"/>
     <suppress files=".*Test.java" checks="ImportControl"/>
+    <suppress files="CustomGelfEncoder.java" checks="ImportControl"/>
 
 </suppressions>
