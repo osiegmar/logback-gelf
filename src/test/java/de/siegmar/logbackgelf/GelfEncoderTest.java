@@ -32,6 +32,8 @@ import java.nio.charset.StandardCharsets;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -110,11 +112,15 @@ public class GelfEncoderTest {
             new Object[]{1});
     }
 
-    public static void basicValidation(final JsonNode jsonNode) {
+    private static void coreValidation(final JsonNode jsonNode) {
         assertEquals("1.1", jsonNode.get("version").textValue());
         assertEquals("localhost", jsonNode.get("host").textValue());
         assertEquals("message 1", jsonNode.get("short_message").textValue());
         assertEquals(7, jsonNode.get("level").intValue());
+    }
+
+    public static void basicValidation(final JsonNode jsonNode) {
+        coreValidation(jsonNode);
         assertNotNull(jsonNode.get("_thread_name").textValue());
         assertEquals(LOGGER_NAME, jsonNode.get("_logger_name").textValue());
     }
@@ -182,7 +188,6 @@ public class GelfEncoderTest {
         assertNull(jsonNode.get("_exception"));
     }
 
-
     @Test
     public void customLevelNameKey() throws IOException {
         encoder.setIncludeLevelName(true);
@@ -200,6 +205,46 @@ public class GelfEncoderTest {
         final JsonNode jsonNode = om.readTree(logMsg);
         basicValidation(jsonNode);
         assertEquals("DEBUG", jsonNode.get("_Severity").textValue());
+        assertNull(jsonNode.get("_exception"));
+    }
+
+    @Test
+    public void customLoggerNameKey() throws IOException {
+        encoder.setLoggerNameKey("Logger");
+        encoder.start();
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+
+        final LoggingEvent event = simpleLoggingEvent(logger, null);
+
+        final String logMsg = encodeToStr(event);
+
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        coreValidation(jsonNode);
+        assertNotNull(jsonNode.get("_thread_name").textValue());
+        assertEquals(LOGGER_NAME, jsonNode.get("_Logger").textValue());
+        assertNull(jsonNode.get("_exception"));
+    }
+
+    @Test
+    public void customThreadNameKey() throws IOException {
+        encoder.setThreadNameKey("Thread");
+        encoder.start();
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+
+        final LoggingEvent event = simpleLoggingEvent(logger, null);
+
+        final String logMsg = encodeToStr(event);
+
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        coreValidation(jsonNode);
+        assertNotNull(jsonNode.get("_Thread").textValue());
+        assertEquals(LOGGER_NAME, jsonNode.get("_logger_name").textValue());
         assertNull(jsonNode.get("_exception"));
     }
 
@@ -330,6 +375,46 @@ public class GelfEncoderTest {
         final JsonNode httpStatus = jsonNode.get("_http_status");
         assertEquals("200", httpStatus.asText());
         assertFalse(httpStatus.isNumber());
+    }
+
+    @Test
+    public void singleMarker() throws IOException {
+        encoder.setLoggerNameKey("Logger");
+        encoder.start();
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+
+        final LoggingEvent event = simpleLoggingEvent(logger, null);
+        event.setMarker(MarkerFactory.getMarker("SINGLE"));
+
+        final String logMsg = encodeToStr(event);
+
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        coreValidation(jsonNode);
+        assertEquals("SINGLE", jsonNode.get("_marker").textValue());
+    }
+
+    @Test
+    public void multipleMarker() throws IOException {
+        encoder.setLoggerNameKey("Logger");
+        encoder.start();
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+
+        final LoggingEvent event = simpleLoggingEvent(logger, null);
+        final Marker marker = MarkerFactory.getMarker("FIRST");
+        marker.add(MarkerFactory.getMarker("SECOND"));
+        event.setMarker(marker);
+
+        final String logMsg = encodeToStr(event);
+
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        coreValidation(jsonNode);
+        assertEquals("FIRST, SECOND", jsonNode.get("_marker").textValue());
     }
 
     private String encodeToStr(final LoggingEvent event) {

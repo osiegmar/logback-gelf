@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -88,6 +89,16 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      * The key that should be used for the levelName.
      */
     private String levelNameKey = "level_name";
+
+    /**
+     * The key that should be used for the loggerName.
+     */
+    private String loggerNameKey = "logger_name";
+
+    /**
+     * The key that should be used for the threadName.
+     */
+    private String threadNameKey = "thread_name";
 
     /**
      * If true, a system depended newline separator will be added at the end of each message.
@@ -179,6 +190,22 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     public void setLevelNameKey(final String levelNameKey) {
         this.levelNameKey = levelNameKey;
+    }
+
+    public String getLoggerNameKey() {
+        return loggerNameKey;
+    }
+
+    public void setLoggerNameKey(final String loggerNameKey) {
+        this.loggerNameKey = loggerNameKey;
+    }
+
+    public String getThreadNameKey() {
+        return threadNameKey;
+    }
+
+    public void setThreadNameKey(final String threadNameKey) {
+        this.threadNameKey = threadNameKey;
     }
 
     public boolean isAppendNewline() {
@@ -329,8 +356,8 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private Map<String, Object> mapAdditionalFields(final ILoggingEvent event) {
         final Map<String, Object> additionalFields = new HashMap<>(staticFields);
 
-        additionalFields.put("logger_name", event.getLoggerName());
-        additionalFields.put("thread_name", event.getThreadName());
+        additionalFields.put(loggerNameKey, event.getLoggerName());
+        additionalFields.put(threadNameKey, event.getThreadName());
 
         if (includeRawMessage) {
             additionalFields.put("raw_message", event.getMessage());
@@ -339,7 +366,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         if (includeMarker) {
             final Marker marker = event.getMarker();
             if (marker != null) {
-                additionalFields.put("marker", marker.getName());
+                additionalFields.put("marker", buildMarkerStr(marker));
             }
         }
 
@@ -360,6 +387,21 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
 
         return additionalFields;
+    }
+
+    private static String buildMarkerStr(final Marker marker) {
+        if (!marker.hasReferences()) {
+            return marker.getName();
+        }
+
+        final StringBuilder sb = new StringBuilder(marker.getName());
+
+        final Iterator<Marker> it = marker.iterator();
+        do {
+            sb.append(", ").append(it.next().getName());
+        } while (it.hasNext());
+
+        return sb.toString();
     }
 
     private Map<String, Object> buildMdcData(final Map<String, String> mdcProperties) {
