@@ -38,43 +38,43 @@ import static org.junit.Assert.assertEquals;
 
 public class CustomGelfEncoderTest {
 
-  private static final String LOGGER_NAME = GelfEncoderTest.class.getCanonicalName();
-  private static final String THREAD_NAME = "thread name";
-  private static final long TIMESTAMP = 1577359700000L;
+    private static final String LOGGER_NAME = GelfEncoderTest.class.getCanonicalName();
+    private static final String THREAD_NAME = "thread name";
+    private static final long TIMESTAMP = 1577359700000L;
 
-  private final CustomGelfEncoder encoder = new CustomGelfEncoder();
+    private final CustomGelfEncoder encoder = new CustomGelfEncoder();
 
-  @Before
-  public void before() {
-    encoder.setContext(new LoggerContext());
-    encoder.setOriginHost("localhost");
-  }
+    @Before
+    public void before() {
+        encoder.setContext(new LoggerContext());
+        encoder.setOriginHost("localhost");
+    }
 
-  @Test
-  public void custom() throws IOException {
-    encoder.start();
+    @Test
+    public void custom() throws IOException {
+        encoder.start();
 
-    final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-    final Logger logger = lc.getLogger(LOGGER_NAME);
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
 
-    final LoggingEvent event = simpleLoggingEvent(logger, null);
-    event.setTimeStamp(TIMESTAMP);
-    event.setThreadName(THREAD_NAME);
-    final String logMsg = encodeToStr(event);
+        final LoggingEvent event = simpleLoggingEvent(logger, null);
+        event.setTimeStamp(TIMESTAMP);
+        event.setThreadName(THREAD_NAME);
+        final String logMsg = encodeToStr(event);
 
-    final ObjectMapper om = new ObjectMapper();
-    final JsonNode jsonNode = om.readTree(logMsg);
-    basicValidation(jsonNode);
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        basicValidation(jsonNode);
 
-    assertEquals("message 1\n", jsonNode.get("full_message").textValue());
-    assertEquals("Log line: " + logMsg,
-        "970db79831490f2e5e02b80cf484308bf77e7353f727b6fd42417b82be254419",
-        jsonNode.get("_sha256").textValue()
-    );
-  }
+        assertEquals("message 1\n", jsonNode.get("full_message").textValue());
+        assertEquals("Log line: " + logMsg,
+            "970db79831490f2e5e02b80cf484308bf77e7353f727b6fd42417b82be254419",
+            jsonNode.get("_sha256").textValue()
+        );
+    }
 
-  private String encodeToStr(final LoggingEvent event) {
-    return new String(encoder.encode(event), StandardCharsets.UTF_8);
-  }
+    private String encodeToStr(final LoggingEvent event) {
+        return new String(encoder.encode(event), StandardCharsets.UTF_8);
+    }
 
 }
