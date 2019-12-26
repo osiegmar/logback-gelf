@@ -102,7 +102,7 @@ public class GelfEncoderTest {
         assertNotNull(logMsg);
     }
 
-    private LoggingEvent simpleLoggingEvent(final Logger logger, final Throwable e) {
+    public static LoggingEvent simpleLoggingEvent(final Logger logger, final Throwable e) {
         return new LoggingEvent(
             LOGGER_NAME,
             logger,
@@ -112,14 +112,14 @@ public class GelfEncoderTest {
             new Object[]{1});
     }
 
-    private void coreValidation(final JsonNode jsonNode) {
+    private static void coreValidation(final JsonNode jsonNode) {
         assertEquals("1.1", jsonNode.get("version").textValue());
         assertEquals("localhost", jsonNode.get("host").textValue());
         assertEquals("message 1", jsonNode.get("short_message").textValue());
         assertEquals(7, jsonNode.get("level").intValue());
     }
 
-    private void basicValidation(final JsonNode jsonNode) {
+    public static void basicValidation(final JsonNode jsonNode) {
         coreValidation(jsonNode);
         assertNotNull(jsonNode.get("_thread_name").textValue());
         assertEquals(LOGGER_NAME, jsonNode.get("_logger_name").textValue());
