@@ -19,22 +19,26 @@
 
 package de.siegmar.logbackgelf;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.LoggingEvent;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.siegmar.logbackgelf.custom.CustomGelfEncoder;
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.LoggerFactory;
+import static org.junit.Assert.assertEquals;
+
+import static de.siegmar.logbackgelf.GelfEncoderTest.basicValidation;
+import static de.siegmar.logbackgelf.GelfEncoderTest.simpleLoggingEvent;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import static de.siegmar.logbackgelf.GelfEncoderTest.basicValidation;
-import static de.siegmar.logbackgelf.GelfEncoderTest.simpleLoggingEvent;
-import static org.junit.Assert.assertEquals;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.LoggingEvent;
+
+import de.siegmar.logbackgelf.custom.CustomGelfEncoder;
 
 public class CustomGelfEncoderTest {
 
