@@ -28,7 +28,7 @@ import java.util.Objects;
 /**
  * Class for GELF 1.1 format representation.
  */
-class GelfMessage {
+public class GelfMessage {
 
     private static final String VERSION = "1.1";
 
