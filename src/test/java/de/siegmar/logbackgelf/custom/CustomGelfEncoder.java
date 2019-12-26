@@ -21,12 +21,16 @@ package de.siegmar.logbackgelf.custom;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import de.siegmar.logbackgelf.GelfEncoder;
 import de.siegmar.logbackgelf.GelfMessage;
 
 // Put it in different package from GelfEncoder to reveal any visibility issues
 public class CustomGelfEncoder extends GelfEncoder {
+
+    private static final int INT_255 = 0xff;
+    private static final char CHAR_ZERO = '0';
 
     @Override
     protected String gelfMessageToJson(final GelfMessage gelfMessage) {
@@ -44,14 +48,15 @@ public class CustomGelfEncoder extends GelfEncoder {
             final StringBuilder hexString = new StringBuilder();
 
             for (byte b : hash) {
-                final String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
+                final String hex = Integer.toHexString(INT_255 & b);
+                if (hex.length() == 1) {
+                    hexString.append(CHAR_ZERO);
+                }
                 hexString.append(hex);
             }
 
             return hexString.toString();
-        }
-        catch (Exception e) {
+        } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }
     }
