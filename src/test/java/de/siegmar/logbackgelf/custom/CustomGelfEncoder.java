@@ -20,8 +20,7 @@
 package de.siegmar.logbackgelf.custom;
 
 import java.nio.charset.StandardCharsets;
-
-import com.google.common.hash.Hashing;
+import java.security.MessageDigest;
 
 import de.siegmar.logbackgelf.GelfEncoder;
 import de.siegmar.logbackgelf.GelfMessage;
@@ -30,11 +29,31 @@ import de.siegmar.logbackgelf.GelfMessage;
 public class CustomGelfEncoder extends GelfEncoder {
 
     @Override
-    protected String gelfMessageToJson(GelfMessage gelfMessage) {
+    protected String gelfMessageToJson(final GelfMessage gelfMessage) {
         final String json = super.gelfMessageToJson(gelfMessage);
-        final String sha256 = Hashing.sha256().hashString(json, StandardCharsets.UTF_8).toString();
+        final String sha256 = sha256(json);
         gelfMessage.getAdditionalFields().put("sha256", sha256);
         return super.gelfMessageToJson(gelfMessage);
+    }
+
+    // Based on https://stackoverflow.com/a/11009612/74694
+    private static String sha256(final String base) {
+        try {
+            final MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            final byte[] hash = digest.digest(base.getBytes(StandardCharsets.UTF_8));
+            final StringBuilder hexString = new StringBuilder();
+
+            for (byte b : hash) {
+                final String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+        }
+        catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
 }
