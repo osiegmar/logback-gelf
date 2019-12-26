@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 public class CustomGelfEncoderTest {
 
   private static final String LOGGER_NAME = GelfEncoderTest.class.getCanonicalName();
+  private static final String THREAD_NAME = "thread name";
   private static final long TIMESTAMP = 1577359700000L;
 
   private final CustomGelfEncoder encoder = new CustomGelfEncoder();
@@ -39,6 +40,7 @@ public class CustomGelfEncoderTest {
 
     final LoggingEvent event = simpleLoggingEvent(logger, null);
     event.setTimeStamp(TIMESTAMP);
+    event.setThreadName(THREAD_NAME);
     final String logMsg = encodeToStr(event);
 
     final ObjectMapper om = new ObjectMapper();
@@ -46,8 +48,8 @@ public class CustomGelfEncoderTest {
     basicValidation(jsonNode);
 
     assertEquals("message 1\n", jsonNode.get("full_message").textValue());
-    assertEquals(
-        "42d545b39843028e578fd8c2b2470b905586c028c6eb0ed218ec1dc6ea869ed3",
+    assertEquals("Log line: " + logMsg,
+        "970db79831490f2e5e02b80cf484308bf77e7353f727b6fd42417b82be254419",
         jsonNode.get("_sha256").textValue()
     );
   }
