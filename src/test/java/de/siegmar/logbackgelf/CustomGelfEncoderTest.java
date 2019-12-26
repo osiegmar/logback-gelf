@@ -20,7 +20,6 @@
 package de.siegmar.logbackgelf;
 
 import static org.junit.Assert.assertEquals;
-
 import static de.siegmar.logbackgelf.GelfEncoderTest.basicValidation;
 import static de.siegmar.logbackgelf.GelfEncoderTest.simpleLoggingEvent;
 
@@ -37,7 +36,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.LoggingEvent;
-
 import de.siegmar.logbackgelf.custom.CustomGelfEncoder;
 
 public class CustomGelfEncoderTest {
