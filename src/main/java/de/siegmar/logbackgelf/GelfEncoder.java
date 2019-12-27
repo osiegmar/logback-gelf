@@ -343,6 +343,9 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     /**
      * Allow subclasses to customize the message before it is converted to String.
+     *
+     * @param gelfMessage the GELF message to serialize.
+     * @return the serialized GELF message (in JSON format).
      */
     protected String gelfMessageToJson(final GelfMessage gelfMessage) {
         return gelfMessage.toJSON();
