@@ -51,12 +51,15 @@ dependencies {
 
 ## Important notes
 
+Some changes may require to update your configuration.
+
 ### Breaking changes in version 3
-Version 3.0.0 of this library upgraded from Java 7 to Java 8.
+* Version 3.0.0 of this library upgraded from Java 7 to Java 8.
+* The server's certificate hostname now gets verified by `GelfTcpTlsAppender`.
+* The `trustAllCertificates` property of `GelfTcpTlsAppender` was renamed to `insecure`.
 
 ### Breaking changes in version 2
-Version 2.0.0 of this library introduced a configuration change. If you were already using this library, update
-your configuration to keep it working!
+* Version 2.0.0 of this library introduced a configuration change.
 
 **Old** format:
 ```xml
@@ -173,7 +176,7 @@ Find more advanced examples in the [examples directory](examples).
 `de.siegmar.logbackgelf.GelfTcpTlsAppender`
 
 * Everything from GelfTcpAppender
-* **trustAllCertificates**: If true, trust all TLS certificates (even self signed certificates).
+* **insecure**: If true, skip the TLS certificate validation.
   You should not use this in production! Default: false.
 
 ### Encoder

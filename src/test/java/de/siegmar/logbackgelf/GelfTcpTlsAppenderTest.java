@@ -103,7 +103,7 @@ public class GelfTcpTlsAppenderTest {
         gelfAppender.setEncoder(encoder);
         gelfAppender.setGraylogHost("localhost");
         gelfAppender.setGraylogPort(server.getPort());
-        gelfAppender.setTrustAllCertificates(true);
+        gelfAppender.setInsecure(true);
         gelfAppender.start();
         return gelfAppender;
     }

@@ -19,63 +19,79 @@
 
 package de.siegmar.logbackgelf;
 
+import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 public class GelfTcpTlsAppender extends GelfTcpAppender {
 
     /**
-     * If {@code true}, trust all TLS certificates (even self signed certificates).
+     * If {@code true}, skip the TLS certificate validation.
      */
-    private boolean trustAllCertificates;
+    private boolean insecure;
 
-    public boolean isTrustAllCertificates() {
-        return trustAllCertificates;
+    public boolean isInsecure() {
+        return insecure;
     }
 
-    public void setTrustAllCertificates(final boolean trustAllCertificates) {
-        this.trustAllCertificates = trustAllCertificates;
+    public void setInsecure(final boolean insecure) {
+        this.insecure = insecure;
     }
 
     @Override
     protected SSLSocketFactory initSocketFactory() {
-        if (trustAllCertificates) {
-            addWarn("Enable trustAllCertificates - don't use this in production!");
-            try {
-                final SSLContext context = SSLContext.getInstance("TLS");
-                context.init(null, buildNoopTrustManagers(), new SecureRandom());
-                return context.getSocketFactory();
-            } catch (final NoSuchAlgorithmException | KeyManagementException e) {
-                throw new IllegalStateException(e);
+        return configureSocket();
+    }
+
+    private SSLSocketFactory configureSocket() {
+        final TrustManager trustManager;
+
+        try {
+            if (insecure) {
+                addWarn("Enabled insecure mode (skip TLS certificate validation)"
+                    + " - don't use this in production!");
+                trustManager = new NoopX509TrustManager();
+            } else {
+                trustManager = new CustomX509TrustManager(defaultTrustManager(), getGraylogHost());
+            }
+
+            return configureSslFactory(trustManager);
+        } catch (final GeneralSecurityException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static X509TrustManager defaultTrustManager()
+        throws NoSuchAlgorithmException, KeyStoreException {
+
+        final TrustManagerFactory trustManagerFactory =
+            TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init((KeyStore) null);
+
+        for (final TrustManager trustManager : trustManagerFactory.getTrustManagers()) {
+            if (trustManager instanceof X509TrustManager) {
+                return (X509TrustManager) trustManager;
             }
         }
 
-        return (SSLSocketFactory) SSLSocketFactory.getDefault();
+        return null;
     }
 
-    private static TrustManager[] buildNoopTrustManagers() {
-        return new TrustManager[] {
-            new X509TrustManager() {
-                public X509Certificate[] getAcceptedIssuers() {
-                    return null;
-                }
+    private SSLSocketFactory configureSslFactory(final TrustManager trustManager)
+        throws NoSuchAlgorithmException, KeyManagementException {
 
-                public void checkClientTrusted(final X509Certificate[] chain,
-                                               final String authType) {
-                }
-
-                public void checkServerTrusted(final X509Certificate[] chain,
-                                               final String authType) {
-                }
-            },
-        };
+        final SSLContext context = SSLContext.getInstance("TLS");
+        context.init(null, new TrustManager[]{trustManager}, new SecureRandom());
+        return context.getSocketFactory();
     }
 
 }

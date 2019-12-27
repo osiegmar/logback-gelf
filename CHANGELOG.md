@@ -8,9 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Allow encoder subclasses to customize the message before it is converted to String
   [\#40](https://github.com/osiegmar/logback-gelf/issues/40)
+- Server certificate hostname verification in `GelfTcpTlsAppender`.
 
 ### Changed
 - Upgrade to Java 8 (Premier Support of Java 7 ended in July 2019)
+- Rename `trustAllCertificates` property of `GelfTcpTlsAppender` to `insecure`.
 
 ## [2.2.0] - 2019-12-14
 ### Added

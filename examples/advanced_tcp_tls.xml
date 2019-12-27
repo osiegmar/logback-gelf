@@ -9,7 +9,7 @@
         <retryDelay>3000</retryDelay>
         <poolSize>2</poolSize>
         <poolMaxWaitTime>5000</poolMaxWaitTime>
-        <trustAllCertificates>false</trustAllCertificates>
+        <insecure>false</insecure>
         <encoder class="de.siegmar.logbackgelf.GelfEncoder">
             <originHost>localhost</originHost>
             <includeRawMessage>false</includeRawMessage>
