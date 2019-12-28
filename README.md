@@ -1,5 +1,4 @@
-Logback GELF
-============
+# Logback GELF
 
 [![Build Status](https://api.travis-ci.org/osiegmar/logback-gelf.svg)](https://travis-ci.org/osiegmar/logback-gelf)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.siegmar/logback-gelf/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.siegmar/logback-gelf)
@@ -8,8 +7,7 @@ Logback appender for sending GELF (Graylog Extended Log Format) messages with ze
 dependencies.
 
 
-Latest release
---------------
+## Latest release
 
 The most recent release is 2.2.0, released December 14, 2019.
 
@@ -32,8 +30,7 @@ dependencies {
 ```
 
 
-Features
---------
+## Features
 
 - UDP (with chunking)
 - TCP (with or without TLS encryption)
@@ -46,16 +43,18 @@ Features
 - No runtime dependencies beside Logback
 
 
-Requirements
-------------
+## Requirements
 
 - Java 8
 - Logback 1.2.3
 
 
-Important notes
----------------
+## Important notes
 
+### Breaking changes in version 3
+Version 3.0.0 of this library upgraded from Java 7 to Java 8.
+
+### Breaking changes in version 2
 Version 2.0.0 of this library introduced a configuration change. If you were already using this library, update
 your configuration to keep it working!
 
@@ -72,8 +71,7 @@ your configuration to keep it working!
 This change was introduced, as the API of the Encoder interface changed in Logback 1.2.0.
 
 
-Example
--------
+## Examples
 
 Simple UDP configuration:
 
@@ -102,8 +100,13 @@ Simple TCP configuration:
         <graylogPort>12201</graylogPort>
     </appender>
 
-    <root level="debug">
+    <!-- Use AsyncAppender to prevent slowdowns -->
+    <appender name="ASYNC GELF" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="GELF" />
+    </appender>
+
+    <root level="debug">
+        <appender-ref ref="ASYNC GELF" />
     </root>
 
 </configuration>
@@ -119,93 +122,7 @@ Simple TCP with TLS configuration:
         <graylogPort>12201</graylogPort>
     </appender>
 
-    <root level="debug">
-        <appender-ref ref="GELF" />
-    </root>
-
-</configuration>
-```
-
-**Please note, that it is recommended to use Logback's AsyncAppender in conjunction with
-GelfTcpAppender or GelfTcpTlsAppender to send logs asynchronously.
-See the advanced configuration example below.**
-
-
-Advanced UDP configuration:
-
-```xml
-<configuration>
-
-    <appender name="GELF" class="de.siegmar.logbackgelf.GelfUdpAppender">
-        <graylogHost>localhost</graylogHost>
-        <graylogPort>12201</graylogPort>
-        <maxChunkSize>508</maxChunkSize>
-        <useCompression>true</useCompression>
-        <encoder class="de.siegmar.logbackgelf.GelfEncoder">
-            <originHost>localhost</originHost>
-            <includeRawMessage>false</includeRawMessage>
-            <includeMarker>true</includeMarker>
-            <includeMdcData>true</includeMdcData>
-            <includeCallerData>false</includeCallerData>
-            <includeRootCauseData>false</includeRootCauseData>
-            <includeLevelName>false</includeLevelName>
-            <shortPatternLayout class="ch.qos.logback.classic.PatternLayout">
-                <pattern>%m%nopex</pattern>
-            </shortPatternLayout>
-            <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
-                <pattern>%m%n</pattern>
-            </fullPatternLayout>
-            <numbersAsString>false</numbersAsString>
-            <staticField>app_name:backend</staticField>
-            <staticField>os_arch:${os.arch}</staticField>
-            <staticField>os_name:${os.name}</staticField>
-            <staticField>os_version:${os.version}</staticField>
-        </encoder>
-    </appender>
-
-    <root level="debug">
-        <appender-ref ref="GELF" />
-    </root>
-
-</configuration>
-```
-
-Advanced TCP configuration:
-
-```xml
-<configuration>
-
-    <appender name="GELF" class="de.siegmar.logbackgelf.GelfTcpAppender">
-        <graylogHost>localhost</graylogHost>
-        <graylogPort>12201</graylogPort>
-        <connectTimeout>15000</connectTimeout>
-        <reconnectInterval>300</reconnectInterval>
-        <maxRetries>2</maxRetries>
-        <retryDelay>3000</retryDelay>
-        <poolSize>2</poolSize>
-        <poolMaxWaitTime>5000</poolMaxWaitTime>
-        <encoder class="de.siegmar.logbackgelf.GelfEncoder">
-            <originHost>localhost</originHost>
-            <includeRawMessage>false</includeRawMessage>
-            <includeMarker>true</includeMarker>
-            <includeMdcData>true</includeMdcData>
-            <includeCallerData>false</includeCallerData>
-            <includeRootCauseData>false</includeRootCauseData>
-            <includeLevelName>false</includeLevelName>
-            <shortPatternLayout class="ch.qos.logback.classic.PatternLayout">
-                <pattern>%m%nopex</pattern>
-            </shortPatternLayout>
-            <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
-                <pattern>%m%n</pattern>
-            </fullPatternLayout>
-            <numbersAsString>false</numbersAsString>
-            <staticField>app_name:backend</staticField>
-            <staticField>os_arch:${os.arch}</staticField>
-            <staticField>os_name:${os.name}</staticField>
-            <staticField>os_version:${os.version}</staticField>
-        </encoder>
-    </appender>
-
+    <!-- Use AsyncAppender to prevent slowdowns -->
     <appender name="ASYNC GELF" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="GELF" />
     </appender>
@@ -217,58 +134,11 @@ Advanced TCP configuration:
 </configuration>
 ```
 
-Advanced TCP with TLS configuration:
+Find more advanced examples in the [examples directory](examples).
 
-```xml
-<configuration>
+## Configuration
 
-    <appender name="GELF" class="de.siegmar.logbackgelf.GelfTcpTlsAppender">
-        <graylogHost>localhost</graylogHost>
-        <graylogPort>12201</graylogPort>
-        <connectTimeout>15000</connectTimeout>
-        <reconnectInterval>300</reconnectInterval>
-        <maxRetries>2</maxRetries>
-        <retryDelay>3000</retryDelay>
-        <poolSize>2</poolSize>
-        <poolMaxWaitTime>5000</poolMaxWaitTime>
-        <trustAllCertificates>false</trustAllCertificates>
-        <encoder class="de.siegmar.logbackgelf.GelfEncoder">
-            <originHost>localhost</originHost>
-            <includeRawMessage>false</includeRawMessage>
-            <includeMarker>true</includeMarker>
-            <includeMdcData>true</includeMdcData>
-            <includeCallerData>false</includeCallerData>
-            <includeRootCauseData>false</includeRootCauseData>
-            <includeLevelName>false</includeLevelName>
-            <shortPatternLayout class="ch.qos.logback.classic.PatternLayout">
-                <pattern>%m%nopex</pattern>
-            </shortPatternLayout>
-            <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
-                <pattern>%m%n</pattern>
-            </fullPatternLayout>
-            <numbersAsString>false</numbersAsString>
-            <staticField>app_name:backend</staticField>
-            <staticField>os_arch:${os.arch}</staticField>
-            <staticField>os_name:${os.name}</staticField>
-            <staticField>os_version:${os.version}</staticField>
-        </encoder>
-    </appender>
-
-    <appender name="ASYNC GELF" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="GELF" />
-    </appender>
-
-    <root level="debug">
-        <appender-ref ref="ASYNC GELF" />
-    </root>
-
-</configuration>
-```
-
-Configuration
--------------
-
-## Appender
+### Appender
 
 `de.siegmar.logbackgelf.GelfUdpAppender`
 
@@ -306,7 +176,7 @@ Configuration
 * **trustAllCertificates**: If true, trust all TLS certificates (even self signed certificates).
   You should not use this in production! Default: false.
 
-## Encoder
+### Encoder
 
 `de.siegmar.logbackgelf.GelfEncoder`
 
@@ -336,8 +206,7 @@ Configuration
 * **staticFields**: Additional, static fields to send to graylog. Defaults: none.
 
 
-Contribution
-------------
+## Contribution
 
 - Fork
 - Code
@@ -346,8 +215,7 @@ Contribution
 - Send me a pull request
 
 
-Copyright
----------
+## Copyright
 
 Copyright (C) 2016-2019 Oliver Siegmar
 

@@ -1,0 +1,61 @@
+<!--
+  ~ Logback GELF - zero dependencies Logback GELF appender library.
+  ~ Copyright (C) 2019 Oliver Siegmar
+  ~
+  ~ This library is free software; you can redistribute it and/or
+  ~ modify it under the terms of the GNU Lesser General Public
+  ~ License as published by the Free Software Foundation; either
+  ~ version 2.1 of the License, or (at your option) any later version.
+  ~
+  ~ This library is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with this library; if not, write to the Free Software
+  ~ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+  -->
+
+<configuration>
+
+    <appender name="GELF" class="de.siegmar.logbackgelf.GelfTcpAppender">
+        <graylogHost>localhost</graylogHost>
+        <graylogPort>12201</graylogPort>
+        <connectTimeout>15000</connectTimeout>
+        <reconnectInterval>300</reconnectInterval>
+        <maxRetries>2</maxRetries>
+        <retryDelay>3000</retryDelay>
+        <poolSize>2</poolSize>
+        <poolMaxWaitTime>5000</poolMaxWaitTime>
+        <encoder class="de.siegmar.logbackgelf.GelfEncoder">
+            <originHost>localhost</originHost>
+            <includeRawMessage>false</includeRawMessage>
+            <includeMarker>true</includeMarker>
+            <includeMdcData>true</includeMdcData>
+            <includeCallerData>false</includeCallerData>
+            <includeRootCauseData>false</includeRootCauseData>
+            <includeLevelName>false</includeLevelName>
+            <shortPatternLayout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%m%nopex</pattern>
+            </shortPatternLayout>
+            <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%m%n</pattern>
+            </fullPatternLayout>
+            <numbersAsString>false</numbersAsString>
+            <staticField>app_name:backend</staticField>
+            <staticField>os_arch:${os.arch}</staticField>
+            <staticField>os_name:${os.name}</staticField>
+            <staticField>os_version:${os.version}</staticField>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNC GELF" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="GELF" />
+    </appender>
+
+    <root level="debug">
+        <appender-ref ref="ASYNC GELF" />
+    </root>
+
+</configuration>
