@@ -18,6 +18,7 @@ To add a dependency using Maven, use the following:
     <groupId>de.siegmar</groupId>
     <artifactId>logback-gelf</artifactId>
     <version>2.2.0</version>
+    <scope>runtime</scope>
 </dependency>
 ```
 
@@ -25,7 +26,7 @@ To add a dependency using Gradle:
 
 ```gradle
 dependencies {
-    compile 'de.siegmar:logback-gelf:2.2.0'
+    runtimeOnly 'de.siegmar:logback-gelf:2.2.0'
 }
 ```
 
@@ -139,6 +140,7 @@ Simple TCP with TLS configuration:
 
 Find more advanced examples in the [examples directory](examples).
 
+
 ## Configuration
 
 ### Appender
@@ -179,6 +181,7 @@ Find more advanced examples in the [examples directory](examples).
 * **insecure**: If true, skip the TLS certificate validation.
   You should not use this in production! Default: false.
 
+
 ### Encoder
 
 `de.siegmar.logbackgelf.GelfEncoder`
@@ -207,6 +210,17 @@ Find more advanced examples in the [examples directory](examples).
 * **fullPatternLayout**: Full message format (Stacktrace). Default: `"%m%n"`.
 * **numbersAsString**: Log numbers as String. Default: true (will be changed in next major release).
 * **staticFields**: Additional, static fields to send to graylog. Defaults: none.
+
+
+## Troubleshooting
+
+If you have any problems, enable the debug mode and check the logs.
+
+```xml
+<configuration debug="true">
+    ...
+</configuration>
+```
 
 
 ## Contribution
