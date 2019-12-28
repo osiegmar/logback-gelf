@@ -19,18 +19,20 @@
 
 package de.siegmar.logbackgelf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static java.time.Duration.ofMillis;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
@@ -51,7 +53,7 @@ public class GelfEncoderTest {
 
     private final GelfEncoder encoder = new GelfEncoder();
 
-    @Before
+    @BeforeEach
     public void before() {
         encoder.setContext(new LoggerContext());
         encoder.setOriginHost("localhost");
@@ -88,7 +90,7 @@ public class GelfEncoderTest {
         assertTrue(logMsg.endsWith(System.lineSeparator()));
     }
 
-    @Test(timeout = 400L)
+    @Test
     public void nestedExceptionShouldNotFail() {
         encoder.setIncludeRootCauseData(true);
         encoder.start();
@@ -96,10 +98,12 @@ public class GelfEncoderTest {
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         final Logger logger = lc.getLogger(LOGGER_NAME);
 
-        final String logMsg = encodeToStr(simpleLoggingEvent(logger,
-            new IOException(new IOException(new IOException()))));
+        assertTimeout(ofMillis(400), () -> {
+            final String logMsg = encodeToStr(simpleLoggingEvent(logger,
+                new IOException(new IOException(new IOException()))));
 
-        assertNotNull(logMsg);
+            assertNotNull(logMsg);
+        });
     }
 
     public static LoggingEvent simpleLoggingEvent(final Logger logger, final Throwable e) {
@@ -155,9 +159,8 @@ public class GelfEncoderTest {
         assertEquals("message 1", msg.readLine());
         assertEquals("java.lang.IllegalArgumentException: Example Exception", msg.readLine());
         final String line = msg.readLine();
-        assertTrue("Unexpected line: " + line, line.matches(
-            "^\tat de.siegmar.logbackgelf.GelfEncoderTest.exception"
-                + "\\(GelfEncoderTest.java:\\d+\\)$"));
+        assertTrue(line.matches("^\tat de.siegmar.logbackgelf.GelfEncoderTest.exception"
+            + "\\(GelfEncoderTest.java:\\d+\\)$"), "Unexpected line: " + line);
     }
 
     @Test
@@ -351,7 +354,7 @@ public class GelfEncoderTest {
         final JsonNode jsonNode = om.readTree(logMsg);
         basicValidation(jsonNode);
         final JsonNode httpStatus = jsonNode.get("_http_status");
-        assertEquals(200, httpStatus.asDouble(), 0);
+        assertEquals(200, httpStatus.asDouble());
         assertTrue(httpStatus.isNumber());
     }
 

@@ -3,43 +3,32 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'checkstyle'
-    id 'com.github.spotbugs' version '1.6.9'
+    id 'com.github.spotbugs' version '3.0.0'
 }
 
 group = "de.siegmar"
-archivesBaseName = "logback-gelf"
-version = "2.2.0"
+version = "3.0.0"
 
-sourceCompatibility = 1.7
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    withJavadocJar()
+    withSourcesJar()
+}
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
     api 'ch.qos.logback:logback-classic:1.2.3'
-    testImplementation 'junit:junit:4.12'
-    testImplementation 'com.google.guava:guava:27.0.1-jre'
-    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+    testImplementation 'com.google.guava:guava:28.1-jre'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.10.1'
 }
 
-task sourcesJar(type: Jar) {
-    from sourceSets.main.allJava
-    archiveClassifier = 'sources'
-}
-
-task javadocJar(type: Jar) {
-    from javadoc
-    archiveClassifier = 'javadoc'
-}
-
-artifacts {
-    archives javadocJar, sourcesJar
-}
-
-checkstyle {
-    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
-    configProperties = [samedir: "${rootDir}/config/checkstyle", project_loc: "${rootDir}"]
+test {
+    useJUnitPlatform()
 }
 
 tasks.withType(com.github.spotbugs.SpotBugsTask) {
@@ -54,10 +43,7 @@ if (hasProperty('ossrhUsername')) {
         publications {
             mavenJava(MavenPublication) {
                 artifactId = "logback-gelf"
-
                 from components.java
-                artifact sourcesJar
-                artifact javadocJar
 
                 pom {
                     name = 'Logback GELF'

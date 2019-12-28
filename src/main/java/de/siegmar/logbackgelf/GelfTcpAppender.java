@@ -19,13 +19,10 @@
 
 package de.siegmar.logbackgelf;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 import javax.net.SocketFactory;
 
-import de.siegmar.logbackgelf.pool.PooledObjectConsumer;
-import de.siegmar.logbackgelf.pool.PooledObjectFactory;
 import de.siegmar.logbackgelf.pool.SimpleObjectPool;
 
 public class GelfTcpAppender extends AbstractGelfAppender {
@@ -124,13 +121,9 @@ public class GelfTcpAppender extends AbstractGelfAppender {
     protected void startAppender() {
         final AddressResolver addressResolver = new AddressResolver(getGraylogHost());
 
-        connectionPool = new SimpleObjectPool<>(new PooledObjectFactory<TcpConnection>() {
-            @Override
-            public TcpConnection newInstance() {
-                return new TcpConnection(initSocketFactory(),
-                    addressResolver, getGraylogPort(), connectTimeout);
-            }
-        }, poolSize, poolMaxWaitTime, reconnectInterval);
+        connectionPool = new SimpleObjectPool<>(() -> new TcpConnection(initSocketFactory(),
+            addressResolver, getGraylogPort(), connectTimeout),
+            poolSize, poolMaxWaitTime, reconnectInterval);
     }
 
     protected SocketFactory initSocketFactory() {
@@ -170,12 +163,7 @@ public class GelfTcpAppender extends AbstractGelfAppender {
     @SuppressWarnings("checkstyle:illegalcatch")
     private boolean sendMessage(final byte[] messageToSend) {
         try {
-            connectionPool.execute(new PooledObjectConsumer<TcpConnection>() {
-                @Override
-                public void accept(final TcpConnection tcpConnection) throws IOException {
-                    tcpConnection.write(messageToSend);
-                }
-            });
+            connectionPool.execute(tcpConnection -> tcpConnection.write(messageToSend));
         } catch (final Exception e) {
             addError(String.format("Error sending message via tcp://%s:%s",
                 getGraylogHost(), getGraylogPort()), e);

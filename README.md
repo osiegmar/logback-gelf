@@ -49,7 +49,7 @@ Features
 Requirements
 ------------
 
-- Java 7
+- Java 8
 - Logback 1.2.3
 
 

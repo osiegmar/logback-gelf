@@ -19,15 +19,15 @@
 
 package de.siegmar.logbackgelf;
 
-import static org.junit.Assert.assertEquals;
 import static de.siegmar.logbackgelf.GelfEncoderTest.basicValidation;
 import static de.siegmar.logbackgelf.GelfEncoderTest.simpleLoggingEvent;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -46,7 +46,7 @@ public class CustomGelfEncoderTest {
 
     private final CustomGelfEncoder encoder = new CustomGelfEncoder();
 
-    @Before
+    @BeforeEach
     public void before() {
         encoder.setContext(new LoggerContext());
         encoder.setOriginHost("localhost");
@@ -69,9 +69,10 @@ public class CustomGelfEncoderTest {
         basicValidation(jsonNode);
 
         assertEquals("message 1\n", jsonNode.get("full_message").textValue());
-        assertEquals("Log line: " + logMsg,
+        assertEquals(
             "970db79831490f2e5e02b80cf484308bf77e7353f727b6fd42417b82be254419",
-            jsonNode.get("_sha256").textValue()
+            jsonNode.get("_sha256").textValue(),
+            "Log line: " + logMsg
         );
     }
 

@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
-<!DOCTYPE suppressions PUBLIC "-//Puppy Crawl//DTD Suppressions 1.0//EN" "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+<!DOCTYPE suppressions PUBLIC "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN" "https://checkstyle.org/dtds/suppressions_1_2.dtd">
 <suppressions>
-
-    <!-- sacrifice some coding styles for the sake of performance -->
 
     <suppress files=".*Test.java" checks="MagicNumber"/>
     <suppress files=".*Test.java" checks="ImportControl"/>
     <suppress files="CustomGelfEncoder.java" checks="ImportControl"/>
+
+    <suppress files="Example.java" checks=".*"/>
+    <suppress files="Manual.java" checks=".*"/>
 
 </suppressions>

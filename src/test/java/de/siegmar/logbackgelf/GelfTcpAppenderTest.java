@@ -19,9 +19,9 @@
 
 package de.siegmar.logbackgelf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -30,8 +30,8 @@ import java.net.Socket;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -47,7 +47,7 @@ public class GelfTcpAppenderTest {
 
     private TcpServerRunnable server;
 
-    @Before
+    @BeforeEach
     public void before() throws IOException, InterruptedException {
         server = new TcpServerRunnable();
         final Thread serverThread = new Thread(server);

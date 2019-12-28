@@ -158,12 +158,7 @@ class GelfUdpChunker {
     }
 
     Iterable<? extends ByteBuffer> chunks(final byte[] message) {
-        return new Iterable<ByteBuffer>() {
-            @Override
-            public Iterator<ByteBuffer> iterator() {
-                return new ChunkIterator(message);
-            }
-        };
+        return (Iterable<ByteBuffer>) () -> new ChunkIterator(message);
     }
 
     private final class ChunkIterator implements Iterator<ByteBuffer> {
