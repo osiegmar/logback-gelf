@@ -7,7 +7,4 @@
     <suppress files="CustomGelfEncoder.java" checks="ImportControl"/>
     <suppress files="X509Util.java" checks="ImportControl"/>
 
-    <suppress files="Example.java" checks=".*"/>
-    <suppress files="Manual.java" checks=".*"/>
-
 </suppressions>
