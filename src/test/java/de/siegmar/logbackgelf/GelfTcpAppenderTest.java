@@ -25,10 +25,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,17 +50,18 @@ public class GelfTcpAppenderTest {
 
     private static final String LOGGER_NAME = GelfTcpAppenderTest.class.getCanonicalName();
 
-    private TcpServerRunnable server;
+    private int port;
+    private Future<byte[]> future;
 
     @BeforeEach
-    public void before() throws IOException, InterruptedException {
-        server = new TcpServerRunnable();
-        final Thread serverThread = new Thread(server);
-        serverThread.start();
+    public void before() throws IOException {
+        final TcpServer server = new TcpServer();
+        port = server.getPort();
+        future = Executors.newSingleThreadExecutor().submit(server);
     }
 
     @Test
-    public void simple() throws IOException {
+    public void simple() {
         final Logger logger = setupLogger();
 
         logger.error("Test message");
@@ -93,13 +99,17 @@ public class GelfTcpAppenderTest {
         gelfAppender.setName("GELF");
         gelfAppender.setEncoder(gelfEncoder);
         gelfAppender.setGraylogHost("localhost");
-        gelfAppender.setGraylogPort(server.getPort());
+        gelfAppender.setGraylogPort(port);
         gelfAppender.start();
         return gelfAppender;
     }
 
-    private JsonNode receiveMessage() throws IOException {
-        return new ObjectMapper().readTree(server.getReceivedData());
+    private JsonNode receiveMessage() {
+        try {
+            return new ObjectMapper().readTree(receive());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private void stopLogger(final Logger logger) {
@@ -107,49 +117,39 @@ public class GelfTcpAppenderTest {
         gelfAppender.stop();
     }
 
-    private static final class TcpServerRunnable implements Runnable {
+    private byte[] receive() {
+        try {
+            return future.get(5, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static final class TcpServer implements Callable<byte[]> {
 
         private final ServerSocket server;
-        private final Semaphore semaphore = new Semaphore(1);
-        private byte[] receivedData;
 
-        TcpServerRunnable() throws IOException, InterruptedException {
+        TcpServer() throws IOException {
             server = new ServerSocket(0);
-            semaphore.acquire();
         }
 
         int getPort() {
             return server.getLocalPort();
         }
 
-        byte[] getReceivedData() {
-            try {
-                if (!semaphore.tryAcquire(10, TimeUnit.SECONDS)) {
-                    throw new IllegalStateException("Couldn't acquire semaphore!");
-                }
-            } catch (final InterruptedException e) {
-                throw new IllegalStateException(e);
-            }
-            return receivedData;
-        }
-
         @Override
-        public void run() {
+        public byte[] call() throws Exception {
+            final byte[] ret;
+
             try (Socket socket = server.accept()) {
                 try (DataInputStream in = new DataInputStream(socket.getInputStream())) {
-                    receivedData = ByteStreams.toByteArray(in);
+                    ret = ByteStreams.toByteArray(in);
                 }
-            } catch (final IOException e) {
-                throw new IllegalStateException(e);
-            }
-
-            try {
+            } finally {
                 server.close();
-            } catch (final IOException e) {
-                throw new IllegalStateException(e);
             }
 
-            semaphore.release();
+            return ret;
         }
 
     }

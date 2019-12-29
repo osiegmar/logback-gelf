@@ -25,11 +25,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.Arrays;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.zip.InflaterOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -46,17 +51,18 @@ public class GelfUdpAppenderTest {
 
     private static final String LOGGER_NAME = GelfUdpAppenderTest.class.getCanonicalName();
 
-    private UdpServerRunnable server;
+    private int port;
+    private Future<byte[]> future;
 
     @BeforeEach
-    public void before() throws IOException, InterruptedException {
-        server = new UdpServerRunnable();
-        final Thread serverThread = new Thread(server);
-        serverThread.start();
+    public void before() throws IOException {
+        final UdpServer server = new UdpServer();
+        port = server.getPort();
+        future = Executors.newSingleThreadExecutor().submit(server);
     }
 
     @Test
-    public void simple() throws IOException {
+    public void simple() {
         final Logger logger = setupLogger(false);
 
         logger.error("Test message");
@@ -74,7 +80,7 @@ public class GelfUdpAppenderTest {
     }
 
     @Test
-    public void compression() throws IOException {
+    public void compression() {
         final Logger logger = setupLogger(true);
 
         logger.error("Test message");
@@ -113,24 +119,32 @@ public class GelfUdpAppenderTest {
         gelfAppender.setName("GELF");
         gelfAppender.setEncoder(gelfEncoder);
         gelfAppender.setGraylogHost("localhost");
-        gelfAppender.setGraylogPort(server.getPort());
+        gelfAppender.setGraylogPort(port);
         gelfAppender.setUseCompression(useCompression);
         gelfAppender.start();
         return gelfAppender;
     }
 
-    private JsonNode receiveMessage() throws IOException {
-        return new ObjectMapper().readTree(server.getReceivedData());
+    private JsonNode receiveMessage() {
+        try {
+            return new ObjectMapper().readTree(receive());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
-    private JsonNode receiveCompressedMessage() throws IOException {
+    private JsonNode receiveCompressedMessage() {
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         final InflaterOutputStream inflaterOutputStream = new InflaterOutputStream(bos);
 
-        inflaterOutputStream.write(server.getReceivedData());
-        inflaterOutputStream.close();
+        try {
+            inflaterOutputStream.write(receive());
+            inflaterOutputStream.close();
 
-        return new ObjectMapper().readTree(bos.toByteArray());
+            return new ObjectMapper().readTree(bos.toByteArray());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private void stopLogger(final Logger logger) {
@@ -138,47 +152,38 @@ public class GelfUdpAppenderTest {
         gelfAppender.stop();
     }
 
-    private static final class UdpServerRunnable implements Runnable {
+    private byte[] receive() {
+        try {
+            return future.get(5, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static final class UdpServer implements Callable<byte[]> {
 
         private final DatagramSocket server;
-        private final Semaphore semaphore = new Semaphore(1);
-        private byte[] receivedData;
 
-        UdpServerRunnable() throws IOException, InterruptedException {
+        UdpServer() throws IOException {
             server = new DatagramSocket(0);
-            semaphore.acquire();
         }
 
         int getPort() {
             return server.getLocalPort();
         }
 
-        byte[] getReceivedData() {
-            try {
-                if (!semaphore.tryAcquire(10, TimeUnit.SECONDS)) {
-                    throw new IllegalStateException("Couldn't acquire semaphore!");
-                }
-            } catch (final InterruptedException e) {
-                throw new IllegalStateException(e);
-            }
-            return receivedData;
-        }
-
         @Override
-        public void run() {
+        public byte[] call() throws Exception {
             final byte[] receiveData = new byte[1024];
             final DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
             try {
                 server.receive(packet);
-            } catch (final IOException e) {
-                throw new IllegalStateException(e);
             } finally {
                 server.close();
             }
-            receivedData = Arrays.copyOf(packet.getData(), packet.getLength());
-            semaphore.release();
-        }
 
+            return Arrays.copyOf(packet.getData(), packet.getLength());
+        }
     }
 
 }
