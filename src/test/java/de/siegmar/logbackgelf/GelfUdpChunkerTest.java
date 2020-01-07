@@ -32,7 +32,7 @@ public class GelfUdpChunkerTest {
 
     @Test
     public void singleChunk() {
-        final GelfUdpChunker chunker = new GelfUdpChunker();
+        final GelfUdpChunker chunker = new GelfUdpChunker(new MessageIdSupplier(), null);
         final Iterator<? extends ByteBuffer> chunks =
             chunker.chunks("hello".getBytes(StandardCharsets.UTF_8)).iterator();
         final String actual = new String(chunks.next().array(), StandardCharsets.UTF_8);
@@ -42,7 +42,7 @@ public class GelfUdpChunkerTest {
 
     @Test
     public void multipleChunks() {
-        final GelfUdpChunker chunker = new GelfUdpChunker(13);
+        final GelfUdpChunker chunker = new GelfUdpChunker(new MessageIdSupplier(), 13);
         final Iterator<? extends ByteBuffer> chunks =
             chunker.chunks("hello".getBytes(StandardCharsets.UTF_8)).iterator();
         expectedChunk(chunks.next().array(), 0, 5, 'h');

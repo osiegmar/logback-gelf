@@ -5,7 +5,9 @@
         <graylogPort>12201</graylogPort>
         <maxChunkSize>508</maxChunkSize>
         <useCompression>true</useCompression>
+        <messageIdSupplier class="de.siegmar.logbackgelf.MessageIdSupplier"/>
         <encoder class="de.siegmar.logbackgelf.GelfEncoder">
+            <hostnameProvider class="de.siegmar.logbackgelf.HostnameProvider"/>
             <originHost>localhost</originHost>
             <includeRawMessage>false</includeRawMessage>
             <includeMarker>true</includeMarker>

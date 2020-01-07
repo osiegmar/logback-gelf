@@ -155,6 +155,8 @@ Find more advanced examples in the [examples directory](examples).
   IP packet fragmentation. This is also the recommended minimum.
   Maximum supported chunk size is 65,467 bytes.
 * **useCompression**: If true, compression of GELF messages is enabled. Default: true.
+* **messageIdSupplier**: The mechanism that supplies unique message ids that are required by the
+  GELF UDP protocol. Default: `de.siegmar.logbackgelf.MessageIdSupplier`.
 
 
 `de.siegmar.logbackgelf.GelfTcpAppender`
@@ -186,7 +188,8 @@ Find more advanced examples in the [examples directory](examples).
 
 `de.siegmar.logbackgelf.GelfEncoder`
 
-* **originHost**: Origin hostname - will be auto detected if not specified.
+* **hostnameProvider**: The provider for the origin hostname. Default: `de.siegmar.logbackgelf.HostnameProvider`.
+* **originHost**: Origin hostname - will be auto detected (via the hostnameProvider) if not specified.
 * **includeRawMessage**: If true, the raw message (with argument placeholders) will be sent, too.
   Default: false.
 * **includeMarker**: If true, logback markers will be sent, too. Default: true.

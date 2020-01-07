@@ -1,6 +1,6 @@
 /*
  * Logback GELF - zero dependencies Logback GELF appender library.
- * Copyright (C) 2019 Oliver Siegmar
+ * Copyright (C) 2020 Oliver Siegmar
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,25 +19,23 @@
 
 package de.siegmar.logbackgelf;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
-final class InetUtil {
+import java.util.Arrays;
 
-    private InetUtil() {
-    }
+import org.junit.jupiter.api.Test;
 
-    /**
-     * Retrieves the local host's name. Preferably the fully qualified one.
-     *
-     * @return the (fully qualified) name of local host or the IP address if not resolvable.
-     * @throws UnknownHostException if the hostname could not be resolved due to a system
-     *                              misconfiguration.
-     */
-    static String getLocalHostName() throws UnknownHostException {
-        final InetAddress localHost = InetAddress.getLocalHost();
-        final String canonicalHostName = localHost.getCanonicalHostName();
-        return canonicalHostName.isEmpty() ? localHost.getHostName() : canonicalHostName;
+public class MessageIdSupplierTest {
+
+    private static final int GELF_UDP_MESSAGE_ID_LENGTH = 8;
+    private MessageIdSupplier messageIdSupplier = new MessageIdSupplier();
+
+    @Test
+    public void test() {
+        final byte[] bytes = messageIdSupplier.get();
+        assertEquals(GELF_UDP_MESSAGE_ID_LENGTH, bytes.length);
+        assertFalse(Arrays.equals(bytes, messageIdSupplier.get()));
     }
 
 }

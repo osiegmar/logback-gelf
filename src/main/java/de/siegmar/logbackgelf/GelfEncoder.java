@@ -36,7 +36,6 @@ import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.util.LevelToSyslogSeverity;
 import ch.qos.logback.core.encoder.EncoderBase;
 
-
 /**
  * This class is responsible for transforming a Logback log event to a GELF message.
  */
@@ -49,7 +48,12 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private static final String DEFAULT_FULL_PATTERN = "%m%n";
 
     /**
-     * Origin hostname - will be auto detected if not specified.
+     * The provider for the origin hostname.
+     */
+    private HostnameProvider hostnameProvider = new HostnameProvider();
+
+    /**
+     * Origin hostname - will be auto detected (via the hostnameProvider) if not specified.
      */
     private String originHost;
 
@@ -127,6 +131,14 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      * Additional, static fields to send to graylog. Defaults: none.
      */
     private Map<String, Object> staticFields = new HashMap<>();
+
+    public HostnameProvider getHostnameProvider() {
+        return hostnameProvider;
+    }
+
+    public void setHostnameProvider(final HostnameProvider hostnameProvider) {
+        this.hostnameProvider = hostnameProvider;
+    }
 
     public String getOriginHost() {
         return originHost;
@@ -288,7 +300,12 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     @Override
     public void start() {
         if (originHost == null || originHost.trim().isEmpty()) {
-            originHost = buildHostname();
+            try {
+                originHost = hostnameProvider.get();
+            } catch (final UnknownHostException e) {
+                addWarn("Could not determine local hostname", e);
+                originHost = "unknown";
+            }
         }
         if (shortPatternLayout == null) {
             shortPatternLayout = buildPattern(DEFAULT_SHORT_PATTERN);
@@ -298,15 +315,6 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
 
         super.start();
-    }
-
-    private String buildHostname() {
-        try {
-            return InetUtil.getLocalHostName();
-        } catch (final UnknownHostException e) {
-            addWarn("Could not determine local hostname", e);
-            return "unknown";
-        }
     }
 
     private PatternLayout buildPattern(final String pattern) {

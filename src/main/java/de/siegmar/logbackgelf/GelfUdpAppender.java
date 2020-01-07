@@ -41,6 +41,8 @@ public class GelfUdpAppender extends AbstractGelfAppender {
      */
     private boolean useCompression = true;
 
+    private MessageIdSupplier messageIdSupplier = new MessageIdSupplier();
+
     private RobustChannel robustChannel;
 
     private GelfUdpChunker chunker;
@@ -63,10 +65,18 @@ public class GelfUdpAppender extends AbstractGelfAppender {
         this.useCompression = useCompression;
     }
 
+    public MessageIdSupplier getMessageIdSupplier() {
+        return messageIdSupplier;
+    }
+
+    public void setMessageIdSupplier(final MessageIdSupplier messageIdSupplier) {
+        this.messageIdSupplier = messageIdSupplier;
+    }
+
     @Override
     protected void startAppender() throws IOException {
         robustChannel = new RobustChannel();
-        chunker = new GelfUdpChunker(maxChunkSize);
+        chunker = new GelfUdpChunker(messageIdSupplier, maxChunkSize);
         addressResolver = new AddressResolver(getGraylogHost());
     }
 

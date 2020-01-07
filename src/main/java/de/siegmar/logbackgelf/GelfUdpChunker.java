@@ -19,15 +19,9 @@
 
 package de.siegmar.logbackgelf;
 
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.UUID;
 
 class GelfUdpChunker {
 
@@ -76,21 +70,14 @@ class GelfUdpChunker {
     private static final int MAX_CHUNK_PAYLOAD_SIZE = MAX_CHUNK_SIZE - HEADER_LENGTH;
 
     /**
-     * hostname used together with a timestamp to generate message IDs.
-     */
-    private final String hostname;
-
-    /**
      * The maximum size used for the payload.
      */
     private final int maxChunkPayloadSize;
 
-    GelfUdpChunker() {
-        this(null);
-    }
+    private final MessageIdSupplier messageIdSupplier;
 
-    GelfUdpChunker(final Integer maxChunkSize) {
-        this.hostname = buildHostname();
+    GelfUdpChunker(final MessageIdSupplier messageIdSupplier, final Integer maxChunkSize) {
+        this.messageIdSupplier = messageIdSupplier;
 
         if (maxChunkSize != null) {
             if (maxChunkSize < MIN_CHUNK_SIZE) {
@@ -104,14 +91,6 @@ class GelfUdpChunker {
 
         final int mcs = maxChunkSize != null ? maxChunkSize : DEFAULT_CHUNK_SIZE;
         this.maxChunkPayloadSize = mcs - HEADER_LENGTH;
-    }
-
-    private String buildHostname() {
-        try {
-            return InetUtil.getLocalHostName();
-        } catch (final UnknownHostException e) {
-            return UUID.randomUUID().toString();
-        }
     }
 
     private static ByteBuffer buildChunk(final byte[] messageId, final byte[] message,
@@ -141,20 +120,6 @@ class GelfUdpChunker {
         byteBuffer.flip();
 
         return byteBuffer;
-    }
-
-    private byte[] buildMessageId() {
-        final byte[] messageIdSource =
-            (hostname + System.nanoTime()).getBytes(StandardCharsets.UTF_8);
-        return Arrays.copyOf(md5(messageIdSource), MESSAGE_ID_LENGTH);
-    }
-
-    private static byte[] md5(final byte[] data) {
-        try {
-            return MessageDigest.getInstance("MD5").digest(data);
-        } catch (final NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     Iterable<? extends ByteBuffer> chunks(final byte[] message) {
@@ -191,7 +156,7 @@ class GelfUdpChunker {
             this.chunkSize = localChunkSize;
             this.chunkCount = (byte) localChunkCount;
 
-            messageId = localChunkCount > 1 ? buildMessageId() : null;
+            messageId = localChunkCount > 1 ? messageIdSupplier.get() : null;
         }
 
         private int calcChunkCount(final byte[] msg, final int cs) {
