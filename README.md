@@ -212,7 +212,7 @@ If you have any problems, enable the debug mode and check the logs.
 
 ## Copyright
 
-Copyright (C) 2016-2019 Oliver Siegmar
+Copyright (C) 2016-2020 Oliver Siegmar
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
