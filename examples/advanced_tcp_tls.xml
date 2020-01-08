@@ -12,7 +12,7 @@
         <insecure>false</insecure>
         <encoder class="de.siegmar.logbackgelf.GelfEncoder">
             <hostnameProvider class="de.siegmar.logbackgelf.HostnameProvider"/>
-            <originHost>localhost</originHost>
+            <originHost>localhost</originHost> <!-- define this *or* a hostnameProvider -->
             <includeRawMessage>false</includeRawMessage>
             <includeMarker>true</includeMarker>
             <includeMdcData>true</includeMdcData>
