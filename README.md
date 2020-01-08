@@ -50,31 +50,6 @@ dependencies {
 - Logback 1.2.3
 
 
-## Important notes
-
-Some changes may require to update your configuration.
-
-### Breaking changes in version 3
-* Version 3.0.0 of this library upgraded from Java 7 to Java 8.
-* The server's certificate hostname now gets verified by `GelfTcpTlsAppender`.
-* The `trustAllCertificates` property of `GelfTcpTlsAppender` was renamed to `insecure`.
-
-### Breaking changes in version 2
-* Version 2.0.0 of this library introduced a configuration change.
-
-**Old** format:
-```xml
-<layout class="de.siegmar.logbackgelf.GelfLayout">
-```
-
-**New** format:
-```xml
-<encoder class="de.siegmar.logbackgelf.GelfEncoder">
-```
-
-This change was introduced, as the API of the Encoder interface changed in Logback 1.2.0.
-
-
 ## Examples
 
 Simple UDP configuration:
