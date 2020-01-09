@@ -7,8 +7,7 @@
         <useCompression>true</useCompression>
         <messageIdSupplier class="de.siegmar.logbackgelf.MessageIdSupplier"/>
         <encoder class="de.siegmar.logbackgelf.GelfEncoder">
-            <hostnameProvider class="de.siegmar.logbackgelf.HostnameProvider"/>
-            <originHost>localhost</originHost> <!-- define this *or* a hostnameProvider -->
+            <originHost>localhost</originHost>
             <includeRawMessage>false</includeRawMessage>
             <includeMarker>true</includeMarker>
             <includeMdcData>true</includeMdcData>

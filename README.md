@@ -163,8 +163,7 @@ Find more advanced examples in the [examples directory](examples).
 
 `de.siegmar.logbackgelf.GelfEncoder`
 
-* **hostnameProvider**: The provider for the origin hostname. Default: `de.siegmar.logbackgelf.HostnameProvider`.
-* **originHost**: Origin hostname - will be auto detected (via the hostnameProvider) if not specified.
+* **originHost**: Origin hostname - will be auto detected if not specified.
 * **includeRawMessage**: If true, the raw message (with argument placeholders) will be sent, too.
   Default: false.
 * **includeMarker**: If true, logback markers will be sent, too. Default: true.

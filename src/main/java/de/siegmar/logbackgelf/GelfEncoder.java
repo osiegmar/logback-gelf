@@ -48,12 +48,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private static final String DEFAULT_FULL_PATTERN = "%m%n";
 
     /**
-     * The provider for the origin hostname.
-     */
-    private HostnameProvider hostnameProvider = new HostnameProvider();
-
-    /**
-     * Origin hostname - will be auto detected (via the hostnameProvider) if not specified.
+     * Origin hostname - will be auto detected if not specified.
      */
     private String originHost;
 
@@ -131,14 +126,6 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      * Additional, static fields to send to graylog. Defaults: none.
      */
     private Map<String, Object> staticFields = new HashMap<>();
-
-    public HostnameProvider getHostnameProvider() {
-        return hostnameProvider;
-    }
-
-    public void setHostnameProvider(final HostnameProvider hostnameProvider) {
-        this.hostnameProvider = hostnameProvider;
-    }
 
     public String getOriginHost() {
         return originHost;
@@ -301,7 +288,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     public void start() {
         if (originHost == null || originHost.trim().isEmpty()) {
             try {
-                originHost = hostnameProvider.get();
+                originHost = InetUtil.getLocalHostName();
             } catch (final UnknownHostException e) {
                 addWarn("Could not determine local hostname", e);
                 originHost = "unknown";
