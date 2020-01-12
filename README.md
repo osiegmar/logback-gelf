@@ -7,30 +7,6 @@ Logback appender for sending GELF (Graylog Extended Log Format) messages with ze
 dependencies.
 
 
-## Latest release
-
-The most recent release is 2.2.0, released December 14, 2019.
-
-To add a dependency using Maven, use the following:
-
-```xml
-<dependency>
-    <groupId>de.siegmar</groupId>
-    <artifactId>logback-gelf</artifactId>
-    <version>2.2.0</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-To add a dependency using Gradle:
-
-```gradle
-dependencies {
-    runtimeOnly 'de.siegmar:logback-gelf:2.2.0'
-}
-```
-
-
 ## Features
 
 - UDP (with chunking)
