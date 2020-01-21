@@ -164,6 +164,9 @@ public class GelfTcpAppender extends AbstractGelfAppender {
     private boolean sendMessage(final byte[] messageToSend) {
         try {
             connectionPool.execute(tcpConnection -> tcpConnection.write(messageToSend));
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         } catch (final Exception e) {
             addError(String.format("Error sending message via tcp://%s:%s",
                 getGraylogHost(), getGraylogPort()), e);
