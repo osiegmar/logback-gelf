@@ -19,8 +19,6 @@
 
 package de.siegmar.logbackgelf;
 
-import java.util.Arrays;
-
 import javax.net.SocketFactory;
 
 import de.siegmar.logbackgelf.pool.SimpleObjectPool;
@@ -132,12 +130,9 @@ public class GelfTcpAppender extends AbstractGelfAppender {
 
     @Override
     protected void appendMessage(final byte[] messageToSend) {
-        // GELF via TCP requires 0 termination
-        final byte[] tcpMessage = Arrays.copyOf(messageToSend, messageToSend.length + 1);
-
         int openRetries = maxRetries;
         do {
-            if (sendMessage(tcpMessage)) {
+            if (sendMessage(messageToSend)) {
                 // Message was sent successfully - we're done with it
                 break;
             }

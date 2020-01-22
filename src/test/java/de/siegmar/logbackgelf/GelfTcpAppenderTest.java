@@ -119,7 +119,11 @@ public class GelfTcpAppenderTest {
 
     private byte[] receive() {
         try {
-            return future.get(5, TimeUnit.SECONDS);
+            final byte[] bytes = future.get(5, TimeUnit.SECONDS);
+            if (bytes[bytes.length - 1] != 0) {
+                throw new IllegalStateException("Data stream is not terminated by 0");
+            }
+            return bytes;
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             throw new IllegalStateException(e);
         }

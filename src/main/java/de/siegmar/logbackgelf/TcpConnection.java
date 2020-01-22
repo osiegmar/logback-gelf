@@ -53,6 +53,10 @@ public class TcpConnection extends AbstractPooledObject {
         }
 
         outputStream.write(messageToSend);
+
+        // GELF via TCP requires 0 termination
+        outputStream.write(0);
+
         outputStream.flush();
     }
 
