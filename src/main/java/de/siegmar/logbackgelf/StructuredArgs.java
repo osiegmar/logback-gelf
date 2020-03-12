@@ -22,7 +22,7 @@ package de.siegmar.logbackgelf;
 /**
  * This class is responsible for read structured arguments.
  */
-public class StructuredArgs {
+public final class StructuredArgs {
 
     /**
      * Argument key.
@@ -34,7 +34,7 @@ public class StructuredArgs {
      */
     private final Object object;
 
-    public StructuredArgs(final String key, final Object object) {
+    private StructuredArgs(final String key, final Object object) {
         this.key = key;
         this.object = object;
     }
