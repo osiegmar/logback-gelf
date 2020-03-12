@@ -21,12 +21,14 @@ package de.siegmar.logbackgelf;
 
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.slf4j.Marker;
 
@@ -382,6 +384,13 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
         if (includeRootCauseData) {
             additionalFields.putAll(buildRootExceptionData(event.getThrowableProxy()));
+        }
+
+        if (event.getArgumentArray() != null) {
+            additionalFields.putAll(Arrays.stream(event.getArgumentArray())
+                    .filter(arg -> arg instanceof StructuredArgs)
+                    .map(o -> (StructuredArgs) o)
+                    .collect(Collectors.toMap(StructuredArgs::getKey, StructuredArgs::getObject)));
         }
 
         return additionalFields;
