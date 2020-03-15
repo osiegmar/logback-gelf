@@ -33,14 +33,14 @@ public class GelfMessageTest {
     public void simple() {
         final Map<String, Object> additionalFields = ImmutableMap.of("foo", (Object) "bar");
 
-        final GelfMessage message =
-            new GelfMessage("host", "short message", null, 123.456D, 6, additionalFields);
+        final GelfMessage message = new GelfMessage("host", "short message", null,
+                1584271169123L, 6, additionalFields);
 
         assertEquals("{"
             + "\"version\":\"1.1\","
             + "\"host\":\"host\","
             + "\"short_message\":\"short message\","
-            + "\"timestamp\":123.456,"
+            + "\"timestamp\":1584271169.123,"
             + "\"level\":6,"
             + "\"_foo\":\"bar\""
             + "}",
@@ -51,15 +51,15 @@ public class GelfMessageTest {
     public void complete() {
         final Map<String, Object> additionalFields = ImmutableMap.of("foo", (Object) "bar");
 
-        final GelfMessage message =
-            new GelfMessage("host", "short message", "full message", 123.456D, 6, additionalFields);
+        final GelfMessage message = new GelfMessage("host", "short message", "full message",
+            1584271169123L, 6, additionalFields);
 
         assertEquals("{"
             + "\"version\":\"1.1\","
             + "\"host\":\"host\","
             + "\"short_message\":\"short message\","
             + "\"full_message\":\"full message\","
-            + "\"timestamp\":123.456,"
+            + "\"timestamp\":1584271169.123,"
             + "\"level\":6,"
             + "\"_foo\":\"bar\""
             + "}",

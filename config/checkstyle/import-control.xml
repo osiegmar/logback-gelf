@@ -5,6 +5,7 @@
     <allow pkg="java.io"/>
     <allow pkg="java.net"/>
     <allow pkg="java.nio"/>
+    <allow pkg="java.math"/>
     <allow pkg="java.security"/>
     <allow pkg="java.text"/>
     <allow pkg="java.util"/>

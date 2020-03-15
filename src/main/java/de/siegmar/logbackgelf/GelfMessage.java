@@ -19,9 +19,7 @@
 
 package de.siegmar.logbackgelf;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.Locale;
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Objects;
 
@@ -35,12 +33,12 @@ public class GelfMessage {
     private final String host;
     private final String shortMessage;
     private final String fullMessage;
-    private final double timestamp;
+    private final long timestamp;
     private final int level;
     private final Map<String, Object> additionalFields;
 
     GelfMessage(final String host, final String shortMessage, final String fullMessage,
-                final double timestamp, final int level,
+                final long timestamp, final int level,
                 final Map<String, Object> additionalFields) {
         this.host = Objects.requireNonNull(host, "host must not be null");
         this.shortMessage = Objects.requireNonNull(shortMessage, "shortMessage must not be null");
@@ -54,15 +52,12 @@ public class GelfMessage {
     String toJSON() {
         final SimpleJsonEncoder jsonEncoder = new SimpleJsonEncoder();
 
-        final DecimalFormat decimalFormat =
-            new DecimalFormat("#.###", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
-
         jsonEncoder
             .appendToJSON("version", VERSION)
             .appendToJSON("host", host)
             .appendToJSON("short_message", shortMessage)
             .appendToJSON("full_message", fullMessage)
-            .appendToJSONUnquoted("timestamp", decimalFormat.format(timestamp))
+            .appendToJSONUnquoted("timestamp", timestampToGelfNotation(timestamp))
             .appendToJSONUnquoted("level", level);
 
         for (final Map.Entry<String, Object> entry : additionalFields.entrySet()) {
@@ -70,6 +65,11 @@ public class GelfMessage {
         }
 
         return jsonEncoder.toString();
+    }
+
+    @SuppressWarnings("checkstyle:MagicNumber")
+    private static String timestampToGelfNotation(final long timestamp) {
+        return new BigDecimal(timestamp).movePointLeft(3).toPlainString();
     }
 
     public String getHost() {
@@ -84,7 +84,7 @@ public class GelfMessage {
         return fullMessage;
     }
 
-    public double getTimestamp() {
+    public long getTimestamp() {
         return timestamp;
     }
 

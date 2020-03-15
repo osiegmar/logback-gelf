@@ -42,8 +42,6 @@ import ch.qos.logback.core.encoder.EncoderBase;
 public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     private static final Pattern VALID_ADDITIONAL_FIELD_PATTERN = Pattern.compile("^[\\w.-]*$");
-    private static final double MSEC_DIVIDER = 1000D;
-
     private static final String DEFAULT_SHORT_PATTERN = "%m%nopex";
     private static final String DEFAULT_FULL_PATTERN = "%m%n";
 
@@ -321,12 +319,10 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     public byte[] encode(final ILoggingEvent event) {
         final String shortMessage = shortPatternLayout.doLayout(event);
         final String fullMessage = fullPatternLayout.doLayout(event);
-        final double timestamp = event.getTimeStamp() / MSEC_DIVIDER;
         final Map<String, Object> additionalFields = mapAdditionalFields(event);
 
-        final GelfMessage gelfMessage =
-            new GelfMessage(originHost, shortMessage, fullMessage, timestamp,
-                LevelToSyslogSeverity.convert(event), additionalFields);
+        final GelfMessage gelfMessage = new GelfMessage(originHost, shortMessage, fullMessage,
+            event.getTimeStamp(), LevelToSyslogSeverity.convert(event), additionalFields);
 
         String jsonStr = gelfMessageToJson(gelfMessage);
         if (appendNewline) {

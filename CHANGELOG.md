@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgrade to Java 8 (Premier Support of Java 7 ended in July 2019).
 - Change the default value of `numbersAsString` of `GelfEncoder` from `true` to `false`.
 - Rename `trustAllCertificates` property of `GelfTcpTlsAppender` to `insecure`.
+- Never write timestamp in JSON using scientific notation.
 
 ## [2.2.0] - 2019-12-14
 ### Added

@@ -70,7 +70,7 @@ public class CustomGelfEncoderTest {
 
         assertEquals("message 1\n", jsonNode.get("full_message").textValue());
         assertEquals(
-            "970db79831490f2e5e02b80cf484308bf77e7353f727b6fd42417b82be254419",
+            "ad4ab384b5b7dca879dc1b65132db321a67239f13c2cc0cd9867c8e607c7ce08",
             jsonNode.get("_sha256").textValue(),
             "Log line: " + logMsg
         );
