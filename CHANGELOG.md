@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.0.0] - 2020-??-??
+## [3.0.0] - 2020-03-15
 ### Added
 - Allow encoder subclasses to customize the message before it is converted to String.
   [\#40](https://github.com/osiegmar/logback-gelf/issues/40)
@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change the default value of `numbersAsString` of `GelfEncoder` from `true` to `false`.
 - Rename `trustAllCertificates` property of `GelfTcpTlsAppender` to `insecure`.
 - Never write timestamp in JSON using scientific notation.
+- Never write static or MDC fields in JSON using scientific notation.
 
 ## [2.2.0] - 2019-12-14
 ### Added

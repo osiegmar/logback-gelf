@@ -19,6 +19,7 @@
 
 package de.siegmar.logbackgelf;
 
+import java.math.BigDecimal;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -274,7 +275,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private Object processValue(final String value) {
         if (!numbersAsString) {
             try {
-                return Double.valueOf(value);
+                return new BigDecimal(value);
             } catch (final NumberFormatException e) {
                 return value;
             }

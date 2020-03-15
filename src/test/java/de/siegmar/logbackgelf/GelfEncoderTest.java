@@ -345,16 +345,16 @@ public class GelfEncoderTest {
 
         final LoggingEvent event = simpleLoggingEvent(logger, null);
 
-        event.setMDCPropertyMap(ImmutableMap.of("http_status", "200"));
+        event.setMDCPropertyMap(ImmutableMap.of("int", "200", "float", "0.00001"));
 
         final String logMsg = encodeToStr(event);
 
         final ObjectMapper om = new ObjectMapper();
         final JsonNode jsonNode = om.readTree(logMsg);
         basicValidation(jsonNode);
-        final JsonNode httpStatus = jsonNode.get("_http_status");
-        assertEquals(200, httpStatus.asDouble());
-        assertTrue(httpStatus.isNumber());
+
+        assertTrue(logMsg.contains("\"_int\":200"));
+        assertTrue(logMsg.contains("\"_float\":0.00001"));
     }
 
     @Test
@@ -367,16 +367,16 @@ public class GelfEncoderTest {
 
         final LoggingEvent event = simpleLoggingEvent(logger, null);
 
-        event.setMDCPropertyMap(ImmutableMap.of("http_status", "200"));
+        event.setMDCPropertyMap(ImmutableMap.of("int", "200", "float", "0.00001"));
 
         final String logMsg = encodeToStr(event);
 
         final ObjectMapper om = new ObjectMapper();
         final JsonNode jsonNode = om.readTree(logMsg);
         basicValidation(jsonNode);
-        final JsonNode httpStatus = jsonNode.get("_http_status");
-        assertEquals("200", httpStatus.asText());
-        assertFalse(httpStatus.isNumber());
+
+        assertTrue(logMsg.contains("\"_int\":\"200\""));
+        assertTrue(logMsg.contains("\"_float\":\"0.00001\""));
     }
 
     @Test
