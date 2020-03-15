@@ -7,6 +7,7 @@ Some changes may require to update your configuration.
 * Version 3.0.0 of this library upgraded from Java 7 to Java 8.
 * The server's certificate hostname now gets verified by `GelfTcpTlsAppender`.
 * The `trustAllCertificates` property of `GelfTcpTlsAppender` was renamed to `insecure`.
+* The default value of `numbersAsString` of `GelfEncoder` was changed from `true` to `false`.
 
 ## Upgrade from 1.x to 2.x
 
