@@ -118,9 +118,9 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private PatternLayout fullPatternLayout;
 
     /**
-     * Log numbers as String. Default: true (will be changed in next major release).
+     * Log numbers as String. Default: false.
      */
-    private boolean numbersAsString = true;
+    private boolean numbersAsString;
 
     /**
      * Additional, static fields to send to graylog. Defaults: none.

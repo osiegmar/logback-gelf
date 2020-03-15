@@ -6,13 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.0.0] - 2020-??-??
 ### Added
-- Allow encoder subclasses to customize the message before it is converted to String
+- Allow encoder subclasses to customize the message before it is converted to String.
   [\#40](https://github.com/osiegmar/logback-gelf/issues/40)
 - Server certificate hostname verification in `GelfTcpTlsAppender`.
-- Allow custom implementations for supplying GELF UDP Message-IDs
+- Allow custom implementations for supplying GELF UDP Message-IDs.
 
 ### Changed
-- Upgrade to Java 8 (Premier Support of Java 7 ended in July 2019)
+- Upgrade to Java 8 (Premier Support of Java 7 ended in July 2019).
+- Change the default value of `numbersAsString` of `GelfEncoder` from `true` to `false`.
 - Rename `trustAllCertificates` property of `GelfTcpTlsAppender` to `insecure`.
 
 ## [2.2.0] - 2019-12-14

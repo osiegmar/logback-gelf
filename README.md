@@ -161,7 +161,7 @@ Find more advanced examples in the [examples directory](examples).
   console logging!
 * **shortPatternLayout**: Short message format. Default: `"%m%nopex"`.
 * **fullPatternLayout**: Full message format (Stacktrace). Default: `"%m%n"`.
-* **numbersAsString**: Log numbers as String. Default: true (will be changed in next major release).
+* **numbersAsString**: Log numbers as String. Default: false.
 * **staticFields**: Additional, static fields to send to graylog. Defaults: none.
 
 

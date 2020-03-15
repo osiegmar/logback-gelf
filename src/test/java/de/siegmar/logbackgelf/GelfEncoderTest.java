@@ -338,7 +338,6 @@ public class GelfEncoderTest {
 
     @Test
     public void numericValueAsNumber() throws IOException {
-        encoder.setNumbersAsString(false);
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
