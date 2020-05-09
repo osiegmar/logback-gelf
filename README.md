@@ -126,7 +126,9 @@ Find more advanced examples in the [examples directory](examples).
 * **poolSize**: Number of concurrent tcp connections (minimum 1). Default: 2.
 * **poolMaxWaitTime**: Maximum amount of time (in milliseconds) to wait for a connection to become
   available from the pool. A value of -1 disables the timeout. Default: 5,000 milliseconds.
-
+* **poolMaxIdleTime**: Maximum amount of time (in seconds) that a pooled connection can be idle
+  before it is considered 'stale' and will not be reused. A value of -1 disables the max idle time
+  feature. Default: -1 (disabled).
 
 `de.siegmar.logbackgelf.GelfTcpTlsAppender`
 

@@ -22,9 +22,18 @@ package de.siegmar.logbackgelf.pool;
 public abstract class AbstractPooledObject {
 
     private final long createdAt = System.currentTimeMillis();
+    private long lastBorrowed = createdAt;
 
     final long lifeTime() {
         return System.currentTimeMillis() - createdAt;
+    }
+
+    final long lastBorrowed() {
+        return lastBorrowed;
+    }
+
+    final void borrow() {
+        this.lastBorrowed = System.currentTimeMillis();
     }
 
     protected void close() {
