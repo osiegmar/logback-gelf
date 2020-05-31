@@ -95,13 +95,11 @@ public class SimpleObjectPool<T extends AbstractPooledObject> {
     }
 
     private boolean needToEvict(final T pooledObject) {
-        if (maxLifeTime > 0 && pooledObject.lifeTime() > maxLifeTime) {
+        if (maxLifeTime >= 0 && pooledObject.lifeTime() > maxLifeTime) {
             return true;
-        } else if (maxIdleTime >= 0 && (System.currentTimeMillis() - pooledObject.lastBorrowed()) > maxIdleTime) {
-            return true;
-        } else {
-            return false;
         }
+
+        return maxIdleTime >= 0 && pooledObject.idleTime() > maxIdleTime;
     }
 
     private T recycle(final T oldInstance) {

@@ -28,12 +28,12 @@ public abstract class AbstractPooledObject {
         return System.currentTimeMillis() - createdAt;
     }
 
-    final long lastBorrowed() {
-        return lastBorrowed;
+    final long idleTime() {
+        return System.currentTimeMillis() - lastBorrowed;
     }
 
     final void borrow() {
-        this.lastBorrowed = System.currentTimeMillis();
+        lastBorrowed = System.currentTimeMillis();
     }
 
     protected void close() {
