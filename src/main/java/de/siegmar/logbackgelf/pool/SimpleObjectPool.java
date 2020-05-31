@@ -35,10 +35,11 @@ public class SimpleObjectPool<T extends AbstractPooledObject> {
     private final PooledObjectFactory<T> objectFactory;
     private final int maxWaitTime;
     private final int maxLifeTime;
+    private final int maxIdleTime;
 
     public SimpleObjectPool(final PooledObjectFactory<T> objectFactory,
                             final int poolSize, final int maxWaitTime,
-                            final int maxLifeTime) {
+                            final int maxLifeTime, final int maxIdleTime) {
 
         if (poolSize < 1) {
             throw new IllegalArgumentException("poolSize must be > 0");
@@ -47,6 +48,7 @@ public class SimpleObjectPool<T extends AbstractPooledObject> {
         this.objectFactory = objectFactory;
         this.maxWaitTime = maxWaitTime;
         this.maxLifeTime = maxLifeTime < 0 ? maxLifeTime : maxLifeTime * MILLIS_PER_SECOND;
+        this.maxIdleTime = maxIdleTime < 0 ? maxIdleTime : maxIdleTime * MILLIS_PER_SECOND;
 
         for (int i = 0; i < poolSize; i++) {
             final T pooledObject = this.objectFactory.newInstance();
@@ -87,11 +89,19 @@ public class SimpleObjectPool<T extends AbstractPooledObject> {
             }
         }
 
-        return needToEvict(pooledObject) ? recycle(pooledObject) : pooledObject;
+        final T result = needToEvict(pooledObject) ? recycle(pooledObject) : pooledObject;
+        result.borrow();
+        return result;
     }
 
     private boolean needToEvict(final T pooledObject) {
-        return maxLifeTime < 0 || pooledObject.lifeTime() > maxLifeTime;
+        if (maxLifeTime > 0 && pooledObject.lifeTime() > maxLifeTime) {
+            return true;
+        } else if (maxIdleTime >= 0 && (System.currentTimeMillis() - pooledObject.lastBorrowed()) > maxIdleTime) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private T recycle(final T oldInstance) {

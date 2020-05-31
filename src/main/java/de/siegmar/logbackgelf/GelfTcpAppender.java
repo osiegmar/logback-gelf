@@ -31,6 +31,7 @@ public class GelfTcpAppender extends AbstractGelfAppender {
     private static final int DEFAULT_RETRY_DELAY = 3_000;
     private static final int DEFAULT_POOL_SIZE = 2;
     private static final int DEFAULT_POOL_MAX_WAIT_TIME = 5_000;
+    private static final int DEFAULT_POOL_MAX_IDLE_TIME = -1;
 
     /**
      * Maximum time (in milliseconds) to wait for establishing a connection. A value of 0 disables
@@ -65,6 +66,13 @@ public class GelfTcpAppender extends AbstractGelfAppender {
      * available from the pool. A value of -1 disables the timeout. Default: 5,000 milliseconds.
      */
     private int poolMaxWaitTime = DEFAULT_POOL_MAX_WAIT_TIME;
+
+    /**
+     * Maximum amount of time (in seconds) that a pooled connection can be idle before it is
+     * considered 'stale' and will not be reused. A value of -1 disables the max idle time feature.
+     * Default: -1 (disabled).
+     */
+    private int poolMaxIdleTime = DEFAULT_POOL_MAX_IDLE_TIME;
 
     private SimpleObjectPool<TcpConnection> connectionPool;
 
@@ -121,7 +129,7 @@ public class GelfTcpAppender extends AbstractGelfAppender {
 
         connectionPool = new SimpleObjectPool<>(() -> new TcpConnection(initSocketFactory(),
             addressResolver, getGraylogPort(), connectTimeout),
-            poolSize, poolMaxWaitTime, reconnectInterval);
+            poolSize, poolMaxWaitTime, reconnectInterval, poolMaxIdleTime);
     }
 
     protected SocketFactory initSocketFactory() {

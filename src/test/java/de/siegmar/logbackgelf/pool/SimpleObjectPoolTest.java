@@ -40,7 +40,7 @@ public class SimpleObjectPoolTest {
     @Test
     public void simple() throws InterruptedException {
         final SimpleObjectPool<MyPooledObject> pool =
-            new SimpleObjectPool<>(factory, 2, 100, 100);
+            new SimpleObjectPool<>(factory, 2, 100, 100, 100);
 
         for (int i = 0; i < 10; i++) {
             final MyPooledObject o1 = pool.borrowObject();
@@ -56,7 +56,7 @@ public class SimpleObjectPoolTest {
     @Test
     public void invalidate() throws InterruptedException {
         final SimpleObjectPool<MyPooledObject> pool =
-            new SimpleObjectPool<>(factory, 2, 100, 100);
+            new SimpleObjectPool<>(factory, 2, 100, 100, 100);
 
         final MyPooledObject o1 = pool.borrowObject();
         assertEquals(1, o1.getId());
@@ -65,6 +65,28 @@ public class SimpleObjectPoolTest {
         final MyPooledObject o2 = pool.borrowObject();
         assertEquals(2, o2.getId());
         pool.returnObject(o2);
+
+        final MyPooledObject o3 = pool.borrowObject();
+        assertEquals(3, o3.getId());
+        pool.returnObject(o3);
+    }
+
+    @Test
+    public void maxLastBorrowed() throws InterruptedException {
+        final SimpleObjectPool<MyPooledObject> pool =
+                new SimpleObjectPool<>(factory, 1, 100, 100, 0);
+
+        final MyPooledObject o1 = pool.borrowObject();
+        assertEquals(1, o1.getId());
+        pool.returnObject(o1);
+
+        Thread.sleep(2);
+
+        final MyPooledObject o2 = pool.borrowObject();
+        assertEquals(2, o2.getId());
+        pool.returnObject(o2);
+
+        Thread.sleep(2);
 
         final MyPooledObject o3 = pool.borrowObject();
         assertEquals(3, o3.getId());
