@@ -1,6 +1,6 @@
 # Logback GELF
 
-[![Build Status](https://api.travis-ci.org/osiegmar/logback-gelf.svg)](https://travis-ci.org/osiegmar/logback-gelf)
+[![Build Status](https://travis-ci.org/osiegmar/logback-gelf.svg?branch=master)](https://travis-ci.org/osiegmar/logback-gelf)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.siegmar/logback-gelf/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.siegmar/logback-gelf)
 
 Logback appender for sending GELF (Graylog Extended Log Format) messages with zero additional
