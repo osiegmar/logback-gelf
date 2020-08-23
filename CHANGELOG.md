@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add poolMaxIdleTime configuration option to TCP appenders
   [\#49](https://github.com/osiegmar/logback-gelf/pull/49)
 
+### Changed
+- Removed MD5 for creating Message-IDs and rewrote MessageIdSupplier logic (#52)
+  [\#52](https://github.com/osiegmar/logback-gelf/issues/52)
+
 ## [3.0.0] - 2020-03-15
 ### Added
 - Allow encoder subclasses to customize the message before it is converted to String.

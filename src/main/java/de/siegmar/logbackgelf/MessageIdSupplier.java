@@ -19,55 +19,29 @@
 
 package de.siegmar.logbackgelf;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Random;
 
+/**
+ * Supplier implementation for GELF message IDs as used for UDP chunks. Unfortunately the GELF
+ * protocol limits the message id length to 8 bytes thus an UUID cannot be used (16 bytes).
+ */
 public class MessageIdSupplier {
 
-    protected static final int MESSAGE_ID_LENGTH = 8;
-    protected static final int LONG_LENGTH = 8;
-    private byte[] machinePart;
+    // static random to keep Spotbugs happy
+    private static final Random RANDOM = new Random();
+    private int machinePart = RANDOM.nextInt();
 
-    public MessageIdSupplier() {
-        try {
-            machinePart = InetAddress.getLocalHost().getAddress();
-        } catch (final UnknownHostException e) {
-            machinePart = new byte[LONG_LENGTH];
-            new Random().nextBytes(machinePart);
-        }
+    public int getMachinePart() {
+        return machinePart;
     }
 
-    protected byte[] getMachinePart() {
-        return Arrays.copyOf(machinePart, machinePart.length);
+    public void setMachinePart(final int machinePart) {
+        this.machinePart = machinePart;
     }
 
-    protected void setMachinePart(final byte[] machinePart) {
-        this.machinePart = Arrays.copyOf(machinePart, machinePart.length);
-    }
-
-    public byte[] get() {
-        return Arrays.copyOf(buildMessageId(), MESSAGE_ID_LENGTH);
-    }
-
-    protected byte[] buildMessageId() {
-        final ByteBuffer bb = ByteBuffer.allocate(machinePart.length + LONG_LENGTH);
-        bb.put(machinePart);
-        bb.putLong(System.nanoTime());
-        bb.flip();
-        return md5(bb.array());
-    }
-
-    protected static byte[] md5(final byte[] data) {
-        try {
-            return MessageDigest.getInstance("MD5").digest(data);
-        } catch (final NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+    @SuppressWarnings("checkstyle:magicnumber")
+    public Long get() {
+        return (long) machinePart << 32 | System.nanoTime() & 0xffffffffL;
     }
 
 }

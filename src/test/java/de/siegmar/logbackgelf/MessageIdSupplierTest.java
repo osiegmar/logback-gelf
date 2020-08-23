@@ -19,23 +19,18 @@
 
 package de.siegmar.logbackgelf;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-
-import java.util.Arrays;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import org.junit.jupiter.api.Test;
 
 public class MessageIdSupplierTest {
 
-    private static final int GELF_UDP_MESSAGE_ID_LENGTH = 8;
-    private MessageIdSupplier messageIdSupplier = new MessageIdSupplier();
+    private final MessageIdSupplier messageIdSupplier = new MessageIdSupplier();
 
     @Test
     public void test() {
-        final byte[] bytes = messageIdSupplier.get();
-        assertEquals(GELF_UDP_MESSAGE_ID_LENGTH, bytes.length);
-        assertFalse(Arrays.equals(bytes, messageIdSupplier.get()));
+        final Long messageId = messageIdSupplier.get();
+        assertNotEquals(messageId, messageIdSupplier.get());
     }
 
 }

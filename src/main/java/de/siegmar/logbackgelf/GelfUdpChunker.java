@@ -93,7 +93,7 @@ class GelfUdpChunker {
         this.maxChunkPayloadSize = mcs - HEADER_LENGTH;
     }
 
-    private static ByteBuffer buildChunk(final byte[] messageId, final byte[] message,
+    private static ByteBuffer buildChunk(final long messageId, final byte[] message,
                                          final byte chunkCount, final byte chunkNo,
                                          final int maxChunkPayloadSize) {
 
@@ -106,7 +106,7 @@ class GelfUdpChunker {
         byteBuffer.put(CHUNKED_GELF_HEADER);
 
         // Message ID 8 bytes
-        byteBuffer.put(messageId);
+        byteBuffer.putLong(messageId);
 
         // Sequence number 1 byte
         byteBuffer.put(chunkNo);
@@ -131,7 +131,7 @@ class GelfUdpChunker {
         private final byte[] message;
         private final int chunkSize;
         private final byte chunkCount;
-        private final byte[] messageId;
+        private final long messageId;
 
         private byte chunkIdx;
 
@@ -156,7 +156,7 @@ class GelfUdpChunker {
             this.chunkSize = localChunkSize;
             this.chunkCount = (byte) localChunkCount;
 
-            messageId = localChunkCount > 1 ? messageIdSupplier.get() : null;
+            messageId = localChunkCount > 1 ? messageIdSupplier.get() : 0;
         }
 
         private int calcChunkCount(final byte[] msg, final int cs) {
