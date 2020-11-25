@@ -22,9 +22,11 @@ package de.siegmar.logbackgelf;
 import java.math.BigDecimal;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -125,6 +127,8 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      * Additional, static fields to send to graylog. Defaults: none.
      */
     private Map<String, Object> staticFields = new HashMap<>();
+
+    private List<GelfAdditionalFieldMapper> additionalFieldMappers = new ArrayList<>();
 
     public String getOriginHost() {
         return originHost;
@@ -283,6 +287,10 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         return value;
     }
 
+    public void addAdditionalFieldMapper(GelfAdditionalFieldMapper additionalFieldMapper) {
+        additionalFieldMappers.add(additionalFieldMapper);
+    }
+
     @Override
     public void start() {
         if (originHost == null || originHost.trim().isEmpty()) {
@@ -321,6 +329,13 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         final String shortMessage = shortPatternLayout.doLayout(event);
         final String fullMessage = fullPatternLayout.doLayout(event);
         final Map<String, Object> additionalFields = mapAdditionalFields(event);
+        for (GelfAdditionalFieldMapper additionalFieldMapper : additionalFieldMappers) {
+            final GelfAdditionalFieldMapper.KeyValue<String, Object> keyValue =
+                additionalFieldMapper.mapAdditionalField(event);
+            if (keyValue != null) {
+                additionalFields.put(keyValue.key, keyValue.value);
+            }
+        }
 
         final GelfMessage gelfMessage = new GelfMessage(originHost, shortMessage, fullMessage,
             event.getTimeStamp(), LevelToSyslogSeverity.convert(event), additionalFields);
