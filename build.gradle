@@ -3,14 +3,16 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'checkstyle'
-    id 'com.github.spotbugs' version '3.0.0'
+    id 'com.github.spotbugs' version '4.5.0'
 }
 
 group = "de.siegmar"
 version = "3.0.0"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
     withJavadocJar()
     withSourcesJar()
 }
@@ -32,58 +34,54 @@ test {
     useJUnitPlatform()
 }
 
-tasks.withType(com.github.spotbugs.SpotBugsTask) {
-    reports {
-        xml.enabled = false
+tasks.matching {task -> task.name.startsWith('spotbugs')}.forEach {
+    it.reports {
         html.enabled = true
+        xml.enabled = false
     }
 }
 
-if (hasProperty('ossrhUsername')) {
-    publishing {
-        publications {
-            mavenJava(MavenPublication) {
-                artifactId = "logback-gelf"
-                from components.java
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = "logback-gelf"
+            from components.java
 
-                pom {
-                    name = 'Logback GELF'
-                    description = 'Logback appender for sending GELF messages with zero additional dependencies.'
+            pom {
+                name = 'Logback GELF'
+                description = 'Logback appender for sending GELF messages with zero additional dependencies.'
+                url = 'https://github.com/osiegmar/logback-gelf'
+                licenses {
+                    license {
+                        name = 'GNU Lesser General Public License version 2.1'
+                        url = 'http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt'
+                    }
+                }
+                scm {
                     url = 'https://github.com/osiegmar/logback-gelf'
-                    licenses {
-                        license {
-                            name = 'GNU Lesser General Public License version 2.1'
-                            url = 'http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt'
-                        }
-                    }
-                    scm {
-                        url = 'https://github.com/osiegmar/logback-gelf'
-                        connection = 'scm:git:https://github.com/osiegmar/logback-gelf.git'
-                    }
-                    developers {
-                        developer {
-                            id = 'osiegmar'
-                            name = 'Oliver Siegmar'
-                            email = 'oliver@siegmar.de'
-                        }
+                    connection = 'scm:git:https://github.com/osiegmar/logback-gelf.git'
+                }
+                developers {
+                    developer {
+                        id = 'osiegmar'
+                        name = 'Oliver Siegmar'
+                        email = 'oliver@siegmar.de'
                     }
                 }
-            }
-        }
-        repositories {
-            maven {
-                credentials {
-                    username "$ossrhUsername"
-                    password "$ossrhPassword"
-                }
-                def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-                def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
-                url version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
             }
         }
     }
+    repositories {
+        maven {
+            name = 'ossrh'
+            credentials(PasswordCredentials)
+            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+            url version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+        }
+    }
+}
 
-    signing {
-        sign publishing.publications.mavenJava
-    }
+signing {
+    sign publishing.publications.mavenJava
 }
