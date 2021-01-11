@@ -128,7 +128,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      */
     private Map<String, Object> staticFields = new HashMap<>();
 
-    private List<GelfAdditionalFieldMapper> additionalFieldMappers = new ArrayList<>();
+    private List<GelfFieldMapper> fieldMappers = new ArrayList<>();
 
     public String getOriginHost() {
         return originHost;
@@ -287,8 +287,8 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         return value;
     }
 
-    public void addAdditionalFieldMapper(GelfAdditionalFieldMapper additionalFieldMapper) {
-        additionalFieldMappers.add(additionalFieldMapper);
+    public void addFieldMapper(GelfFieldMapper fieldMapper) {
+        fieldMappers.add(fieldMapper);
     }
 
     @Override
@@ -329,13 +329,8 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         final String shortMessage = shortPatternLayout.doLayout(event);
         final String fullMessage = fullPatternLayout.doLayout(event);
         final Map<String, Object> additionalFields = mapAdditionalFields(event);
-        for (GelfAdditionalFieldMapper additionalFieldMapper : additionalFieldMappers) {
-            final GelfAdditionalFieldMapper.KeyValue<String, Object> keyValue =
-                additionalFieldMapper.mapAdditionalField(event);
-            if (keyValue != null) {
-                additionalFields.put(keyValue.key, keyValue.value);
-            }
-        }
+
+        fieldMappers.forEach(fieldMapper -> fieldMapper.mapField(event, additionalFields::put));
 
         final GelfMessage gelfMessage = new GelfMessage(originHost, shortMessage, fullMessage,
             event.getTimeStamp(), LevelToSyslogSeverity.convert(event), additionalFields);
