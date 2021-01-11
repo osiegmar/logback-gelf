@@ -17,23 +17,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package de.siegmar.logbackgelf;
+package de.siegmar.logbackgelf.mappers;
 
 import java.util.function.BiConsumer;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import de.siegmar.logbackgelf.GelfFieldMapper;
 
-/**
- * Field mapper that can be used to add fields to resulting GELF message, using {@link ILoggingEvent} as input.
- */
-public interface GelfFieldMapper<T> {
+public class CallerDataFieldMapper implements GelfFieldMapper<Object> {
 
-    /**
-     * Map a field (one or more) from {@link ILoggingEvent} to a GELF message.
-     *
-     * @param event the source log event
-     * @param valueHandler the consumer of the field ({@link String} name and value)
-     */
-    void mapField(ILoggingEvent event, BiConsumer<String, T> valueHandler);
+    @Override
+    public void mapField(final ILoggingEvent event, final BiConsumer<String, Object> valueHandler) {
+        final StackTraceElement[] callerData = event.getCallerData();
+        if (callerData == null || callerData.length == 0) {
+            return;
+        }
+
+        final StackTraceElement first = callerData[0];
+
+        valueHandler.accept("source_file_name", first.getFileName());
+        valueHandler.accept("source_method_name", first.getMethodName());
+        valueHandler.accept("source_class_name", first.getClassName());
+        valueHandler.accept("source_line_number", first.getLineNumber());
+    }
 
 }

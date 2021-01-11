@@ -17,23 +17,39 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package de.siegmar.logbackgelf;
+package de.siegmar.logbackgelf.mappers;
 
-import java.util.function.BiConsumer;
+import java.util.Iterator;
+
+import org.slf4j.Marker;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 
-/**
- * Field mapper that can be used to add fields to resulting GELF message, using {@link ILoggingEvent} as input.
- */
-public interface GelfFieldMapper<T> {
+public class MarkerFieldMapper extends AbstractFixedNameFieldMapper<String> {
 
-    /**
-     * Map a field (one or more) from {@link ILoggingEvent} to a GELF message.
-     *
-     * @param event the source log event
-     * @param valueHandler the consumer of the field ({@link String} name and value)
-     */
-    void mapField(ILoggingEvent event, BiConsumer<String, T> valueHandler);
+    public MarkerFieldMapper(final String fieldName) {
+        super(fieldName);
+    }
+
+    @Override
+    protected String getValue(final ILoggingEvent event) {
+        final Marker marker = event.getMarker();
+        return marker != null ? buildMarkerStr(marker) : null;
+    }
+
+    private static String buildMarkerStr(final Marker marker) {
+        if (!marker.hasReferences()) {
+            return marker.getName();
+        }
+
+        final StringBuilder sb = new StringBuilder(marker.getName());
+
+        final Iterator<Marker> it = marker.iterator();
+        do {
+            sb.append(", ").append(it.next().getName());
+        } while (it.hasNext());
+
+        return sb.toString();
+    }
 
 }
