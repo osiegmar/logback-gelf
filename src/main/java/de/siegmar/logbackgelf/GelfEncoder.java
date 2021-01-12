@@ -40,6 +40,7 @@ import de.siegmar.logbackgelf.mappers.SimpleFieldMapper;
 /**
  * This class is responsible for transforming a Logback log event to a GELF message.
  */
+@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     private static final String DEFAULT_SHORT_PATTERN = "%m%nopex";
