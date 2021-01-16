@@ -19,30 +19,30 @@
 
 package de.siegmar.logbackgelf;
 
-import java.math.BigDecimal;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Pattern;
-
-import org.slf4j.Marker;
 
 import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.util.LevelToSyslogSeverity;
 import ch.qos.logback.core.encoder.EncoderBase;
+import de.siegmar.logbackgelf.mappers.CallerDataFieldMapper;
+import de.siegmar.logbackgelf.mappers.MarkerFieldMapper;
+import de.siegmar.logbackgelf.mappers.MdcDataFieldMapper;
+import de.siegmar.logbackgelf.mappers.RootExceptionDataFieldMapper;
+import de.siegmar.logbackgelf.mappers.SimpleFieldMapper;
 
 /**
  * This class is responsible for transforming a Logback log event to a GELF message.
  */
+@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
-    private static final Pattern VALID_ADDITIONAL_FIELD_PATTERN = Pattern.compile("^[\\w.-]*$");
     private static final String DEFAULT_SHORT_PATTERN = "%m%nopex";
     private static final String DEFAULT_FULL_PATTERN = "%m%n";
 
@@ -117,14 +117,13 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private PatternLayout fullPatternLayout;
 
     /**
-     * Log numbers as String. Default: false.
-     */
-    private boolean numbersAsString;
-
-    /**
      * Additional, static fields to send to graylog. Defaults: none.
      */
     private Map<String, Object> staticFields = new HashMap<>();
+
+    private final List<GelfFieldMapper<?>> fieldMappers = new ArrayList<>();
+
+    private final GelfFieldHelper fieldHelper = new GelfFieldHelper(this);
 
     public String getOriginHost() {
         return originHost;
@@ -215,11 +214,11 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     }
 
     public boolean isNumbersAsString() {
-        return numbersAsString;
+        return fieldHelper.isNumbersAsString();
     }
 
     public void setNumbersAsString(final boolean numbersAsString) {
-        this.numbersAsString = numbersAsString;
+        this.fieldHelper.setNumbersAsString(numbersAsString);
     }
 
     public PatternLayout getShortPatternLayout() {
@@ -249,38 +248,14 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     public void addStaticField(final String staticField) {
         final String[] split = staticField.split(":", 2);
         if (split.length == 2) {
-            addField(staticFields, split[0].trim(), split[1].trim());
+            fieldHelper.addField(staticFields, split[0].trim(), split[1].trim());
         } else {
             addWarn("staticField must be in format key:value - rejecting '" + staticField + "'");
         }
     }
 
-    private void addField(final Map<String, Object> dst, final String key, final String value) {
-        if (key.isEmpty()) {
-            addWarn("staticField key must not be empty");
-        } else if ("id".equalsIgnoreCase(key)) {
-            addWarn("staticField key name 'id' is prohibited");
-        } else if (dst.containsKey(key)) {
-            addWarn("additional field with key '" + key + "' is already set");
-        } else if (!VALID_ADDITIONAL_FIELD_PATTERN.matcher(key).matches()) {
-            addWarn("staticField key '" + key + "' is illegal. "
-                + "Keys must apply to regex ^[\\w.-]*$");
-        } else {
-            if (value != null) {
-                dst.put(key, processValue(value));
-            }
-        }
-    }
-
-    private Object processValue(final String value) {
-        if (!numbersAsString) {
-            try {
-                return new BigDecimal(value);
-            } catch (final NumberFormatException e) {
-                return value;
-            }
-        }
-        return value;
+    public void addFieldMapper(final GelfFieldMapper<?> fieldMapper) {
+        fieldMappers.add(fieldMapper);
     }
 
     @Override
@@ -299,6 +274,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         if (fullPatternLayout == null) {
             fullPatternLayout = buildPattern(DEFAULT_FULL_PATTERN);
         }
+        addBuiltInFieldMappers();
 
         super.start();
     }
@@ -320,7 +296,15 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     public byte[] encode(final ILoggingEvent event) {
         final String shortMessage = shortPatternLayout.doLayout(event);
         final String fullMessage = fullPatternLayout.doLayout(event);
-        final Map<String, Object> additionalFields = mapAdditionalFields(event);
+        final Map<String, Object> additionalFields = new HashMap<>(staticFields);
+
+        fieldMappers.forEach(fieldMapper -> fieldMapper.mapField(event, (key, value) -> {
+            final Object oldValue = additionalFields.put(key, value);
+            if (oldValue != null) {
+                addWarn("additional field with key '" + key + "' is already set");
+                additionalFields.put(key, oldValue);
+            }
+        }));
 
         final GelfMessage gelfMessage = new GelfMessage(originHost, shortMessage, fullMessage,
             event.getTimeStamp(), LevelToSyslogSeverity.convert(event), additionalFields);
@@ -348,110 +332,33 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         return null;
     }
 
-    private Map<String, Object> mapAdditionalFields(final ILoggingEvent event) {
-        final Map<String, Object> additionalFields = new HashMap<>(staticFields);
-
-        additionalFields.put(loggerNameKey, event.getLoggerName());
-        additionalFields.put(threadNameKey, event.getThreadName());
+    private void addBuiltInFieldMappers() {
+        addFieldMapper(new SimpleFieldMapper<>(loggerNameKey, ILoggingEvent::getLoggerName));
+        addFieldMapper(new SimpleFieldMapper<>(threadNameKey, ILoggingEvent::getThreadName));
 
         if (includeRawMessage) {
-            additionalFields.put("raw_message", event.getMessage());
+            addFieldMapper(new SimpleFieldMapper<>("raw_message", ILoggingEvent::getMessage));
         }
 
         if (includeMarker) {
-            final Marker marker = event.getMarker();
-            if (marker != null) {
-                additionalFields.put("marker", buildMarkerStr(marker));
-            }
+            addFieldMapper(new MarkerFieldMapper("marker"));
         }
 
         if (includeLevelName) {
-            additionalFields.put(levelNameKey, event.getLevel().levelStr);
+            addFieldMapper(new SimpleFieldMapper<>(levelNameKey, event -> event.getLevel().levelStr));
         }
 
         if (includeMdcData) {
-            additionalFields.putAll(buildMdcData(event.getMDCPropertyMap()));
+            addFieldMapper(new MdcDataFieldMapper(fieldHelper));
         }
 
         if (includeCallerData) {
-            additionalFields.putAll(buildCallerData(event.getCallerData()));
+            addFieldMapper(new CallerDataFieldMapper());
         }
 
         if (includeRootCauseData) {
-            additionalFields.putAll(buildRootExceptionData(event.getThrowableProxy()));
+            addFieldMapper(new RootExceptionDataFieldMapper());
         }
-
-        return additionalFields;
-    }
-
-    private static String buildMarkerStr(final Marker marker) {
-        if (!marker.hasReferences()) {
-            return marker.getName();
-        }
-
-        final StringBuilder sb = new StringBuilder(marker.getName());
-
-        final Iterator<Marker> it = marker.iterator();
-        do {
-            sb.append(", ").append(it.next().getName());
-        } while (it.hasNext());
-
-        return sb.toString();
-    }
-
-    private Map<String, Object> buildMdcData(final Map<String, String> mdcProperties) {
-        if (mdcProperties == null || mdcProperties.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        final Map<String, Object> additionalFields = new HashMap<>();
-        for (final Map.Entry<String, String> entry : mdcProperties.entrySet()) {
-            addField(additionalFields, entry.getKey(), entry.getValue());
-        }
-
-        return additionalFields;
-    }
-
-    private Map<String, Object> buildCallerData(final StackTraceElement[] callerData) {
-        if (callerData == null || callerData.length == 0) {
-            return Collections.emptyMap();
-        }
-
-        final StackTraceElement first = callerData[0];
-
-        final Map<String, Object> callerDataMap = new HashMap<>(4);
-        callerDataMap.put("source_file_name", first.getFileName());
-        callerDataMap.put("source_method_name", first.getMethodName());
-        callerDataMap.put("source_class_name", first.getClassName());
-        callerDataMap.put("source_line_number", first.getLineNumber());
-
-        return callerDataMap;
-    }
-
-    private Map<String, Object> buildRootExceptionData(final IThrowableProxy throwableProxy) {
-        final IThrowableProxy rootException = getRootException(throwableProxy);
-        if (rootException == null) {
-            return Collections.emptyMap();
-        }
-
-        final Map<String, Object> exceptionDataMap = new HashMap<>(2);
-        exceptionDataMap.put("root_cause_class_name", rootException.getClassName());
-        exceptionDataMap.put("root_cause_message", rootException.getMessage());
-
-        return exceptionDataMap;
-    }
-
-    private IThrowableProxy getRootException(final IThrowableProxy throwableProxy) {
-        if (throwableProxy == null) {
-            return null;
-        }
-
-        IThrowableProxy rootCause = throwableProxy;
-        while (rootCause.getCause() != null) {
-            rootCause = rootCause.getCause();
-        }
-
-        return rootCause;
     }
 
 }
