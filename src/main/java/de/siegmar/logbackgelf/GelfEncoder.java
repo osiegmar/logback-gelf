@@ -282,11 +282,10 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
                 + "Keys must apply to regex " + VALID_ADDITIONAL_FIELD_PATTERN);
         }
 
-        if (dst.get(fieldName) != null) {
+        final Object oldValue = dst.putIfAbsent(fieldName, convertToNumberIfNeeded(fieldValue));
+        if (oldValue != null) {
             throw new IllegalArgumentException("Field mapper tried to set already defined key '" + fieldName + "'.");
         }
-
-        dst.put(fieldName, convertToNumberIfNeeded(fieldValue));
     }
 
     private Object convertToNumberIfNeeded(final Object value) {
