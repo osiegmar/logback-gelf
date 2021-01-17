@@ -279,7 +279,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
         if (!VALID_ADDITIONAL_FIELD_PATTERN.matcher(fieldName).matches()) {
             throw new IllegalArgumentException("fieldName key '" + fieldName + "' is illegal. "
-                + "Keys must apply to regex ^[\\w.-]*$");
+                + "Keys must apply to regex " + VALID_ADDITIONAL_FIELD_PATTERN);
         }
 
         if (dst.get(fieldName) != null) {
