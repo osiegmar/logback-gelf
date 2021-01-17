@@ -19,6 +19,7 @@
 
 package de.siegmar.logbackgelf.mappers;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -33,8 +34,8 @@ public class SimpleFieldMapper<T> extends AbstractFixedNameFieldMapper<T> {
     }
 
     @Override
-    protected T getValue(final ILoggingEvent event) {
-        return valueGetter.apply(event);
+    protected Optional<T> getValue(final ILoggingEvent event) {
+        return Optional.ofNullable(valueGetter.apply(event));
     }
 
 }

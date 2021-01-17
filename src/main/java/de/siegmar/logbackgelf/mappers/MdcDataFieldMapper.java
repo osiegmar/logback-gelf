@@ -20,6 +20,7 @@
 package de.siegmar.logbackgelf.mappers;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -36,16 +37,14 @@ public class MdcDataFieldMapper implements GelfFieldMapper<Object> {
 
     @Override
     public void mapField(final ILoggingEvent event, final BiConsumer<String, Object> valueHandler) {
-        final Map<String, String> mdcProperties = event.getMDCPropertyMap();
-        if (mdcProperties == null || mdcProperties.isEmpty()) {
-            return;
-        }
-
-        for (final Map.Entry<String, String> entry : mdcProperties.entrySet()) {
-            if (fieldHelper.isValidFieldName(entry.getKey())) {
-                valueHandler.accept(entry.getKey(), fieldHelper.convertToNumberIfNeeded(entry.getValue()));
-            }
-        }
+        Optional.ofNullable(event.getMDCPropertyMap())
+            .ifPresent(p -> {
+                for (final Map.Entry<String, String> entry : p.entrySet()) {
+                    if (fieldHelper.isValidFieldName(entry.getKey())) {
+                        valueHandler.accept(entry.getKey(), fieldHelper.convertToNumberIfNeeded(entry.getValue()));
+                    }
+                }
+            });
     }
 
 }

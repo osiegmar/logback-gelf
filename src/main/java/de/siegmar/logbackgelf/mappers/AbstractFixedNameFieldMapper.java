@@ -19,6 +19,7 @@
 
 package de.siegmar.logbackgelf.mappers;
 
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -34,12 +35,9 @@ public abstract class AbstractFixedNameFieldMapper<T> implements GelfFieldMapper
 
     @Override
     public void mapField(final ILoggingEvent event, final BiConsumer<String, T> valueHandler) {
-        final T value = getValue(event);
-        if (value != null) {
-            valueHandler.accept(fieldName, value);
-        }
+        getValue(event).ifPresent(v -> valueHandler.accept(fieldName, v));
     }
 
-    protected abstract T getValue(ILoggingEvent event);
+    protected abstract Optional<T> getValue(ILoggingEvent event);
 
 }

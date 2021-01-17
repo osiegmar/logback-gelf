@@ -19,6 +19,7 @@
 
 package de.siegmar.logbackgelf.mappers;
 
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -28,17 +29,15 @@ public class CallerDataFieldMapper implements GelfFieldMapper<Object> {
 
     @Override
     public void mapField(final ILoggingEvent event, final BiConsumer<String, Object> valueHandler) {
-        final StackTraceElement[] callerData = event.getCallerData();
-        if (callerData == null || callerData.length == 0) {
-            return;
-        }
-
-        final StackTraceElement first = callerData[0];
-
-        valueHandler.accept("source_file_name", first.getFileName());
-        valueHandler.accept("source_method_name", first.getMethodName());
-        valueHandler.accept("source_class_name", first.getClassName());
-        valueHandler.accept("source_line_number", first.getLineNumber());
+        Optional.ofNullable(event.getCallerData())
+            .filter(s -> s.length > 0)
+            .map(s -> s[0])
+            .ifPresent(first -> {
+                valueHandler.accept("source_file_name", first.getFileName());
+                valueHandler.accept("source_method_name", first.getMethodName());
+                valueHandler.accept("source_class_name", first.getClassName());
+                valueHandler.accept("source_line_number", first.getLineNumber());
+            });
     }
 
 }

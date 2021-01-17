@@ -19,6 +19,7 @@
 
 package de.siegmar.logbackgelf.mappers;
 
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -29,15 +30,11 @@ public class RootExceptionDataFieldMapper implements GelfFieldMapper<Object> {
 
     @Override
     public void mapField(final ILoggingEvent event, final BiConsumer<String, Object> valueHandler) {
-        final IThrowableProxy throwableProxy = event.getThrowableProxy();
-        final IThrowableProxy rootException = getRootException(throwableProxy);
-        if (rootException == null) {
-            return;
-        }
-
-        valueHandler.accept("root_cause_class_name", rootException.getClassName());
-        valueHandler.accept("root_cause_message", rootException.getMessage());
-
+        Optional.ofNullable(getRootException(event.getThrowableProxy()))
+            .ifPresent(rootException -> {
+                valueHandler.accept("root_cause_class_name", rootException.getClassName());
+                valueHandler.accept("root_cause_message", rootException.getMessage());
+            });
     }
 
     private IThrowableProxy getRootException(final IThrowableProxy throwableProxy) {
