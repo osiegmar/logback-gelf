@@ -19,13 +19,15 @@
 
 package de.siegmar.logbackgelf;
 
+import java.math.BigDecimal;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.regex.Pattern;
 
 import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -43,6 +45,7 @@ import de.siegmar.logbackgelf.mappers.SimpleFieldMapper;
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
+    private static final Pattern VALID_ADDITIONAL_FIELD_PATTERN = Pattern.compile("^[\\w.-]*$");
     private static final String DEFAULT_SHORT_PATTERN = "%m%nopex";
     private static final String DEFAULT_FULL_PATTERN = "%m%n";
 
@@ -117,13 +120,18 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private PatternLayout fullPatternLayout;
 
     /**
+     * Log numbers as String. Default: false.
+     */
+    private boolean numbersAsString;
+
+    /**
      * Additional, static fields to send to graylog. Defaults: none.
      */
-    private Map<String, Object> staticFields = new HashMap<>();
+    private final Map<String, Object> staticFields = new HashMap<>();
+
+    private final List<GelfFieldMapper<?>> builtInFieldMappers = new ArrayList<>();
 
     private final List<GelfFieldMapper<?>> fieldMappers = new ArrayList<>();
-
-    private final GelfFieldHelper fieldHelper = new GelfFieldHelper(this);
 
     public String getOriginHost() {
         return originHost;
@@ -214,11 +222,11 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     }
 
     public boolean isNumbersAsString() {
-        return fieldHelper.isNumbersAsString();
+        return numbersAsString;
     }
 
     public void setNumbersAsString(final boolean numbersAsString) {
-        this.fieldHelper.setNumbersAsString(numbersAsString);
+        this.numbersAsString = numbersAsString;
     }
 
     public PatternLayout getShortPatternLayout() {
@@ -238,24 +246,59 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     }
 
     public Map<String, Object> getStaticFields() {
-        return staticFields;
-    }
-
-    public void setStaticFields(final Map<String, Object> staticFields) {
-        this.staticFields = Objects.requireNonNull(staticFields);
+        return Collections.unmodifiableMap(staticFields);
     }
 
     public void addStaticField(final String staticField) {
         final String[] split = staticField.split(":", 2);
         if (split.length == 2) {
-            fieldHelper.addField(staticFields, split[0].trim(), split[1].trim());
+            try {
+                addField(staticFields, split[0].trim(), split[1].trim());
+            } catch (final IllegalArgumentException e) {
+                addWarn("Could not add field " + staticField, e);
+            }
         } else {
             addWarn("staticField must be in format key:value - rejecting '" + staticField + "'");
         }
     }
 
+    public List<GelfFieldMapper<?>> getFieldMappers() {
+        return Collections.unmodifiableList(fieldMappers);
+    }
+
     public void addFieldMapper(final GelfFieldMapper<?> fieldMapper) {
         fieldMappers.add(fieldMapper);
+    }
+
+    private void addField(final Map<String, Object> dst, final String fieldName, final Object fieldValue) {
+        if (fieldName.isEmpty()) {
+            throw new IllegalArgumentException("fieldName key must not be empty");
+        }
+        if ("id".equalsIgnoreCase(fieldName)) {
+            throw new IllegalArgumentException("fieldName key name 'id' is prohibited");
+        }
+        if (!VALID_ADDITIONAL_FIELD_PATTERN.matcher(fieldName).matches()) {
+            throw new IllegalArgumentException("fieldName key '" + fieldName + "' is illegal. "
+                + "Keys must apply to regex ^[\\w.-]*$");
+        }
+
+        if (dst.get(fieldName) != null) {
+            throw new IllegalArgumentException("Field mapper tried to set already defined key '" + fieldName + "'.");
+        }
+
+        dst.put(fieldName, convertToNumberIfNeeded(fieldValue));
+    }
+
+    private Object convertToNumberIfNeeded(final Object value) {
+        if (numbersAsString || !(value instanceof String)) {
+            return value;
+        }
+
+        try {
+            return new BigDecimal((String) value);
+        } catch (final NumberFormatException e) {
+            return value;
+        }
     }
 
     @Override
@@ -287,6 +330,35 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         return patternLayout;
     }
 
+    private void addBuiltInFieldMappers() {
+        builtInFieldMappers.add(new SimpleFieldMapper<>(loggerNameKey, ILoggingEvent::getLoggerName));
+        builtInFieldMappers.add(new SimpleFieldMapper<>(threadNameKey, ILoggingEvent::getThreadName));
+
+        if (includeLevelName) {
+            builtInFieldMappers.add(new SimpleFieldMapper<>(levelNameKey, event -> event.getLevel().toString()));
+        }
+
+        if (includeRawMessage) {
+            builtInFieldMappers.add(new SimpleFieldMapper<>("raw_message", ILoggingEvent::getMessage));
+        }
+
+        if (includeCallerData) {
+            builtInFieldMappers.add(new CallerDataFieldMapper());
+        }
+
+        if (includeRootCauseData) {
+            builtInFieldMappers.add(new RootExceptionDataFieldMapper());
+        }
+
+        if (includeMarker) {
+            builtInFieldMappers.add(new MarkerFieldMapper("marker"));
+        }
+
+        if (includeMdcData) {
+            builtInFieldMappers.add(new MdcDataFieldMapper());
+        }
+    }
+
     @Override
     public byte[] headerBytes() {
         return null;
@@ -294,20 +366,18 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     @Override
     public byte[] encode(final ILoggingEvent event) {
-        final String shortMessage = shortPatternLayout.doLayout(event);
-        final String fullMessage = fullPatternLayout.doLayout(event);
         final Map<String, Object> additionalFields = new HashMap<>(staticFields);
+        addFieldMapperData(event, additionalFields, builtInFieldMappers);
+        addFieldMapperData(event, additionalFields, fieldMappers);
 
-        fieldMappers.forEach(fieldMapper -> fieldMapper.mapField(event, (key, value) -> {
-            final Object oldValue = additionalFields.put(key, value);
-            if (oldValue != null) {
-                addWarn("additional field with key '" + key + "' is already set");
-                additionalFields.put(key, oldValue);
-            }
-        }));
-
-        final GelfMessage gelfMessage = new GelfMessage(originHost, shortMessage, fullMessage,
-            event.getTimeStamp(), LevelToSyslogSeverity.convert(event), additionalFields);
+        final GelfMessage gelfMessage = new GelfMessage(
+            originHost,
+            shortPatternLayout.doLayout(event),
+            fullPatternLayout.doLayout(event),
+            event.getTimeStamp(),
+            LevelToSyslogSeverity.convert(event),
+            additionalFields
+        );
 
         String jsonStr = gelfMessageToJson(gelfMessage);
         if (appendNewline) {
@@ -315,6 +385,24 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
 
         return jsonStr.getBytes(StandardCharsets.UTF_8);
+    }
+
+    @SuppressWarnings("checkstyle:IllegalCatch")
+    private void addFieldMapperData(final ILoggingEvent event, final Map<String, Object> additionalFields,
+                                    final List<GelfFieldMapper<?>> mappers) {
+        for (final GelfFieldMapper<?> fieldMapper : mappers) {
+            try {
+                fieldMapper.mapField(event, (key, value) -> {
+                    try {
+                        addField(additionalFields, key, value);
+                    } catch (final IllegalArgumentException e) {
+                        addWarn("Could not add field " + key, e);
+                    }
+                });
+            } catch (final Exception e) {
+                addError("Exception in field mapper", e);
+            }
+        }
     }
 
     /**
@@ -330,35 +418,6 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     @Override
     public byte[] footerBytes() {
         return null;
-    }
-
-    private void addBuiltInFieldMappers() {
-        addFieldMapper(new SimpleFieldMapper<>(loggerNameKey, ILoggingEvent::getLoggerName));
-        addFieldMapper(new SimpleFieldMapper<>(threadNameKey, ILoggingEvent::getThreadName));
-
-        if (includeRawMessage) {
-            addFieldMapper(new SimpleFieldMapper<>("raw_message", ILoggingEvent::getMessage));
-        }
-
-        if (includeMarker) {
-            addFieldMapper(new MarkerFieldMapper("marker"));
-        }
-
-        if (includeLevelName) {
-            addFieldMapper(new SimpleFieldMapper<>(levelNameKey, event -> event.getLevel().levelStr));
-        }
-
-        if (includeMdcData) {
-            addFieldMapper(new MdcDataFieldMapper(fieldHelper));
-        }
-
-        if (includeCallerData) {
-            addFieldMapper(new CallerDataFieldMapper());
-        }
-
-        if (includeRootCauseData) {
-            addFieldMapper(new RootExceptionDataFieldMapper());
-        }
     }
 
 }

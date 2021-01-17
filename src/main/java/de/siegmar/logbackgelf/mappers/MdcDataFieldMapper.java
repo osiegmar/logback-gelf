@@ -19,32 +19,18 @@
 
 package de.siegmar.logbackgelf.mappers;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import de.siegmar.logbackgelf.GelfFieldHelper;
 import de.siegmar.logbackgelf.GelfFieldMapper;
 
-public class MdcDataFieldMapper implements GelfFieldMapper<Object> {
-
-    private final GelfFieldHelper fieldHelper;
-
-    public MdcDataFieldMapper(final GelfFieldHelper fieldHelper) {
-        this.fieldHelper = fieldHelper;
-    }
+public class MdcDataFieldMapper implements GelfFieldMapper<String> {
 
     @Override
-    public void mapField(final ILoggingEvent event, final BiConsumer<String, Object> valueHandler) {
+    public void mapField(final ILoggingEvent event, final BiConsumer<String, String> valueHandler) {
         Optional.ofNullable(event.getMDCPropertyMap())
-            .ifPresent(p -> {
-                for (final Map.Entry<String, String> entry : p.entrySet()) {
-                    if (fieldHelper.isValidFieldName(entry.getKey())) {
-                        valueHandler.accept(entry.getKey(), fieldHelper.convertToNumberIfNeeded(entry.getValue()));
-                    }
-                }
-            });
+            .ifPresent(p -> p.forEach(valueHandler));
     }
 
 }
