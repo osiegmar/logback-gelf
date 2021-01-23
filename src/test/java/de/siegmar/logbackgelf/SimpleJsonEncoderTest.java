@@ -21,92 +21,101 @@ package de.siegmar.logbackgelf;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.io.IOException;
+import java.io.StringWriter;
+
 import org.junit.jupiter.api.Test;
 
 public class SimpleJsonEncoderTest {
 
-    private final SimpleJsonEncoder enc = new SimpleJsonEncoder();
+    private final StringWriter writer = new StringWriter();
+    private final SimpleJsonEncoder enc;
 
-    @Test
-    public void unquoted() {
-        enc.appendToJSONUnquoted("aaa", 123);
-        assertEquals("{\"aaa\":123}", enc.toString());
+    public SimpleJsonEncoderTest() throws IOException {
+        enc = new SimpleJsonEncoder(writer);
     }
 
     @Test
-    public void string() {
-        enc.appendToJSON("aaa", "bbb");
-        assertEquals("{\"aaa\":\"bbb\"}", enc.toString());
+    public void unquoted() throws IOException {
+        enc.appendToJSONUnquoted("aaa", 123).close();
+        assertEquals("{\"aaa\":123}", writer.toString());
     }
 
     @Test
-    public void number() {
-        enc.appendToJSON("aaa", 123);
-        assertEquals("{\"aaa\":123}", enc.toString());
+    public void string() throws IOException {
+        enc.appendToJSON("aaa", "bbb").close();
+        assertEquals("{\"aaa\":\"bbb\"}", writer.toString());
     }
 
     @Test
-    public void quote() {
-        enc.appendToJSON("aaa", "\"");
-        assertEquals("{\"aaa\":\"\\\"\"}", enc.toString());
+    public void number() throws IOException {
+        enc.appendToJSON("aaa", 123).close();
+        assertEquals("{\"aaa\":123}", writer.toString());
     }
 
     @Test
-    public void reverseSolidus() {
-        enc.appendToJSON("aaa", "\\");
-        assertEquals("{\"aaa\":\"\\\\\"}", enc.toString());
+    public void quote() throws IOException {
+        enc.appendToJSON("aaa", "\"").close();
+        assertEquals("{\"aaa\":\"\\\"\"}", writer.toString());
     }
 
     @Test
-    public void solidus() {
-        enc.appendToJSON("aaa", "/");
-        assertEquals("{\"aaa\":\"\\/\"}", enc.toString());
+    public void reverseSolidus() throws IOException {
+        enc.appendToJSON("aaa", "\\").close();
+        assertEquals("{\"aaa\":\"\\\\\"}", writer.toString());
     }
 
     @Test
-    public void backspace() {
-        enc.appendToJSON("aaa", "\b");
-        assertEquals("{\"aaa\":\"\\b\"}", enc.toString());
+    public void solidus() throws IOException {
+        enc.appendToJSON("aaa", "/").close();
+        assertEquals("{\"aaa\":\"\\/\"}", writer.toString());
     }
 
     @Test
-    public void formFeed() {
-        enc.appendToJSON("aaa", "\f");
-        assertEquals("{\"aaa\":\"\\f\"}", enc.toString());
+    public void backspace() throws IOException {
+        enc.appendToJSON("aaa", "\b").close();
+        assertEquals("{\"aaa\":\"\\b\"}", writer.toString());
     }
 
     @Test
-    public void newline() {
-        enc.appendToJSON("aaa", "\n");
-        assertEquals("{\"aaa\":\"\\n\"}", enc.toString());
+    public void formFeed() throws IOException {
+        enc.appendToJSON("aaa", "\f").close();
+        assertEquals("{\"aaa\":\"\\f\"}", writer.toString());
     }
 
     @Test
-    public void carriageReturn() {
-        enc.appendToJSON("aaa", "\r");
-        assertEquals("{\"aaa\":\"\\r\"}", enc.toString());
+    public void newline() throws IOException {
+        enc.appendToJSON("aaa", "\n").close();
+        assertEquals("{\"aaa\":\"\\n\"}", writer.toString());
     }
 
     @Test
-    public void tab() {
-        enc.appendToJSON("aaa", "\t");
-        assertEquals("{\"aaa\":\"\\t\"}", enc.toString());
+    public void carriageReturn() throws IOException {
+        enc.appendToJSON("aaa", "\r").close();
+        assertEquals("{\"aaa\":\"\\r\"}", writer.toString());
+    }
+
+    @Test
+    public void tab() throws IOException {
+        enc.appendToJSON("aaa", "\t").close();
+        assertEquals("{\"aaa\":\"\\t\"}", writer.toString());
     }
 
     @Test
     @SuppressWarnings("checkstyle:avoidescapedunicodecharacters")
-    public void unicode() {
-        enc.appendToJSON("\u0002", "\u0007\u0019");
-        assertEquals("{\"\\u0002\":\"\\u0007\\u0019\"}", enc.toString());
+    public void unicode() throws IOException {
+        enc.appendToJSON("\u0002", "\u0007\u0019").close();
+        assertEquals("{\"\\u0002\":\"\\u0007\\u0019\"}", writer.toString());
     }
 
     @Test
-    public void multipleFields() {
+    public void multipleFields() throws IOException {
         enc.appendToJSONUnquoted("aaa", 123);
         enc.appendToJSON("bbb", "ccc");
         enc.appendToJSON("ddd", 123);
+        enc.close();
 
-        assertEquals("{\"aaa\":123,\"bbb\":\"ccc\",\"ddd\":123}", enc.toString());
+        assertEquals("{\"aaa\":123,\"bbb\":\"ccc\",\"ddd\":123}", writer.toString());
     }
 
 }

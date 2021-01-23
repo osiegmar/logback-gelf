@@ -19,6 +19,7 @@
 
 package de.siegmar.logbackgelf;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Map;
@@ -44,7 +45,7 @@ public class GelfMessageTest {
             + "\"level\":6,"
             + "\"_foo\":\"bar\""
             + "}",
-            message.toJSON());
+            asString(message.toJSON()));
     }
 
     @Test
@@ -63,7 +64,11 @@ public class GelfMessageTest {
             + "\"level\":6,"
             + "\"_foo\":\"bar\""
             + "}",
-            message.toJSON());
+            asString(message.toJSON()));
+    }
+
+    private String asString(final byte[] data) {
+        return new String(data, UTF_8);
     }
 
 }

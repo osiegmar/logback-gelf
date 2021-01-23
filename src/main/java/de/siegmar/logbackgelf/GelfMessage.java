@@ -19,6 +19,12 @@
 
 package de.siegmar.logbackgelf;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Objects;
@@ -29,6 +35,7 @@ import java.util.Objects;
 public class GelfMessage {
 
     private static final String VERSION = "1.1";
+    private static final int INITIAL_SIZE = 256;
 
     private final String host;
     private final String shortMessage;
@@ -49,22 +56,26 @@ public class GelfMessage {
             Objects.requireNonNull(additionalFields, "additionalFields must not be null");
     }
 
-    String toJSON() {
-        final SimpleJsonEncoder jsonEncoder = new SimpleJsonEncoder();
+    byte[] toJSON() {
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream(INITIAL_SIZE);
 
-        jsonEncoder
-            .appendToJSON("version", VERSION)
-            .appendToJSON("host", host)
-            .appendToJSON("short_message", shortMessage)
-            .appendToJSON("full_message", fullMessage)
-            .appendToJSONUnquoted("timestamp", timestampToGelfNotation(timestamp))
-            .appendToJSONUnquoted("level", level);
+        try (SimpleJsonEncoder jsonEncoder = new SimpleJsonEncoder(new OutputStreamWriter(bos, UTF_8))) {
+            jsonEncoder
+                .appendToJSON("version", VERSION)
+                .appendToJSON("host", host)
+                .appendToJSON("short_message", shortMessage)
+                .appendToJSON("full_message", fullMessage)
+                .appendToJSONUnquoted("timestamp", timestampToGelfNotation(timestamp))
+                .appendToJSONUnquoted("level", level);
 
-        for (final Map.Entry<String, Object> entry : additionalFields.entrySet()) {
-            jsonEncoder.appendToJSON('_' + entry.getKey(), entry.getValue());
+            for (final Map.Entry<String, Object> entry : additionalFields.entrySet()) {
+                jsonEncoder.appendToJSON('_' + entry.getKey(), entry.getValue());
+            }
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
         }
 
-        return jsonEncoder.toString();
+        return bos.toByteArray();
     }
 
     @SuppressWarnings("checkstyle:MagicNumber")

@@ -21,6 +21,7 @@ package de.siegmar.logbackgelf;
 
 import java.math.BigDecimal;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -378,12 +379,20 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
             additionalFields
         );
 
-        String jsonStr = gelfMessageToJson(gelfMessage);
+        final byte[] json = gelfMessageToJson(gelfMessage);
+
         if (appendNewline) {
-            jsonStr += System.lineSeparator();
+            final byte[] sep = System.lineSeparator().getBytes(StandardCharsets.UTF_8);
+            final ByteBuffer bb = ByteBuffer.allocate(json.length + sep.length);
+            bb.put(json);
+            for (final byte b : sep) {
+                bb.put(b);
+            }
+            bb.flip();
+            return bb.array();
         }
 
-        return jsonStr.getBytes(StandardCharsets.UTF_8);
+        return json;
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
@@ -410,7 +419,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      * @param gelfMessage the GELF message to serialize.
      * @return the serialized GELF message (in JSON format).
      */
-    protected String gelfMessageToJson(final GelfMessage gelfMessage) {
+    protected byte[] gelfMessageToJson(final GelfMessage gelfMessage) {
         return gelfMessage.toJSON();
     }
 

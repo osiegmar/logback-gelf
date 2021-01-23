@@ -19,8 +19,6 @@
 
 package de.siegmar.logbackgelf.custom;
 
-import java.nio.charset.StandardCharsets;
-
 import com.google.common.hash.Hashing;
 
 import de.siegmar.logbackgelf.GelfEncoder;
@@ -30,9 +28,9 @@ import de.siegmar.logbackgelf.GelfMessage;
 public class CustomGelfEncoder extends GelfEncoder {
 
     @Override
-    protected String gelfMessageToJson(final GelfMessage gelfMessage) {
-        final String json = super.gelfMessageToJson(gelfMessage);
-        final String sha256 = Hashing.sha256().hashString(json, StandardCharsets.UTF_8).toString();
+    protected byte[] gelfMessageToJson(final GelfMessage gelfMessage) {
+        final byte[] json = super.gelfMessageToJson(gelfMessage);
+        final String sha256 = Hashing.sha256().hashBytes(json).toString();
         gelfMessage.getAdditionalFields().put("sha256", sha256);
         return super.gelfMessageToJson(gelfMessage);
     }

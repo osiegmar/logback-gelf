@@ -19,17 +19,21 @@
 
 package de.siegmar.logbackgelf;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.Writer;
+
 /**
  * Simple JSON encoder with very basic functionality that is required by this library.
  */
-class SimpleJsonEncoder {
+class SimpleJsonEncoder implements Closeable {
 
     private static final char QUOTE = '"';
 
     /**
-     * Internal buffer.
+     * Wrapped writer.
      */
-    private final StringBuilder sb = new StringBuilder(256);
+    private final Writer writer;
 
     /**
      * Flag to determine if a comma has to be added on next append execution.
@@ -41,8 +45,9 @@ class SimpleJsonEncoder {
      */
     private boolean closed;
 
-    SimpleJsonEncoder() {
-        sb.append('{');
+    SimpleJsonEncoder(final Writer writer) throws IOException {
+        this.writer = writer;
+        writer.append('{');
     }
 
     /**
@@ -50,16 +55,18 @@ class SimpleJsonEncoder {
      *
      * @return this
      */
-    SimpleJsonEncoder appendToJSON(final String key, final Object value) {
+    SimpleJsonEncoder appendToJSON(final String key, final Object value) throws IOException {
         if (closed) {
             throw new IllegalStateException("Encoder already closed");
         }
         if (value != null) {
             appendKey(key);
             if (value instanceof Number) {
-                sb.append(value.toString());
+                writer.append(value.toString());
             } else {
-                sb.append(QUOTE).append(escapeString(value.toString())).append(QUOTE);
+                writer.append(QUOTE);
+                escapeString(value.toString());
+                writer.append(QUOTE);
             }
         }
         return this;
@@ -71,65 +78,66 @@ class SimpleJsonEncoder {
      *
      * @return this
      */
-    SimpleJsonEncoder appendToJSONUnquoted(final String key, final Object value) {
+    SimpleJsonEncoder appendToJSONUnquoted(final String key, final Object value) throws IOException {
         if (closed) {
             throw new IllegalStateException("Encoder already closed");
         }
         if (value != null) {
             appendKey(key);
-            sb.append(value);
+            writer.append(value.toString());
         }
         return this;
     }
 
-    private void appendKey(final String key) {
+    private void appendKey(final String key) throws IOException {
         if (started) {
-            sb.append(',');
+            writer.append(',');
         } else {
             started = true;
         }
-        sb.append(QUOTE).append(escapeString(key)).append(QUOTE).append(':');
+        writer.append(QUOTE);
+        escapeString(key);
+        writer.append(QUOTE).append(':');
     }
 
     /**
      * Escape characters in string, if required per RFC-7159 (JSON).
      *
      * @param str string to be escaped.
-     * @return escaped string.
      */
     @SuppressWarnings("checkstyle:cyclomaticcomplexity")
-    private static String escapeString(final String str) {
-        final StringBuilder sb = new StringBuilder(str.length());
-
+    private void escapeString(final String str) throws IOException {
         for (final char ch : str.toCharArray()) {
             switch (ch) {
                 case QUOTE:
                 case '\\':
                 case '/':
-                    sb.append('\\');
-                    sb.append(ch);
+                    writer.append('\\');
+                    writer.append(ch);
                     break;
                 case '\b':
-                    sb.append("\\b");
+                    writer.append("\\b");
                     break;
                 case '\f':
-                    sb.append("\\f");
+                    writer.append("\\f");
                     break;
                 case '\n':
-                    sb.append("\\n");
+                    writer.append("\\n");
                     break;
                 case '\r':
-                    sb.append("\\r");
+                    writer.append("\\r");
                     break;
                 case '\t':
-                    sb.append("\\t");
+                    writer.append("\\t");
                     break;
                 default:
-                    sb.append(ch < ' ' ? escapeCharacter(ch) : ch);
+                    if (ch < ' ') {
+                        writer.append(escapeCharacter(ch));
+                    } else {
+                        writer.append(ch);
+                    }
             }
         }
-
-        return sb.toString();
     }
 
     /**
@@ -155,18 +163,13 @@ class SimpleJsonEncoder {
         return "\\u" + prefix + Integer.toHexString(ch);
     }
 
-    /**
-     * Returns the JSON representation of all added fields.
-     *
-     * @return JSON string.
-     */
     @Override
-    public String toString() {
+    public void close() throws IOException {
         if (!closed) {
-            sb.append('}');
+            writer.append('}');
             closed = true;
         }
-        return sb.toString();
+        writer.close();
     }
 
 }
