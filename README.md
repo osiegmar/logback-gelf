@@ -178,16 +178,6 @@ If you have any problems, enable the debug mode and check the logs.
 </configuration>
 ```
 
-
-## Contribution
-
-- Fork
-- Code
-- Add test(s)
-- Commit
-- Send me a pull request
-
-
 ## Copyright
 
 Copyright (C) 2016-2020 Oliver Siegmar
