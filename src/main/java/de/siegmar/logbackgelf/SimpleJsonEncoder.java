@@ -107,7 +107,8 @@ class SimpleJsonEncoder implements Closeable {
      */
     @SuppressWarnings("checkstyle:cyclomaticcomplexity")
     private void escapeString(final String str) throws IOException {
-        for (final char ch : str.toCharArray()) {
+        for (int i = 0; i < str.length(); i++) {
+            final char ch = str.charAt(i);
             switch (ch) {
                 case QUOTE:
                 case '\\':
