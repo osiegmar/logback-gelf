@@ -43,6 +43,7 @@ public class XmlConfigurationTest {
     @BeforeEach
     public void init() {
         context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        context.getStatusManager().clear();
         context.reset();
     }
 
