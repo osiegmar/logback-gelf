@@ -1,0 +1,43 @@
+<configuration>
+
+    <appender name="GELF" class="de.siegmar.logbackgelf.GelfTcpTlsAppender">
+        <graylogHost>localhost</graylogHost>
+        <graylogPort>12201</graylogPort>
+        <connectTimeout>15000</connectTimeout>
+        <reconnectInterval>300</reconnectInterval>
+        <maxRetries>2</maxRetries>
+        <retryDelay>3000</retryDelay>
+        <poolSize>2</poolSize>
+        <poolMaxWaitTime>5000</poolMaxWaitTime>
+        <insecure>false</insecure>
+        <encoder class="de.siegmar.logbackgelf.GelfEncoder">
+            <originHost>localhost</originHost>
+            <includeRawMessage>false</includeRawMessage>
+            <includeMarker>true</includeMarker>
+            <includeMdcData>true</includeMdcData>
+            <includeCallerData>false</includeCallerData>
+            <includeRootCauseData>false</includeRootCauseData>
+            <includeLevelName>false</includeLevelName>
+            <shortPatternLayout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%m%nopex</pattern>
+            </shortPatternLayout>
+            <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%m%n</pattern>
+            </fullPatternLayout>
+            <numbersAsString>false</numbersAsString>
+            <staticField>app_name:backend</staticField>
+            <staticField>os_arch:${os.arch}</staticField>
+            <staticField>os_name:${os.name}</staticField>
+            <staticField>os_version:${os.version}</staticField>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNC GELF" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="GELF" />
+    </appender>
+
+    <root level="debug">
+        <appender-ref ref="ASYNC GELF" />
+    </root>
+
+</configuration>
