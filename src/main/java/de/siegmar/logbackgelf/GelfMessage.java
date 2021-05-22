@@ -56,33 +56,6 @@ public class GelfMessage {
             Objects.requireNonNull(additionalFields, "additionalFields must not be null");
     }
 
-    byte[] toJSON() {
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream(INITIAL_SIZE);
-
-        try (SimpleJsonEncoder jsonEncoder = new SimpleJsonEncoder(new OutputStreamWriter(bos, UTF_8))) {
-            jsonEncoder
-                .appendToJSON("version", VERSION)
-                .appendToJSON("host", host)
-                .appendToJSON("short_message", shortMessage)
-                .appendToJSON("full_message", fullMessage)
-                .appendToJSONUnquoted("timestamp", timestampToGelfNotation(timestamp))
-                .appendToJSONUnquoted("level", level);
-
-            for (final Map.Entry<String, Object> entry : additionalFields.entrySet()) {
-                jsonEncoder.appendToJSON('_' + entry.getKey(), entry.getValue());
-            }
-        } catch (final IOException e) {
-            throw new UncheckedIOException(e);
-        }
-
-        return bos.toByteArray();
-    }
-
-    @SuppressWarnings("checkstyle:MagicNumber")
-    private static String timestampToGelfNotation(final long timestamp) {
-        return new BigDecimal(timestamp).movePointLeft(3).toPlainString();
-    }
-
     public String getHost() {
         return host;
     }
@@ -105,6 +78,32 @@ public class GelfMessage {
 
     public Map<String, Object> getAdditionalFields() {
         return additionalFields;
+    }
+
+    byte[] toJSON() {
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream(INITIAL_SIZE);
+
+        try (SimpleJsonEncoder jsonEncoder = new SimpleJsonEncoder(new OutputStreamWriter(bos, UTF_8))) {
+            jsonEncoder
+                .appendToJSON("version", VERSION)
+                .appendToJSON("host", host)
+                .appendToJSON("short_message", shortMessage)
+                .appendToJSON("full_message", fullMessage)
+                .appendToJSONUnquoted("timestamp", timestampToGelfNotation(timestamp))
+                .appendToJSONUnquoted("level", level);
+
+            additionalFields.forEach((key, value) ->
+                jsonEncoder.appendToJSON('_' + key, value));
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        return bos.toByteArray();
+    }
+
+    @SuppressWarnings("checkstyle:MagicNumber")
+    private static String timestampToGelfNotation(final long timestamp) {
+        return new BigDecimal(timestamp).movePointLeft(3).toPlainString();
     }
 
 }

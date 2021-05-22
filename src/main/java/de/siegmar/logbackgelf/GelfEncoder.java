@@ -252,14 +252,15 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     public void addStaticField(final String staticField) {
         final String[] split = staticField.split(":", 2);
-        if (split.length == 2) {
-            try {
-                addField(staticFields, split[0].trim(), split[1].trim());
-            } catch (final IllegalArgumentException e) {
-                addWarn("Could not add field " + staticField, e);
-            }
-        } else {
+        if (split.length != 2) {
             addWarn("staticField must be in format key:value - rejecting '" + staticField + "'");
+            return;
+        }
+
+        try {
+            addField(staticFields, split[0].trim(), split[1].trim());
+        } catch (final IllegalArgumentException e) {
+            addWarn("Could not add field " + staticField, e);
         }
     }
 

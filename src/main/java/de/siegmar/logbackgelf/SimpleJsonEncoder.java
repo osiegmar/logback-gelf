@@ -21,6 +21,7 @@ package de.siegmar.logbackgelf;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.io.Writer;
 
 /**
@@ -45,9 +46,13 @@ class SimpleJsonEncoder implements Closeable {
      */
     private boolean closed;
 
-    SimpleJsonEncoder(final Writer writer) throws IOException {
+    SimpleJsonEncoder(final Writer writer) {
         this.writer = writer;
-        writer.append('{');
+        try {
+            writer.write('{');
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /**
@@ -55,18 +60,22 @@ class SimpleJsonEncoder implements Closeable {
      *
      * @return this
      */
-    SimpleJsonEncoder appendToJSON(final String key, final Object value) throws IOException {
+    SimpleJsonEncoder appendToJSON(final String key, final Object value) {
         if (closed) {
             throw new IllegalStateException("Encoder already closed");
         }
         if (value != null) {
-            appendKey(key);
-            if (value instanceof Number) {
-                writer.append(value.toString());
-            } else {
-                writer.append(QUOTE);
-                escapeString(value.toString());
-                writer.append(QUOTE);
+            try {
+                appendKey(key);
+                if (value instanceof Number) {
+                    writer.write(value.toString());
+                } else {
+                    writer.write(QUOTE);
+                    escapeString(value.toString());
+                    writer.write(QUOTE);
+                }
+            } catch (final IOException e) {
+                throw new UncheckedIOException(e);
             }
         }
         return this;
@@ -78,26 +87,31 @@ class SimpleJsonEncoder implements Closeable {
      *
      * @return this
      */
-    SimpleJsonEncoder appendToJSONUnquoted(final String key, final Object value) throws IOException {
+    SimpleJsonEncoder appendToJSONUnquoted(final String key, final Object value) {
         if (closed) {
             throw new IllegalStateException("Encoder already closed");
         }
         if (value != null) {
-            appendKey(key);
-            writer.append(value.toString());
+            try {
+                appendKey(key);
+                writer.write(value.toString());
+            } catch (final IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
         return this;
     }
 
     private void appendKey(final String key) throws IOException {
         if (started) {
-            writer.append(',');
+            writer.write(',');
         } else {
             started = true;
         }
-        writer.append(QUOTE);
+        writer.write(QUOTE);
         escapeString(key);
-        writer.append(QUOTE).append(':');
+        writer.write(QUOTE);
+        writer.write(':');
     }
 
     /**
@@ -113,29 +127,29 @@ class SimpleJsonEncoder implements Closeable {
                 case QUOTE:
                 case '\\':
                 case '/':
-                    writer.append('\\');
-                    writer.append(ch);
+                    writer.write('\\');
+                    writer.write(ch);
                     break;
                 case '\b':
-                    writer.append("\\b");
+                    writer.write("\\b");
                     break;
                 case '\f':
-                    writer.append("\\f");
+                    writer.write("\\f");
                     break;
                 case '\n':
-                    writer.append("\\n");
+                    writer.write("\\n");
                     break;
                 case '\r':
-                    writer.append("\\r");
+                    writer.write("\\r");
                     break;
                 case '\t':
-                    writer.append("\\t");
+                    writer.write("\\t");
                     break;
                 default:
                     if (ch < ' ') {
-                        writer.append(escapeCharacter(ch));
+                        writer.write(escapeCharacter(ch));
                     } else {
-                        writer.append(ch);
+                        writer.write(ch);
                     }
             }
         }
@@ -167,7 +181,7 @@ class SimpleJsonEncoder implements Closeable {
     @Override
     public void close() throws IOException {
         if (!closed) {
-            writer.append('}');
+            writer.write('}');
             closed = true;
         }
         writer.close();

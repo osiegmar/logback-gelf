@@ -21,6 +21,7 @@ package de.siegmar.logbackgelf;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.Map;
 
@@ -36,6 +37,13 @@ public class GelfMessageTest {
 
         final GelfMessage message = new GelfMessage("host", "short message", null,
                 1584271169123L, 6, additionalFields);
+
+        assertEquals("host", message.getHost());
+        assertEquals("short message", message.getShortMessage());
+        assertNull(message.getFullMessage());
+        assertEquals(1584271169123L, message.getTimestamp());
+        assertEquals(6, message.getLevel());
+        assertEquals(additionalFields, message.getAdditionalFields());
 
         assertEquals("{"
             + "\"version\":\"1.1\","
