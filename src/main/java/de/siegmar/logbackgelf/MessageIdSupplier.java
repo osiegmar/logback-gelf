@@ -20,12 +20,13 @@
 package de.siegmar.logbackgelf;
 
 import java.util.Random;
+import java.util.function.Supplier;
 
 /**
  * Supplier implementation for GELF message IDs as used for UDP chunks. Unfortunately the GELF
  * protocol limits the message id length to 8 bytes thus an UUID cannot be used (16 bytes).
  */
-public class MessageIdSupplier {
+public class MessageIdSupplier implements Supplier<Long> {
 
     // static random to keep Spotbugs happy
     private static final Random RANDOM = new Random();
@@ -40,6 +41,7 @@ public class MessageIdSupplier {
     }
 
     @SuppressWarnings("checkstyle:magicnumber")
+    @Override
     public Long get() {
         return (long) machinePart << 32 | System.nanoTime() & 0xffffffffL;
     }

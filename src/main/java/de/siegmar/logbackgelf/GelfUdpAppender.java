@@ -26,6 +26,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.util.function.Supplier;
 import java.util.zip.DeflaterOutputStream;
 
 public class GelfUdpAppender extends AbstractGelfAppender {
@@ -41,7 +42,7 @@ public class GelfUdpAppender extends AbstractGelfAppender {
      */
     private boolean useCompression = true;
 
-    private MessageIdSupplier messageIdSupplier = new MessageIdSupplier();
+    private Supplier<Long> messageIdSupplier = new MessageIdSupplier();
 
     private RobustChannel robustChannel;
 
@@ -65,11 +66,11 @@ public class GelfUdpAppender extends AbstractGelfAppender {
         this.useCompression = useCompression;
     }
 
-    public MessageIdSupplier getMessageIdSupplier() {
+    public Supplier<Long> getMessageIdSupplier() {
         return messageIdSupplier;
     }
 
-    public void setMessageIdSupplier(final MessageIdSupplier messageIdSupplier) {
+    public void setMessageIdSupplier(final Supplier<Long> messageIdSupplier) {
         this.messageIdSupplier = messageIdSupplier;
     }
 
