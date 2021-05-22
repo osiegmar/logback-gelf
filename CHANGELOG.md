@@ -6,12 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Add poolMaxIdleTime configuration option to TCP appenders
+- Add poolMaxIdleTime configuration option to TCP appenders (#49)
   [\#49](https://github.com/osiegmar/logback-gelf/pull/49)
 
 ### Changed
 - Removed MD5 for creating Message-IDs and rewrote MessageIdSupplier logic (#52)
   [\#52](https://github.com/osiegmar/logback-gelf/issues/52)
+- Ability to add custom fields to GelfMessage, computed from ILoggingEvent (#55)
+  [\#55](https://github.com/osiegmar/logback-gelf/issues/55)
+- Refactor `de.siegmar.logbackgelf.GelfMessage#toJSON` to return `byte[]`
+  instead of String for proper performance. (#58)
+  [\#58](https://github.com/osiegmar/logback-gelf/issues/58)
+- Improve `SimpleJsonEncoder.escapeString` memory usage. (#61)
+  [\#61](https://github.com/osiegmar/logback-gelf/issues/61)
 
 ## [3.0.0] - 2020-03-15
 ### Added
