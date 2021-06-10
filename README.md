@@ -61,6 +61,7 @@ Simple TCP configuration:
     <!-- Use AsyncAppender to prevent slowdowns -->
     <appender name="ASYNC GELF" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="GELF" />
+        <neverBlock>true</neverBlock>
     </appender>
 
     <root level="debug">
@@ -83,6 +84,7 @@ Simple TCP with TLS configuration:
     <!-- Use AsyncAppender to prevent slowdowns -->
     <appender name="ASYNC GELF" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="GELF" />
+        <neverBlock>true</neverBlock>
     </appender>
 
     <root level="debug">
