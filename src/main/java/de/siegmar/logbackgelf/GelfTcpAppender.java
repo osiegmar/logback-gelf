@@ -26,6 +26,7 @@ import de.siegmar.logbackgelf.pool.SimpleObjectPool;
 public class GelfTcpAppender extends AbstractGelfAppender {
 
     private static final int DEFAULT_CONNECT_TIMEOUT = 15_000;
+    private static final int DEFAULT_SOCKET_TIMEOUT = 0;
     private static final int DEFAULT_RECONNECT_INTERVAL = 60;
     private static final int DEFAULT_MAX_RETRIES = 2;
     private static final int DEFAULT_RETRY_DELAY = 3_000;
@@ -38,6 +39,12 @@ public class GelfTcpAppender extends AbstractGelfAppender {
      * the connect timeout. Default: 15,000 milliseconds.
      */
     private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
+
+    /**
+     * Maximum time (in milliseconds) to block when reading a socket. A value of 0 disables the socket timeout.
+     * Default: {@value DEFAULT_SOCKET_TIMEOUT}
+     */
+    private int socketTimeout = DEFAULT_SOCKET_TIMEOUT;
 
     /**
      * Time interval (in seconds) after an existing connection is closed and re-opened.
@@ -82,6 +89,14 @@ public class GelfTcpAppender extends AbstractGelfAppender {
 
     public void setConnectTimeout(final int connectTimeout) {
         this.connectTimeout = connectTimeout;
+    }
+
+    public int getSocketTimeout() {
+        return socketTimeout;
+    }
+
+    public void setSocketTimeout(int socketTimeout) {
+        this.socketTimeout = socketTimeout;
     }
 
     public int getReconnectInterval() {
@@ -136,7 +151,7 @@ public class GelfTcpAppender extends AbstractGelfAppender {
         final AddressResolver addressResolver = new AddressResolver(getGraylogHost());
 
         connectionPool = new SimpleObjectPool<>(() -> new TcpConnection(initSocketFactory(),
-            addressResolver, getGraylogPort(), connectTimeout),
+            addressResolver, getGraylogPort(), connectTimeout, socketTimeout),
             poolSize, poolMaxWaitTime, reconnectInterval, poolMaxIdleTime);
     }
 
