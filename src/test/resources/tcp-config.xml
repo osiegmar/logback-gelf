@@ -4,6 +4,7 @@
         <graylogHost>localhost</graylogHost>
         <graylogPort>12201</graylogPort>
         <connectTimeout>15000</connectTimeout>
+        <socketTimeout>5000</socketTimeout>
         <reconnectInterval>300</reconnectInterval>
         <maxRetries>2</maxRetries>
         <retryDelay>3000</retryDelay>

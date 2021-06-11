@@ -35,16 +35,19 @@ public class TcpConnection extends AbstractPooledObject {
     private final SocketFactory socketFactory;
     private final int port;
     private final int connectTimeout;
+    private final int socketTimeout;
 
     private volatile OutputStream outputStream;
 
     TcpConnection(final SocketFactory socketFactory,
-                  final AddressResolver addressResolver, final int port, final int connectTimeout) {
+                  final AddressResolver addressResolver, final int port, final int connectTimeout,
+                  final int socketTimeout) {
 
         this.addressResolver = addressResolver;
         this.socketFactory = socketFactory;
         this.port = port;
         this.connectTimeout = connectTimeout;
+        this.socketTimeout = socketTimeout;
     }
 
     public void write(final byte[] messageToSend) throws IOException {
@@ -62,6 +65,7 @@ public class TcpConnection extends AbstractPooledObject {
 
     private void connect() throws IOException {
         final Socket socket = socketFactory.createSocket();
+        socket.setSoTimeout(socketTimeout);
         final InetAddress ip = addressResolver.resolve();
         socket.connect(new InetSocketAddress(ip, port), connectTimeout);
         outputStream = socket.getOutputStream();

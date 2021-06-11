@@ -123,6 +123,8 @@ Find more advanced examples in the [examples directory](examples).
 * **encoder**: See Encoder configuration below.
 * **connectTimeout**: Maximum time (in milliseconds) to wait for establishing a connection. A value
   of 0 disables the connect timeout. Default: 15,000 milliseconds.
+* **socketTimeout**: Maximum time (in milliseconds) to block when reading a socket. A value of 0 disables
+  the socket timeout. Default: 5,000 milliseconds.
 * **reconnectInterval**: Time interval (in seconds) after an existing connection is closed and
   re-opened. A value of -1 disables automatic reconnects. Default: 60 seconds.
 * **maxRetries**: Number of retries. A value of 0 disables retry attempts. Default: 2.
