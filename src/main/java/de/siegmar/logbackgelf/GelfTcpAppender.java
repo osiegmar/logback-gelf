@@ -26,7 +26,7 @@ import de.siegmar.logbackgelf.pool.SimpleObjectPool;
 public class GelfTcpAppender extends AbstractGelfAppender {
 
     private static final int DEFAULT_CONNECT_TIMEOUT = 15_000;
-    private static final int DEFAULT_SOCKET_TIMEOUT = 0;
+    private static final int DEFAULT_SOCKET_TIMEOUT = 5_000;
     private static final int DEFAULT_RECONNECT_INTERVAL = 60;
     private static final int DEFAULT_MAX_RETRIES = 2;
     private static final int DEFAULT_RETRY_DELAY = 3_000;
@@ -42,7 +42,7 @@ public class GelfTcpAppender extends AbstractGelfAppender {
 
     /**
      * Maximum time (in milliseconds) to block when reading a socket. A value of 0 disables the socket timeout.
-     * Default: {@value DEFAULT_SOCKET_TIMEOUT}
+     * Default: {@value DEFAULT_SOCKET_TIMEOUT} milliseconds.
      */
     private int socketTimeout = DEFAULT_SOCKET_TIMEOUT;
 
@@ -95,7 +95,7 @@ public class GelfTcpAppender extends AbstractGelfAppender {
         return socketTimeout;
     }
 
-    public void setSocketTimeout(int socketTimeout) {
+    public void setSocketTimeout(final int socketTimeout) {
         this.socketTimeout = socketTimeout;
     }
 
