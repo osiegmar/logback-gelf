@@ -36,7 +36,7 @@ public class GelfTcpAppender extends AbstractGelfAppender {
 
     /**
      * Maximum time (in milliseconds) to wait for establishing a connection. A value of 0 disables
-     * the connect timeout. Default: 15,000 milliseconds.
+     * the connect timeout. Default: {@value DEFAULT_CONNECT_TIMEOUT} milliseconds.
      */
     private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
@@ -48,36 +48,37 @@ public class GelfTcpAppender extends AbstractGelfAppender {
 
     /**
      * Time interval (in seconds) after an existing connection is closed and re-opened.
-     * A value of -1 disables automatic reconnects. Default: 60 seconds.
+     * A value of -1 disables automatic reconnects. Default: {@value DEFAULT_RECONNECT_INTERVAL} seconds.
      */
     private int reconnectInterval = DEFAULT_RECONNECT_INTERVAL;
 
     /**
-     * Number of retries. A value of 0 disables retry attempts. Default: 2.
+     * Number of retries. A value of 0 disables retry attempts. Default: {@value DEFAULT_MAX_RETRIES}.
      */
     private int maxRetries = DEFAULT_MAX_RETRIES;
 
     /**
      * Time (in milliseconds) between retry attempts. Ignored if maxRetries is 0.
-     * Default: 3,000 milliseconds.
+     * Default: {@value DEFAULT_RETRY_DELAY} milliseconds.
      */
     private int retryDelay = DEFAULT_RETRY_DELAY;
 
     /**
-     * Number of concurrent tcp connections (minimum 1). Default: 2.
+     * Number of concurrent tcp connections (minimum 1). Default: {@value DEFAULT_POOL_SIZE}.
      */
     private int poolSize = DEFAULT_POOL_SIZE;
 
     /**
      * Maximum amount of time (in milliseconds) to wait for a connection to become
-     * available from the pool. A value of -1 disables the timeout. Default: 5,000 milliseconds.
+     * available from the pool. A value of -1 disables the timeout.
+     * Default: {@value DEFAULT_POOL_MAX_WAIT_TIME} milliseconds.
      */
     private int poolMaxWaitTime = DEFAULT_POOL_MAX_WAIT_TIME;
 
     /**
      * Maximum amount of time (in seconds) that a pooled connection can be idle before it is
      * considered 'stale' and will not be reused. A value of -1 disables the max idle time feature.
-     * Default: -1 (disabled).
+     * Default: {@value DEFAULT_POOL_MAX_IDLE_TIME}.
      */
     private int poolMaxIdleTime = DEFAULT_POOL_MAX_IDLE_TIME;
 

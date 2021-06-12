@@ -34,7 +34,7 @@ public abstract class AbstractGelfAppender extends UnsynchronizedAppenderBase<IL
     private String graylogHost;
 
     /**
-     * Port of graylog server. Default: 12201.
+     * Port of graylog server. Default: {@value DEFAULT_GELF_PORT}.
      */
     private int graylogPort = DEFAULT_GELF_PORT;
 
