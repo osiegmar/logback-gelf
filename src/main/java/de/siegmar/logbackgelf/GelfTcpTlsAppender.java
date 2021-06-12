@@ -49,28 +49,24 @@ public class GelfTcpTlsAppender extends GelfTcpAppender {
 
     @Override
     protected SSLSocketFactory initSocketFactory() {
-        return configureSocket();
-    }
-
-    private SSLSocketFactory configureSocket() {
-        final TrustManager trustManager;
-
         try {
-            if (insecure) {
-                addWarn("Enabled insecure mode (skip TLS certificate validation)"
-                    + " - don't use this in production!");
-                trustManager = new NoopX509TrustManager();
-            } else {
-                trustManager = new CustomX509TrustManager(defaultTrustManager(), getGraylogHost());
-            }
-
-            return configureSslFactory(trustManager);
+            return configureSslFactory(newTrustManager());
         } catch (final GeneralSecurityException e) {
             throw new IllegalStateException(e);
         }
     }
 
-    private static X509TrustManager defaultTrustManager()
+    private TrustManager newTrustManager() throws NoSuchAlgorithmException, KeyStoreException {
+        if (insecure) {
+            addWarn("Enabled insecure mode (skip TLS certificate validation)"
+                + " - don't use this in production!");
+            return new NoopX509TrustManager();
+        }
+
+        return new CustomX509TrustManager(findDefaultX509TrustManager(), getGraylogHost());
+    }
+
+    private static X509TrustManager findDefaultX509TrustManager()
         throws NoSuchAlgorithmException, KeyStoreException {
 
         final TrustManagerFactory trustManagerFactory =
@@ -83,7 +79,7 @@ public class GelfTcpTlsAppender extends GelfTcpAppender {
             }
         }
 
-        return null;
+        throw new IllegalStateException("No X509 TrustManager found");
     }
 
     private SSLSocketFactory configureSslFactory(final TrustManager trustManager)
