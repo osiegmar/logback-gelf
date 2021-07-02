@@ -30,13 +30,14 @@ public class MessageIdSupplier implements Supplier<Long> {
 
     // static random to keep Spotbugs happy
     private static final Random RANDOM = new Random();
-    private int machinePart = RANDOM.nextInt();
 
-    public int getMachinePart() {
-        return machinePart;
+    private final int machinePart;
+
+    public MessageIdSupplier() {
+        this(RANDOM.nextInt());
     }
 
-    public void setMachinePart(final int machinePart) {
+    public MessageIdSupplier(final int machinePart) {
         this.machinePart = machinePart;
     }
 

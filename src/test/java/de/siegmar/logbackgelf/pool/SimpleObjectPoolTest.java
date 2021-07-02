@@ -20,6 +20,10 @@
 package de.siegmar.logbackgelf.pool;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import org.junit.jupiter.api.Test;
 
@@ -91,6 +95,79 @@ public class SimpleObjectPoolTest {
         final MyPooledObject o3 = pool.borrowObject();
         assertEquals(3, o3.getId());
         pool.returnObject(o3);
+    }
+
+    @Test
+    void availableObjectsExhausted() throws InterruptedException {
+        final SimpleObjectPool<MyPooledObject> pool =
+                new SimpleObjectPool<>(factory, 1, 100, 100, 0);
+
+        final Object o1 = pool.borrowObject();
+        assertNotNull(o1);
+
+        assertThrows(IllegalStateException.class, pool::borrowObject,
+                "Couldn't acquire connection from pool");
+    }
+
+    @Test
+    void validatePoolSize() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new SimpleObjectPool<>(factory, 0, 100, 100, 0),
+                "poolSize must be > 0");
+    }
+
+    @Test
+    void infinitePollWaitTime() throws InterruptedException {
+        final SimpleObjectPool<MyPooledObject> pool =
+                new SimpleObjectPool<>(factory, 1, -1, 100, 0);
+
+        final MyPooledObject o1 = pool.borrowObject();
+        final long before = System.currentTimeMillis();
+
+        new Thread(() -> {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            pool.returnObject(o1);
+        }).start();
+
+        final MyPooledObject o2 = pool.borrowObject();
+        final long after = System.currentTimeMillis();
+
+        assertNotNull(o2);
+        assertTrue(after - before > 190);
+    }
+
+    @Test
+    void infiniteLifeTime() throws InterruptedException {
+        final SimpleObjectPool<MyPooledObject> pool =
+                new SimpleObjectPool<>(factory, 1, 100, -1, -1);
+
+        final MyPooledObject o1 = pool.borrowObject();
+        pool.returnObject(o1);
+
+        Thread.sleep(200);
+
+        final MyPooledObject o2 = pool.borrowObject();
+
+        assertEquals(o1, o2);
+    }
+
+    @Test
+    void recycleByLifeTime() throws InterruptedException {
+        final SimpleObjectPool<MyPooledObject> pool =
+                new SimpleObjectPool<>(factory, 1, 100, 0, 100);
+
+        final MyPooledObject o1 = pool.borrowObject();
+        pool.returnObject(o1);
+
+        Thread.sleep(2);
+
+        final MyPooledObject o2 = pool.borrowObject();
+
+        assertNotEquals(o1, o2);
     }
 
     private static final class MyPooledObject extends AbstractPooledObject {

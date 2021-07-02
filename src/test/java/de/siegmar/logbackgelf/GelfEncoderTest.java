@@ -33,6 +33,8 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
@@ -423,4 +425,58 @@ public class GelfEncoderTest {
         return new String(encoder.encode(event), StandardCharsets.UTF_8);
     }
 
+    @Test
+    void staticFieldInvalidFormat() {
+        encoder.addStaticField("missing colon");
+        assertEquals(0, encoder.getStaticFields().size());
+    }
+
+    @Test
+    void invalidStaticFieldWithEmptyFieldName() {
+        encoder.addStaticField(":value");
+        assertEquals(0, encoder.getStaticFields().size());
+    }
+
+    @Test
+    void invalidStaticFieldWithIdFieldName() {
+        encoder.addStaticField("id:value");
+        assertEquals(0, encoder.getStaticFields().size());
+    }
+
+    @Test
+    void invalidStaticFieldNotMatchingRegex() {
+        encoder.addStaticField("$id:value");
+        assertEquals(0, encoder.getStaticFields().size());
+    }
+
+    @Test
+    void rewriteStaticField() {
+        encoder.addStaticField("test_id:value");
+        encoder.addStaticField("test_id:new value");
+        assertEquals(1, encoder.getStaticFields().size());
+        assertEquals("value", encoder.getStaticFields().get("test_id"));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    void originHostDefaultToLocalHostNameIfEmpty(final String configuredHostname) throws IOException {
+        encoder.setOriginHost(configuredHostname);
+        encoder.start();
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+
+        final LoggingEvent event = simpleLoggingEvent(logger, null);
+
+        final String logMsg = encodeToStr(event);
+
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        final String hostname = InetUtil.getLocalHostName();
+
+        assertEquals("1.1", jsonNode.get("version").textValue());
+        assertEquals(hostname, jsonNode.get("host").textValue());
+        assertEquals("message 1", jsonNode.get("short_message").textValue());
+        assertEquals(7, jsonNode.get("level").intValue());
+    }
 }
