@@ -20,6 +20,8 @@
 package de.siegmar.logbackgelf;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -118,4 +120,34 @@ public class SimpleJsonEncoderTest {
         assertEquals("{\"aaa\":123,\"bbb\":\"ccc\",\"ddd\":123}", writer.toString());
     }
 
+    @Test
+    void appendToJSONClosed() throws IOException {
+        enc.close();
+
+        assertThrows(IllegalStateException.class, () -> enc.appendToJSON("field", "value"));
+    }
+
+    @Test
+    void appendToUnquotedJSONClosed() throws IOException {
+        enc.close();
+
+        assertThrows(IllegalStateException.class, () -> enc.appendToJSONUnquoted("field", "value"));
+    }
+
+    @Test
+    void multipleCloses() throws IOException {
+        enc.close();
+        assertDoesNotThrow(enc::close);
+    }
+
+    @Test
+    void ignoreNullValues() throws IOException {
+        enc.appendToJSONUnquoted("key1", null);
+        enc.appendToJSON("key2", null);
+        enc.appendToJSONUnquoted("key3", 123);
+        enc.appendToJSON("key4", "321");
+        enc.close();
+
+        assertEquals("{\"key3\":123,\"key4\":\"321\"}", writer.toString());
+    }
 }

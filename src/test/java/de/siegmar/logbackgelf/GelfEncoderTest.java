@@ -479,4 +479,26 @@ public class GelfEncoderTest {
         assertEquals("message 1", jsonNode.get("short_message").textValue());
         assertEquals(7, jsonNode.get("level").intValue());
     }
+
+    @Test
+    void defaultValues() {
+        assertFalse(encoder.isIncludeRawMessage());
+        assertTrue(encoder.isIncludeMarker());
+        assertTrue(encoder.isIncludeMdcData());
+        assertFalse(encoder.isIncludeCallerData());
+        assertFalse(encoder.isIncludeRootCauseData());
+        assertFalse(encoder.isIncludeLevelName());
+        assertEquals("localhost", encoder.getOriginHost());
+        assertEquals("level_name", encoder.getLevelNameKey());
+        assertEquals("logger_name", encoder.getLoggerNameKey());
+        assertEquals("thread_name", encoder.getThreadNameKey());
+        assertFalse(encoder.isAppendNewline());
+        assertFalse(encoder.isNumbersAsString());
+    }
+
+    @Test
+    void addFieldMapper() {
+        encoder.addFieldMapper((event, valueHandler) -> { });
+        assertEquals(1, encoder.getFieldMappers().size());
+    }
 }

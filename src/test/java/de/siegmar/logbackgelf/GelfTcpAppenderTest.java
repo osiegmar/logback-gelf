@@ -61,6 +61,19 @@ public class GelfTcpAppenderTest {
     }
 
     @Test
+    void defaultValues() {
+        final GelfTcpAppender appender = new GelfTcpAppender();
+        assertEquals(15000, appender.getConnectTimeout());
+        assertEquals(5000, appender.getSocketTimeout());
+        assertEquals(2, appender.getMaxRetries());
+        assertEquals(-1, appender.getPoolMaxIdleTime());
+        assertEquals(2, appender.getPoolSize());
+        assertEquals(5000, appender.getPoolMaxWaitTime());
+        assertEquals(60, appender.getReconnectInterval());
+        assertEquals(3000, appender.getRetryDelay());
+    }
+
+    @Test
     public void simple() {
         final Logger logger = setupLogger();
 

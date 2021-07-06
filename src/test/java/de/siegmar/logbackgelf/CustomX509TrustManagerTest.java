@@ -32,6 +32,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.LocalDate;
+import java.util.Arrays;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -102,6 +103,21 @@ public class CustomX509TrustManagerTest {
             .build(HOSTNAME);
 
         validate(cert, caBuilder.getCaCertificate());
+    }
+
+    @Test
+    void clientValidation() throws Exception {
+        final X509Util.CABuilder caBuilder = new X509Util.CABuilder();
+        final X509Certificate cert = prepareCaSigned(caBuilder)
+                .build(HOSTNAME);
+
+        assertThrows(UnsupportedOperationException.class,
+            () -> tm.checkClientTrusted(new X509Certificate[] {cert}, "RSA"));
+    }
+
+    @Test
+    void acceptedIssuers() {
+        assertTrue(Arrays.equals(defaultTrustManager(null).getAcceptedIssuers(), tm.getAcceptedIssuers()));
     }
 
     private X509Util.CertBuilder prepareCaSigned(final X509Util.CABuilder caBuilder)
