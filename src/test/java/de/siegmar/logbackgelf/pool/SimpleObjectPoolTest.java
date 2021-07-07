@@ -25,6 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.jupiter.api.Test;
 
 public class SimpleObjectPoolTest {
@@ -122,19 +125,13 @@ public class SimpleObjectPoolTest {
                 new SimpleObjectPool<>(factory, 1, -1, 100, 0);
 
         final MyPooledObject o1 = pool.borrowObject();
-        final long before = System.currentTimeMillis();
+        final long before = System.nanoTime();
 
-        new Thread(() -> {
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            pool.returnObject(o1);
-        }).start();
+        Executors.newScheduledThreadPool(1)
+                .schedule(() -> pool.returnObject(o1), 200, TimeUnit.MILLISECONDS);
 
         final MyPooledObject o2 = pool.borrowObject();
-        final long after = System.currentTimeMillis();
+        final long after = System.nanoTime();
 
         assertNotNull(o2);
         assertTrue(after - before > 190);
@@ -158,11 +155,12 @@ public class SimpleObjectPoolTest {
     @Test
     void recycleByLifeTime() throws InterruptedException {
         final SimpleObjectPool<MyPooledObject> pool =
-                new SimpleObjectPool<>(factory, 1, 100, 0, 100);
+                new SimpleObjectPool<>(factory, 1, -1, 0, -1);
 
         final MyPooledObject o1 = pool.borrowObject();
         pool.returnObject(o1);
 
+        // Force the objects to be recycled in the pool
         Thread.sleep(2);
 
         final MyPooledObject o2 = pool.borrowObject();

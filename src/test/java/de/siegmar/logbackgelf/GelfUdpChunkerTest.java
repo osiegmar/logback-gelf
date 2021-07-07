@@ -28,6 +28,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class GelfUdpChunkerTest {
 
@@ -73,16 +75,10 @@ public class GelfUdpChunkerTest {
         assertThrows(UnsupportedOperationException.class, chunks::remove);
     }
 
-    @Test
-    void minimumChuckSize() {
+    @ParameterizedTest
+    @ValueSource(ints = {12, 65468})
+    void maxChunkSizeLimitRange(final int maxChunkSize) {
         assertThrows(IllegalArgumentException.class,
-            () -> new GelfUdpChunker(new MessageIdSupplier(), 12));
+            () -> new GelfUdpChunker(new MessageIdSupplier(), maxChunkSize));
     }
-
-    @Test
-    void maximumChunkSize() {
-        assertThrows(IllegalArgumentException.class,
-            () -> new GelfUdpChunker(new MessageIdSupplier(), 65468));
-    }
-
 }

@@ -35,6 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
@@ -425,27 +426,10 @@ public class GelfEncoderTest {
         return new String(encoder.encode(event), StandardCharsets.UTF_8);
     }
 
-    @Test
-    void staticFieldInvalidFormat() {
-        encoder.addStaticField("missing colon");
-        assertEquals(0, encoder.getStaticFields().size());
-    }
-
-    @Test
-    void invalidStaticFieldWithEmptyFieldName() {
-        encoder.addStaticField(":value");
-        assertEquals(0, encoder.getStaticFields().size());
-    }
-
-    @Test
-    void invalidStaticFieldWithIdFieldName() {
-        encoder.addStaticField("id:value");
-        assertEquals(0, encoder.getStaticFields().size());
-    }
-
-    @Test
-    void invalidStaticFieldNotMatchingRegex() {
-        encoder.addStaticField("$id:value");
+    @ParameterizedTest
+    @ValueSource(strings = {"missing colon", "id:value", "$key:value", "#key:value", "new$key:value"})
+    void invalidStaticField(final String staticField) {
+        encoder.addStaticField(staticField);
         assertEquals(0, encoder.getStaticFields().size());
     }
 
@@ -463,21 +447,9 @@ public class GelfEncoderTest {
         encoder.setOriginHost(configuredHostname);
         encoder.start();
 
-        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        final Logger logger = lc.getLogger(LOGGER_NAME);
+        final String localhost = InetUtil.getLocalHostName();
 
-        final LoggingEvent event = simpleLoggingEvent(logger, null);
-
-        final String logMsg = encodeToStr(event);
-
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        final String hostname = InetUtil.getLocalHostName();
-
-        assertEquals("1.1", jsonNode.get("version").textValue());
-        assertEquals(hostname, jsonNode.get("host").textValue());
-        assertEquals("message 1", jsonNode.get("short_message").textValue());
-        assertEquals(7, jsonNode.get("level").intValue());
+        assertEquals(localhost, encoder.getOriginHost());
     }
 
     @Test

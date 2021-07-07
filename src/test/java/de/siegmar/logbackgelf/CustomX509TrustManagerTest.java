@@ -106,13 +106,9 @@ public class CustomX509TrustManagerTest {
     }
 
     @Test
-    void clientValidation() throws Exception {
-        final X509Util.CABuilder caBuilder = new X509Util.CABuilder();
-        final X509Certificate cert = prepareCaSigned(caBuilder)
-                .build(HOSTNAME);
-
+    void clientValidation() {
         assertThrows(UnsupportedOperationException.class,
-            () -> tm.checkClientTrusted(new X509Certificate[] {cert}, "RSA"));
+            () -> tm.checkClientTrusted(new X509Certificate[] {}, "RSA"));
     }
 
     @Test
