@@ -133,8 +133,10 @@ public class SimpleObjectPoolTest {
         final MyPooledObject o2 = pool.borrowObject();
         final long after = System.nanoTime();
 
+        final long elapsedTimeMillis = TimeUnit.NANOSECONDS.toMillis(after - before);
+
         assertNotNull(o2);
-        assertTrue(after - before > 190);
+        assertTrue(elapsedTimeMillis > 200);
     }
 
     @Test
@@ -144,8 +146,6 @@ public class SimpleObjectPoolTest {
 
         final MyPooledObject o1 = pool.borrowObject();
         pool.returnObject(o1);
-
-        Thread.sleep(200);
 
         final MyPooledObject o2 = pool.borrowObject();
 
