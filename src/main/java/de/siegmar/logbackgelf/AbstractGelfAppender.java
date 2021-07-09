@@ -92,8 +92,7 @@ public abstract class AbstractGelfAppender extends UnsynchronizedAppenderBase<IL
         }
     }
 
-    protected void startAppender() throws IOException {
-    }
+    protected abstract void startAppender() throws IOException;
 
     @SuppressWarnings("checkstyle:illegalcatch")
     @Override

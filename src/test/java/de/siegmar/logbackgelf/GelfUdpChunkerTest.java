@@ -21,12 +21,15 @@ package de.siegmar.logbackgelf;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class GelfUdpChunkerTest {
 
@@ -63,4 +66,19 @@ public class GelfUdpChunkerTest {
         assertEquals(payload, data[12]);
     }
 
+    @Test
+    void removeNotPermitted() {
+        final GelfUdpChunker chunker = new GelfUdpChunker(new MessageIdSupplier(), 13);
+        final Iterator<? extends ByteBuffer> chunks =
+                chunker.chunks("hello".getBytes(StandardCharsets.UTF_8)).iterator();
+
+        assertThrows(UnsupportedOperationException.class, chunks::remove);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {12, 65468})
+    void maxChunkSizeLimitRange(final int maxChunkSize) {
+        assertThrows(IllegalArgumentException.class,
+            () -> new GelfUdpChunker(new MessageIdSupplier(), maxChunkSize));
+    }
 }
