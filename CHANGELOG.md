@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [\#58](https://github.com/osiegmar/logback-gelf/issues/58)
 - Improve `SimpleJsonEncoder.escapeString` memory usage. (#61)
   [\#61](https://github.com/osiegmar/logback-gelf/issues/61)
+- Defined 'de.siegmar.logbackgelf' as the Automatic-Module-Name (JPMS module name)
 
 ## [3.0.0] - 2020-03-15
 ### Added
