@@ -45,7 +45,7 @@ tasks.matching {task -> task.name.startsWith('spotbugs')}.forEach {
 
 jacocoTestReport {
     reports {
-        xml.enabled true
+        xml.required = true
     }
 }
 
