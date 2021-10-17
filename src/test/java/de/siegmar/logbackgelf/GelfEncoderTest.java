@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -158,7 +159,7 @@ public class GelfEncoderTest {
 
         assertEquals("message 1", msg.readLine());
         assertEquals("java.lang.IllegalArgumentException: Example Exception", msg.readLine());
-        final String line = msg.readLine();
+        final String line = Objects.requireNonNull(msg.readLine());
         assertTrue(line.matches("^\tat de.siegmar.logbackgelf.GelfEncoderTest.exception"
             + "\\(GelfEncoderTest.java:\\d+\\)$"), "Unexpected line: " + line);
     }
