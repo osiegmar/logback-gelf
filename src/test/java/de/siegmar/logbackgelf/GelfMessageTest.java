@@ -75,6 +75,15 @@ public class GelfMessageTest {
             asString(message.toJSON()));
     }
 
+    @Test
+    void filterEmptyFullMessage() {
+        final GelfMessage message = new GelfMessage("host", "short message", "",
+                1584271169123L, 6, ImmutableMap.of());
+
+        assertEquals("short message", message.getShortMessage());
+        assertNull(message.getFullMessage());
+    }
+
     private String asString(final byte[] data) {
         return new String(data, UTF_8);
     }

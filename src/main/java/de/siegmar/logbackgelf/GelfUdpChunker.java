@@ -183,11 +183,6 @@ class GelfUdpChunker {
             return buildChunk(messageId, message, chunkCount, chunkIdx++, chunkSize);
         }
 
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("remove");
-        }
-
     }
 
 }

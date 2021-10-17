@@ -21,16 +21,21 @@ package de.siegmar.logbackgelf;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-import java.util.function.Supplier;
-
 import org.junit.jupiter.api.Test;
 
 public class MessageIdSupplierTest {
 
-    private final Supplier<Long> messageIdSupplier = new MessageIdSupplier();
+    private final MessageIdSupplier messageIdSupplier = new MessageIdSupplier();
 
     @Test
     public void test() {
+        final Long messageId = messageIdSupplier.get();
+        assertNotEquals(messageId, messageIdSupplier.get());
+    }
+
+    @Test
+    void machinePart() {
+        messageIdSupplier.setMachinePart(23282);
         final Long messageId = messageIdSupplier.get();
         assertNotEquals(messageId, messageIdSupplier.get());
     }

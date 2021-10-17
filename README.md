@@ -4,7 +4,8 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/975049eb1352478a89bb6d2e9d43e2be)](https://www.codacy.com/gh/osiegmar/logback-gelf/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=osiegmar/logback-gelf&amp;utm_campaign=Badge_Grade)
 [![codecov](https://codecov.io/gh/osiegmar/logback-gelf/branch/master/graph/badge.svg?token=YfDHBxprtb)](https://codecov.io/gh/osiegmar/logback-gelf)
 [![javadoc](https://javadoc.io/badge2/de.siegmar/logback-gelf/javadoc.svg)](https://javadoc.io/doc/de.siegmar/logback-gelf)
-[![Maven Central](https://img.shields.io/maven-central/v/de.siegmar/logback-gelf.svg)](https://search.maven.org/search?q=g:%22de.siegmar%22%20AND%20a:%22logback-gelf%22)
+[![Maven Central](https://img.shields.io/maven-central/v/de.siegmar/logback-gelf.svg)](https://search.maven.org/artifact/de.siegmar/logback-gelf)
+
 
 Logback appender for sending GELF (Graylog Extended Log Format) messages with zero additional
 dependencies.

@@ -34,6 +34,9 @@ import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
@@ -424,4 +427,51 @@ public class GelfEncoderTest {
         return new String(encoder.encode(event), StandardCharsets.UTF_8);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"missing colon", "id:value", "$key:value", "#key:value", "new$key:value"})
+    void invalidStaticField(final String staticField) {
+        encoder.addStaticField(staticField);
+        assertEquals(0, encoder.getStaticFields().size());
+    }
+
+    @Test
+    void rewriteStaticField() {
+        encoder.addStaticField("test_id:value");
+        encoder.addStaticField("test_id:new value");
+        assertEquals(1, encoder.getStaticFields().size());
+        assertEquals("value", encoder.getStaticFields().get("test_id"));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    void originHostDefaultToLocalHostNameIfEmpty(final String configuredHostname) throws IOException {
+        encoder.setOriginHost(configuredHostname);
+        encoder.start();
+
+        final String localhost = InetUtil.getLocalHostName();
+
+        assertEquals(localhost, encoder.getOriginHost());
+    }
+
+    @Test
+    void defaultValues() {
+        assertFalse(encoder.isIncludeRawMessage());
+        assertTrue(encoder.isIncludeMarker());
+        assertTrue(encoder.isIncludeMdcData());
+        assertFalse(encoder.isIncludeCallerData());
+        assertFalse(encoder.isIncludeRootCauseData());
+        assertFalse(encoder.isIncludeLevelName());
+        assertEquals("localhost", encoder.getOriginHost());
+        assertEquals("level_name", encoder.getLevelNameKey());
+        assertEquals("logger_name", encoder.getLoggerNameKey());
+        assertEquals("thread_name", encoder.getThreadNameKey());
+        assertFalse(encoder.isAppendNewline());
+        assertFalse(encoder.isNumbersAsString());
+    }
+
+    @Test
+    void addFieldMapper() {
+        encoder.addFieldMapper((event, valueHandler) -> { });
+        assertEquals(1, encoder.getFieldMappers().size());
+    }
 }

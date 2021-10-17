@@ -62,6 +62,12 @@ jacocoTestCoverageVerification {
 
 check.dependsOn jacocoTestCoverageVerification
 
+tasks.named('jar') {
+    manifest {
+        attributes('Automatic-Module-Name': 'de.siegmar.logbackgelf')
+    }
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {

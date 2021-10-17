@@ -22,6 +22,7 @@ package de.siegmar.logbackgelf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -67,6 +68,12 @@ public class GelfTcpTlsAppenderTest {
         final TcpServer server = new TcpServer();
         port = server.getPort();
         future = Executors.newSingleThreadExecutor().submit(server);
+    }
+
+    @Test
+    void defaultValues() {
+        final GelfTcpTlsAppender appender = new GelfTcpTlsAppender();
+        assertFalse(appender.isInsecure());
     }
 
     @Test
