@@ -15,7 +15,7 @@ dependencies.
 - UDP (with chunking)
 - TCP (with or without TLS encryption)
 - Deflate compression in UDP mode
-- Client side load balancing (round robin)
+- Client side load balancing (round-robin)
 - Forwarding of MDC (Mapped Diagnostic Context)
 - Forwarding of caller data
 - Forwarding of static fields
@@ -104,7 +104,7 @@ Find more advanced examples in the [examples directory](examples).
 `de.siegmar.logbackgelf.GelfUdpAppender`
 
 * **graylogHost**: IP or hostname of graylog server.
-  If the hostname resolves to multiple ip addresses, round robin will be used.
+  If the hostname resolves to multiple ip addresses, round-robin will be used.
 * **graylogPort**: Port of graylog server. Default: 12201.
 * **encoder**: See Encoder configuration below.
 * **maxChunkSize**: Maximum size of GELF chunks in bytes. Default chunk size is 508 - this prevents
@@ -118,7 +118,7 @@ Find more advanced examples in the [examples directory](examples).
 `de.siegmar.logbackgelf.GelfTcpAppender`
 
 * **graylogHost**: IP or hostname of graylog server.
-  If the hostname resolves to multiple ip addresses, round robin will be used.
+  If the hostname resolves to multiple ip addresses, round-robin will be used.
 * **graylogPort**: Port of graylog server. Default: 12201.
 * **encoder**: See Encoder configuration below.
 * **connectTimeout**: Maximum time (in milliseconds) to wait for establishing a connection. A value
@@ -148,7 +148,7 @@ Find more advanced examples in the [examples directory](examples).
 
 `de.siegmar.logbackgelf.GelfEncoder`
 
-* **originHost**: Origin hostname - will be auto detected if not specified.
+* **originHost**: Origin hostname - will be auto-detected if not specified.
 * **includeRawMessage**: If true, the raw message (with argument placeholders) will be sent, too.
   Default: false.
 * **includeMarker**: If true, logback markers will be sent, too. Default: true.

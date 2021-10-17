@@ -71,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0] - 2018-01-21
 ### Added
-- Simple connection pooling in GelfTcpAppender & round robin host lookup in GelfUdpAppender
+- Simple connection pooling in GelfTcpAppender & round-robin host lookup in GelfUdpAppender
   [\#11](https://github.com/osiegmar/logback-gelf/issues/11)
 
 ### Changed

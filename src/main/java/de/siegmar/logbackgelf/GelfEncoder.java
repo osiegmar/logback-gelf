@@ -51,7 +51,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private static final String DEFAULT_FULL_PATTERN = "%m%n";
 
     /**
-     * Origin hostname - will be auto detected if not specified.
+     * Origin hostname - will be auto-detected if not specified.
      */
     private String originHost;
 
