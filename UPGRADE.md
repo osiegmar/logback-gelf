@@ -2,6 +2,12 @@
 
 Some changes may require to update your configuration.
 
+## Upgrade from 3.x to 4.x
+* No changes on the configuration were introduced. All changes are only relevant if used programmatically.
+* API of MessageIdSupplier has changed.
+* GelfEncoder uses different field mapping approach.
+* GelfMessage returns JSON as byte[] instead of String.
+
 ## Upgrade from 2.x to 3.x
 
 * Version 3.0.0 of this library upgraded from Java 7 to Java 8.
