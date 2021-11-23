@@ -19,15 +19,15 @@
 
 package de.siegmar.logbackgelf;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.function.Supplier;
-import java.util.zip.DeflaterOutputStream;
+
+import de.siegmar.logbackgelf.compressor.Compressor;
+import de.siegmar.logbackgelf.compressor.NoneCompressor;
 
 public class GelfUdpAppender extends AbstractGelfAppender {
 
@@ -42,6 +42,11 @@ public class GelfUdpAppender extends AbstractGelfAppender {
      */
     private boolean useCompression = true;
 
+    /**
+     * Compression method used if useCompression is true. Default: ZLIB.
+     */
+    private CompressionMethod compressionMethod = CompressionMethod.ZLIB;
+
     private Supplier<Long> messageIdSupplier = new MessageIdSupplier();
 
     private RobustChannel robustChannel;
@@ -49,6 +54,8 @@ public class GelfUdpAppender extends AbstractGelfAppender {
     private GelfUdpChunker chunker;
 
     private AddressResolver addressResolver;
+
+    private Compressor compressor;
 
     public Integer getMaxChunkSize() {
         return maxChunkSize;
@@ -66,6 +73,14 @@ public class GelfUdpAppender extends AbstractGelfAppender {
         this.useCompression = useCompression;
     }
 
+    public CompressionMethod getCompressionMethod() {
+        return compressionMethod;
+    }
+
+    public void setCompressionMethod(final CompressionMethod compressionMethod) {
+        this.compressionMethod = compressionMethod;
+    }
+
     public Supplier<Long> getMessageIdSupplier() {
         return messageIdSupplier;
     }
@@ -79,30 +94,21 @@ public class GelfUdpAppender extends AbstractGelfAppender {
         robustChannel = new RobustChannel();
         chunker = new GelfUdpChunker(messageIdSupplier, maxChunkSize);
         addressResolver = new AddressResolver(getGraylogHost());
+        compressor = useCompression ? compressionMethod.getCompressor() : new NoneCompressor();
     }
 
     @Override
     protected void appendMessage(final byte[] binMessage) throws IOException {
-        final byte[] messageToSend = useCompression ? compress(binMessage) : binMessage;
+        final byte[] messageToSend = compressor.compress(binMessage);
 
         final InetSocketAddress remote = new InetSocketAddress(addressResolver.resolve(),
-            getGraylogPort());
+                getGraylogPort());
 
         for (final ByteBuffer chunk : chunker.chunks(messageToSend)) {
             while (chunk.hasRemaining()) {
                 robustChannel.send(chunk, remote);
             }
         }
-    }
-
-    private static byte[] compress(final byte[] binMessage) {
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream(binMessage.length);
-        try (OutputStream deflaterOut = new DeflaterOutputStream(bos)) {
-            deflaterOut.write(binMessage);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-        return bos.toByteArray();
     }
 
     @Override
