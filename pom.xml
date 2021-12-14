@@ -1,6 +1,6 @@
 <!-- This file is only used to use the Dependency graph feature of GitHub. It is not intended to build this project! -->
 <project>
-    <modelVersion>4.0.1</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
     <groupId>de.siegmar</groupId>
     <artifactId>logback-gelf</artifactId>
     <version>4.0.1</version>
