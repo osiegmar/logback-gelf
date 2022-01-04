@@ -23,8 +23,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -35,6 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -80,14 +84,32 @@ public class GelfUdpAppenderTest {
     }
 
     @Test
-    public void compression() {
+    public void compressionZLIB() {
         final Logger logger = setupLogger(true);
 
         logger.error("Test message");
 
         stopLogger(logger);
 
-        final JsonNode jsonNode = receiveCompressedMessage();
+        final JsonNode jsonNode = receiveCompressedMessage(CompressionMethod.ZLIB);
+        assertEquals("1.1", jsonNode.get("version").textValue());
+        assertEquals("localhost", jsonNode.get("host").textValue());
+        assertEquals("Test message", jsonNode.get("short_message").textValue());
+        assertTrue(jsonNode.get("timestamp").isNumber());
+        assertEquals(3, jsonNode.get("level").intValue());
+        assertNotNull(jsonNode.get("_thread_name").textValue());
+        assertEquals(LOGGER_NAME, jsonNode.get("_logger_name").textValue());
+    }
+
+    @Test
+    public void compressionGZIP() {
+        final Logger logger = setupLogger(true, CompressionMethod.GZIP);
+
+        logger.error("Test message");
+
+        stopLogger(logger);
+
+        final JsonNode jsonNode = receiveCompressedMessage(CompressionMethod.GZIP);
         assertEquals("1.1", jsonNode.get("version").textValue());
         assertEquals("localhost", jsonNode.get("host").textValue());
         assertEquals("Test message", jsonNode.get("short_message").textValue());
@@ -98,6 +120,10 @@ public class GelfUdpAppenderTest {
     }
 
     private Logger setupLogger(final boolean useCompression) {
+        return setupLogger(useCompression, CompressionMethod.ZLIB);
+    }
+
+    private Logger setupLogger(final boolean useCompression, final CompressionMethod compressionMethod) {
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         final GelfEncoder gelfEncoder = new GelfEncoder();
@@ -106,13 +132,15 @@ public class GelfUdpAppenderTest {
         gelfEncoder.start();
 
         final Logger logger = (Logger) LoggerFactory.getLogger(LOGGER_NAME);
-        logger.addAppender(buildAppender(useCompression, lc, gelfEncoder));
+        logger.addAppender(buildAppender(useCompression, compressionMethod, lc, gelfEncoder));
         logger.setAdditive(false);
 
         return logger;
     }
 
-    private GelfUdpAppender buildAppender(final boolean useCompression, final LoggerContext lc,
+    private GelfUdpAppender buildAppender(final boolean useCompression,
+                                          final CompressionMethod compressionMethod,
+                                          final LoggerContext lc,
                                           final GelfEncoder gelfEncoder) {
         final GelfUdpAppender gelfAppender = new GelfUdpAppender();
         gelfAppender.setContext(lc);
@@ -121,6 +149,7 @@ public class GelfUdpAppenderTest {
         gelfAppender.setGraylogHost("localhost");
         gelfAppender.setGraylogPort(port);
         gelfAppender.setUseCompression(useCompression);
+        gelfAppender.setCompressionMethod(compressionMethod);
         gelfAppender.start();
         return gelfAppender;
     }
@@ -133,15 +162,22 @@ public class GelfUdpAppenderTest {
         }
     }
 
-    private JsonNode receiveCompressedMessage() {
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        final InflaterOutputStream inflaterOutputStream = new InflaterOutputStream(bos);
+    private JsonNode receiveCompressedMessage(final CompressionMethod compressionMethod) {
 
         try {
-            inflaterOutputStream.write(receive());
-            inflaterOutputStream.close();
+            if (compressionMethod == CompressionMethod.ZLIB) {
+                return new ObjectMapper().readTree(Decompressor.zlibDecompress(receive()));
+            } else {
+                return new ObjectMapper().readTree(Decompressor.gzipDecompress(receive()));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
 
-            return new ObjectMapper().readTree(bos.toByteArray());
+    private JsonNode receiveGZIPCompressedMessage() {
+        try {
+            return new ObjectMapper().readTree(new GZIPInputStream(new ByteArrayInputStream(receive())));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -184,6 +220,32 @@ public class GelfUdpAppenderTest {
 
             return Arrays.copyOf(packet.getData(), packet.getLength());
         }
+    }
+
+    private static final class Decompressor {
+
+        public static byte[] zlibDecompress(final byte[] bytesIn) {
+            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            final OutputStream inflaterOutputStream = new InflaterOutputStream(bos);
+
+            try {
+                inflaterOutputStream.write(bytesIn);
+                inflaterOutputStream.close();
+
+                return bos.toByteArray();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+
+        public static InputStream gzipDecompress(final byte[] bytesIn) {
+            try {
+                return new GZIPInputStream(new ByteArrayInputStream(bytesIn));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+
     }
 
 }
