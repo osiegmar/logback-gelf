@@ -27,7 +27,7 @@ dependencies.
 ## Requirements
 
 - Java 8
-- Logback 1.2.9
+- Logback 1.2.10
 
 
 ## Examples
