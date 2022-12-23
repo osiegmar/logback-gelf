@@ -42,6 +42,7 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.slf4j.event.KeyValuePair;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
@@ -476,6 +477,21 @@ public class GelfEncoderTest {
         final String localhost = InetUtil.getLocalHostName();
 
         assertEquals(localhost, encoder.getOriginHost());
+    }
+
+    @Test
+    void blankShortmessage() throws JsonProcessingException {
+        encoder.start();
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+
+        final LoggingEvent event = new LoggingEvent(LOGGER_NAME, logger, Level.DEBUG, " \t ", null, new Object[]{1});
+        final String logMsg = encodeToStr(event);
+
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        assertEquals("Empty message replaced by logback-gelf", jsonNode.get("short_message").textValue());
     }
 
     @Test
