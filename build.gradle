@@ -8,11 +8,11 @@ plugins {
 }
 
 group = "de.siegmar"
-version = "4.0.2"
+version = "5.0.0-SNAPSHOT"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
+        languageVersion = JavaLanguageVersion.of(11)
     }
     withJavadocJar()
     withSourcesJar()
