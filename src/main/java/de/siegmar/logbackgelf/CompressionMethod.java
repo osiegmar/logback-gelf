@@ -27,7 +27,7 @@ public enum CompressionMethod {
     ZLIB(new ZLIBCompressor()),
     GZIP(new GZIPCompressor());
 
-    private Compressor compressor;
+    private final Compressor compressor;
 
     CompressionMethod(final Compressor compressor) {
         this.compressor = compressor;

@@ -56,14 +56,14 @@ class GelfUdpChunker {
 
     /**
      * Default chunk size set to 508 bytes. This prevents IP packet fragmentation.
-     *
+     * <p>
      * Minimum MTU (576) - IP header (up to 60) - UDP header (8) = 508
      */
     private static final int DEFAULT_CHUNK_SIZE = 508;
 
     /**
      * Maximum chunk size set to 65467 bytes.
-     *
+     * <p>
      * Maximum IP packet size (65535) - IP header (up to 60) - UDP header (8) = 65467
      */
     private static final int MAX_CHUNK_SIZE = 65467;
