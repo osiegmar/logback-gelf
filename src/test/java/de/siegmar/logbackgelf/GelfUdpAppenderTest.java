@@ -73,7 +73,7 @@ public class GelfUdpAppenderTest {
 
         stopLogger(logger);
 
-        final JsonNode jsonNode = receiveMessage();
+        final JsonNode jsonNode = receiveCompressedMessage(CompressionMethod.GZIP);
         assertEquals("1.1", jsonNode.get("version").textValue());
         assertEquals("localhost", jsonNode.get("host").textValue());
         assertEquals("Test message", jsonNode.get("short_message").textValue());
@@ -85,7 +85,7 @@ public class GelfUdpAppenderTest {
 
     @Test
     public void compressionZLIB() {
-        final Logger logger = setupLogger(true);
+        final Logger logger = setupLogger(true, CompressionMethod.ZLIB);
 
         logger.error("Test message");
 
@@ -120,7 +120,7 @@ public class GelfUdpAppenderTest {
     }
 
     private Logger setupLogger(final boolean useCompression) {
-        return setupLogger(useCompression, CompressionMethod.ZLIB);
+        return setupLogger(useCompression, CompressionMethod.GZIP);
     }
 
     private Logger setupLogger(final boolean useCompression, final CompressionMethod compressionMethod) {
@@ -153,30 +153,13 @@ public class GelfUdpAppenderTest {
         return gelfAppender;
     }
 
-    private JsonNode receiveMessage() {
-        try {
-            return new ObjectMapper().readTree(receive());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
     private JsonNode receiveCompressedMessage(final CompressionMethod compressionMethod) {
-
         try {
-            if (compressionMethod == CompressionMethod.ZLIB) {
-                return new ObjectMapper().readTree(Decompressor.zlibDecompress(receive()));
-            } else {
+            if (compressionMethod == CompressionMethod.GZIP) {
                 return new ObjectMapper().readTree(Decompressor.gzipDecompress(receive()));
+            } else {
+                return new ObjectMapper().readTree(Decompressor.zlibDecompress(receive()));
             }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    private JsonNode receiveGZIPCompressedMessage() {
-        try {
-            return new ObjectMapper().readTree(new GZIPInputStream(new ByteArrayInputStream(receive())));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
