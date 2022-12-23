@@ -20,7 +20,9 @@
 package de.siegmar.logbackgelf.mappers;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Marker;
 
@@ -34,8 +36,14 @@ public class MarkerFieldMapper extends AbstractFixedNameFieldMapper<String> {
 
     @Override
     protected Optional<String> getValue(final ILoggingEvent event) {
-        return Optional.ofNullable(event.getMarker())
+        return Optional.ofNullable(event.getMarkerList())
             .map(MarkerFieldMapper::buildMarkerStr);
+    }
+
+    private static String buildMarkerStr(final List<Marker> markers) {
+        return markers.stream()
+            .map(MarkerFieldMapper::buildMarkerStr)
+            .collect(Collectors.joining(", "));
     }
 
     private static String buildMarkerStr(final Marker marker) {

@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    api 'ch.qos.logback:logback-classic:1.2.9'
+    api 'ch.qos.logback:logback-classic:1.4.5'
     testImplementation(platform('org.junit:junit-bom:5.7.0'))
     testImplementation('org.junit.jupiter:junit-jupiter')
     testImplementation 'com.google.guava:guava:31.0.1-jre'

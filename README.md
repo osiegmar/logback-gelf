@@ -1,6 +1,6 @@
 # Logback GELF
 
-[![build](https://github.com/osiegmar/logback-gelf/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/osiegmar/logback-gelf/actions/workflows/build.yml)
+[![build](https://github.com/osiegmar/logback-gelf/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/osiegmar/logback-gelf/actions/workflows/build.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/975049eb1352478a89bb6d2e9d43e2be)](https://www.codacy.com/gh/osiegmar/logback-gelf/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=osiegmar/logback-gelf&amp;utm_campaign=Badge_Grade)
 [![codecov](https://codecov.io/gh/osiegmar/logback-gelf/branch/master/graph/badge.svg?token=YfDHBxprtb)](https://codecov.io/gh/osiegmar/logback-gelf)
 [![javadoc](https://javadoc.io/badge2/de.siegmar/logback-gelf/javadoc.svg)](https://javadoc.io/doc/de.siegmar/logback-gelf)
@@ -26,8 +26,8 @@ dependencies.
 
 ## Requirements
 
-- Java 8
-- Logback 1.2.9
+- Java 11
+- Logback 1.4.5
 
 
 ## Examples

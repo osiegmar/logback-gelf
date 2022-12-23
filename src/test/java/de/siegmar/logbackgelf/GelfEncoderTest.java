@@ -392,7 +392,7 @@ public class GelfEncoderTest {
         final Logger logger = lc.getLogger(LOGGER_NAME);
 
         final LoggingEvent event = simpleLoggingEvent(logger, null);
-        event.setMarker(MarkerFactory.getMarker("SINGLE"));
+        event.addMarker(MarkerFactory.getMarker("SINGLE"));
 
         final String logMsg = encodeToStr(event);
 
@@ -413,14 +413,15 @@ public class GelfEncoderTest {
         final LoggingEvent event = simpleLoggingEvent(logger, null);
         final Marker marker = MarkerFactory.getMarker("FIRST");
         marker.add(MarkerFactory.getMarker("SECOND"));
-        event.setMarker(marker);
+        event.addMarker(marker);
+        event.addMarker(MarkerFactory.getMarker("THIRD"));
 
         final String logMsg = encodeToStr(event);
 
         final ObjectMapper om = new ObjectMapper();
         final JsonNode jsonNode = om.readTree(logMsg);
         coreValidation(jsonNode);
-        assertEquals("FIRST, SECOND", jsonNode.get("_marker").textValue());
+        assertEquals("FIRST, SECOND, THIRD", jsonNode.get("_marker").textValue());
     }
 
     private String encodeToStr(final LoggingEvent event) {
