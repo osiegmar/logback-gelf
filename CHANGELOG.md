@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Upgrade to Java 11 (Premier Support of Java 8 ended in March 2022).
+- Replace blank hostname and blank log message to prevent Graylog error
+  [\#82](https://github.com/osiegmar/logback-gelf/issues/82)
 
 ## [4.0.2] - 2021-12-22
 ### Changed

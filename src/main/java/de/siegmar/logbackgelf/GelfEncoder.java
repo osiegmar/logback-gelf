@@ -318,7 +318,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     @Override
     public void start() {
-        if (originHost == null || originHost.trim().isEmpty()) {
+        if (originHost == null || originHost.isBlank()) {
             try {
                 originHost = InetUtil.getLocalHostName();
             } catch (final UnknownHostException e) {
@@ -389,9 +389,15 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         addFieldMapperData(event, additionalFields, builtInFieldMappers);
         addFieldMapperData(event, additionalFields, fieldMappers);
 
+        String shortMessage = shortPatternLayout.doLayout(event);
+        if (shortMessage.isBlank()) {
+            shortMessage = "Empty message replaced by logback-gelf";
+            addWarn("Log message was empty - replaced to prevent Graylog error");
+        }
+
         final GelfMessage gelfMessage = new GelfMessage(
             originHost,
-            shortPatternLayout.doLayout(event),
+            shortMessage,
             fullPatternLayout.doLayout(event),
             event.getTimeStamp(),
             LevelToSyslogSeverity.convert(event),
