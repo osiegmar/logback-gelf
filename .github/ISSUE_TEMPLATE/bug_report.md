@@ -17,5 +17,6 @@ insert test code here
 ```
 
 **Additional context**
-Java distribution and version to be used (output of `java -version`).
-SLF4J and Logback version in use.
+* Java distribution and version in use (output of `java -version`)
+* SLF4J and Logback version in use
+* Graylog version in use
