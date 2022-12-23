@@ -24,11 +24,11 @@ repositories {
 
 dependencies {
     api 'ch.qos.logback:logback-classic:1.4.5'
-    testImplementation(platform('org.junit:junit-bom:5.7.0'))
+    testImplementation(platform('org.junit:junit-bom:5.9.0'))
     testImplementation('org.junit.jupiter:junit-jupiter')
-    testImplementation 'com.google.guava:guava:31.0.1-jre'
-    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
-    testImplementation 'org.bouncycastle:bcpkix-jdk15on:1.69'
+    testImplementation 'com.google.guava:guava:31.1-jre'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+    testImplementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
 }
 
 test {
