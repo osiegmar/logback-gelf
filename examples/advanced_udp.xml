@@ -4,7 +4,7 @@
         <graylogHost>localhost</graylogHost>
         <graylogPort>12201</graylogPort>
         <maxChunkSize>508</maxChunkSize>
-        <useCompression>true</useCompression>
+        <compressionMethod>GZIP</compressionMethod>
         <messageIdSupplier class="de.siegmar.logbackgelf.MessageIdSupplier"/>
         <encoder class="de.siegmar.logbackgelf.GelfEncoder">
             <originHost>localhost</originHost>

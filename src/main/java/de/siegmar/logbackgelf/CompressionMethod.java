@@ -19,21 +19,26 @@
 
 package de.siegmar.logbackgelf;
 
+import java.util.function.Supplier;
+
 import de.siegmar.logbackgelf.compressor.Compressor;
 import de.siegmar.logbackgelf.compressor.GZIPCompressor;
 import de.siegmar.logbackgelf.compressor.ZLIBCompressor;
 
 public enum CompressionMethod {
-    ZLIB(new ZLIBCompressor()),
-    GZIP(new GZIPCompressor());
 
-    private final Compressor compressor;
+    NONE(() -> new Compressor() { }),
+    ZLIB(ZLIBCompressor::new),
+    GZIP(GZIPCompressor::new);
 
-    CompressionMethod(final Compressor compressor) {
+    private final Supplier<Compressor> compressor;
+
+    CompressionMethod(final Supplier<Compressor> compressor) {
         this.compressor = compressor;
     }
 
     public Compressor getCompressor() {
-        return this.compressor;
+        return compressor.get();
     }
+
 }

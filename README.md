@@ -111,7 +111,7 @@ Find more advanced examples in the [examples directory](examples).
 * **maxChunkSize**: Maximum size of GELF chunks in bytes. Default chunk size is 508 - this prevents
   IP packet fragmentation. This is also the recommended minimum.
   Maximum supported chunk size is 65,467 bytes.
-* **useCompression**: If true, compression of GELF messages is enabled. Default: true.
+* **compressionMethod**: Compression method to use (NONE, GZIP or ZLIB). Default: GZIP.
 * **messageIdSupplier**: The mechanism that supplies unique message ids that are required by the
   GELF UDP protocol. Default: `de.siegmar.logbackgelf.MessageIdSupplier`.
 

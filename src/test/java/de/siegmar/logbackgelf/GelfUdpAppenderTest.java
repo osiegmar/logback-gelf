@@ -148,7 +148,6 @@ public class GelfUdpAppenderTest {
         gelfAppender.setEncoder(gelfEncoder);
         gelfAppender.setGraylogHost("localhost");
         gelfAppender.setGraylogPort(port);
-        gelfAppender.setUseCompression(useCompression);
         gelfAppender.setCompressionMethod(compressionMethod);
         gelfAppender.start();
         return gelfAppender;

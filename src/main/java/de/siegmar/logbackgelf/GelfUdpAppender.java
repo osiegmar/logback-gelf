@@ -27,7 +27,6 @@ import java.nio.channels.DatagramChannel;
 import java.util.function.Supplier;
 
 import de.siegmar.logbackgelf.compressor.Compressor;
-import de.siegmar.logbackgelf.compressor.NoneCompressor;
 
 public class GelfUdpAppender extends AbstractGelfAppender {
 
@@ -38,14 +37,9 @@ public class GelfUdpAppender extends AbstractGelfAppender {
     private Integer maxChunkSize;
 
     /**
-     * If true, compression of GELF messages is enabled. Default: true.
+     * Compression method used (NONE, GZIP or ZLIB). Default: GZIP.
      */
-    private boolean useCompression = true;
-
-    /**
-     * Compression method used if useCompression is true. Default: ZLIB.
-     */
-    private CompressionMethod compressionMethod = CompressionMethod.ZLIB;
+    private CompressionMethod compressionMethod = CompressionMethod.GZIP;
 
     private Supplier<Long> messageIdSupplier = new MessageIdSupplier();
 
@@ -63,14 +57,6 @@ public class GelfUdpAppender extends AbstractGelfAppender {
 
     public void setMaxChunkSize(final Integer maxChunkSize) {
         this.maxChunkSize = maxChunkSize;
-    }
-
-    public boolean isUseCompression() {
-        return useCompression;
-    }
-
-    public void setUseCompression(final boolean useCompression) {
-        this.useCompression = useCompression;
     }
 
     public CompressionMethod getCompressionMethod() {
@@ -94,7 +80,7 @@ public class GelfUdpAppender extends AbstractGelfAppender {
         robustChannel = new RobustChannel();
         chunker = new GelfUdpChunker(messageIdSupplier, maxChunkSize);
         addressResolver = new AddressResolver(getGraylogHost());
-        compressor = useCompression ? compressionMethod.getCompressor() : new NoneCompressor();
+        compressor = compressionMethod.getCompressor();
     }
 
     @Override

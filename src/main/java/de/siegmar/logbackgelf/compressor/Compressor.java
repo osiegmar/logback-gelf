@@ -19,9 +19,10 @@
 
 package de.siegmar.logbackgelf.compressor;
 
-
 public interface Compressor {
 
-    byte[] compress(byte[] binMessage);
+    default byte[] compress(byte[] binMessage) {
+        return binMessage;
+    }
 
 }
