@@ -152,6 +152,7 @@ Find more advanced examples in the [examples directory](examples).
 * **originHost**: Origin hostname - will be auto-detected if not specified.
 * **includeRawMessage**: If true, the raw message (with argument placeholders) will be sent, too.
   Default: false.
+* **includeKeyValues**: If true, key value pairs will be sent, too. Default: true.
 * **includeMarker**: If true, logback markers will be sent, too. Default: true.
 * **includeMdcData**: If true, MDC keys/values will be sent, too. Default: true.
 * **includeCallerData**: If true, caller data (source file-, method-, class name and line) will be

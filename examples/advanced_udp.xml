@@ -9,6 +9,7 @@
         <encoder class="de.siegmar.logbackgelf.GelfEncoder">
             <originHost>localhost</originHost>
             <includeRawMessage>false</includeRawMessage>
+            <includeKeyValues>true</includeKeyValues>
             <includeMarker>true</includeMarker>
             <includeMdcData>true</includeMdcData>
             <includeCallerData>false</includeCallerData>

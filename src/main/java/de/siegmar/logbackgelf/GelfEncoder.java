@@ -35,6 +35,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.util.LevelToSyslogSeverity;
 import ch.qos.logback.core.encoder.EncoderBase;
 import de.siegmar.logbackgelf.mappers.CallerDataFieldMapper;
+import de.siegmar.logbackgelf.mappers.KeyValueFieldMapper;
 import de.siegmar.logbackgelf.mappers.MarkerFieldMapper;
 import de.siegmar.logbackgelf.mappers.MdcDataFieldMapper;
 import de.siegmar.logbackgelf.mappers.RootExceptionDataFieldMapper;
@@ -59,6 +60,11 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      * If true, the raw message (with argument placeholders) will be sent, too. Default: false.
      */
     private boolean includeRawMessage;
+
+    /**
+     * If true, key value pairs will be sent, too. Default: true.
+     */
+    private boolean includeKeyValues = true;
 
     /**
      * If true, logback markers will be sent, too. Default: true.
@@ -148,6 +154,14 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     public void setIncludeRawMessage(final boolean includeRawMessage) {
         this.includeRawMessage = includeRawMessage;
+    }
+
+    public boolean isIncludeKeyValues() {
+        return includeKeyValues;
+    }
+
+    public void setIncludeKeyValues(final boolean includeKeyValues) {
+        this.includeKeyValues = includeKeyValues;
     }
 
     public boolean isIncludeMarker() {
@@ -349,6 +363,10 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
         if (includeRootCauseData) {
             builtInFieldMappers.add(new RootExceptionDataFieldMapper());
+        }
+
+        if (includeKeyValues) {
+            builtInFieldMappers.add(new KeyValueFieldMapper());
         }
 
         if (includeMarker) {

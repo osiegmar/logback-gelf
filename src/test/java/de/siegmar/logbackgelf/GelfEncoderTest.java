@@ -40,6 +40,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
+import org.slf4j.event.KeyValuePair;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,6 +52,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.LoggingEvent;
 
+@SuppressWarnings("checkstyle:ClassDataAbstractionCoupling")
 public class GelfEncoderTest {
 
     private static final String LOGGER_NAME = GelfEncoderTest.class.getCanonicalName();
@@ -165,6 +167,28 @@ public class GelfEncoderTest {
         final String line = Objects.requireNonNull(msg.readLine());
         assertTrue(line.matches("^\tat de.siegmar.logbackgelf.GelfEncoderTest.exception"
             + "\\(GelfEncoderTest.java:\\d+\\)$"), "Unexpected line: " + line);
+    }
+
+    @Test
+    public void keyValues() throws IOException {
+        encoder.start();
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+
+        final LoggingEvent event = simpleLoggingEvent(logger, null);
+        event.addKeyValuePair(new KeyValuePair("key1", "value"));
+        event.addKeyValuePair(new KeyValuePair("key2", 123));
+        event.addKeyValuePair(new KeyValuePair("key3", true));
+
+        final String logMsg = encodeToStr(event);
+
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        coreValidation(jsonNode);
+        assertEquals("value", jsonNode.get("_key1").textValue());
+        assertEquals(123, jsonNode.get("_key2").numberValue());
+        assertEquals("true", jsonNode.get("_key3").textValue());
     }
 
     @Test
