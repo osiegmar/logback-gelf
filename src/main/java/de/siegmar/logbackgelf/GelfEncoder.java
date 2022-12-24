@@ -109,7 +109,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private String threadNameKey = "thread_name";
 
     /**
-     * If true, a system depended newline separator will be added at the end of each message.
+     * If true, a system dependent newline separator will be added at the end of each message.
      * Don't use this in conjunction with TCP or UDP appenders, as this is only reasonable for
      * console logging!
      * Default: false.
