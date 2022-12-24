@@ -36,11 +36,11 @@ class CustomX509TrustManager implements X509TrustManager {
 
     private static final int TYPE_DNS_NAME = 2;
 
-    private final X509TrustManager defaultTrustManager;
+    private final X509TrustManager trustManager;
     private final String hostname;
 
-    CustomX509TrustManager(final X509TrustManager defaultTrustManager, final String hostname) {
-        this.defaultTrustManager = defaultTrustManager;
+    CustomX509TrustManager(final X509TrustManager trustManager, final String hostname) {
+        this.trustManager = trustManager;
         this.hostname = hostname;
     }
 
@@ -53,8 +53,8 @@ class CustomX509TrustManager implements X509TrustManager {
     public void checkServerTrusted(final X509Certificate[] chain, final String authType)
         throws CertificateException {
 
-        // First, check the chain via the default trust manager
-        defaultTrustManager.checkServerTrusted(chain, authType);
+        // First, check the chain via the trust manager
+        trustManager.checkServerTrusted(chain, authType);
 
         final X509Certificate serverCert = chain[0];
 
@@ -132,7 +132,7 @@ class CustomX509TrustManager implements X509TrustManager {
 
     @Override
     public X509Certificate[] getAcceptedIssuers() {
-        return defaultTrustManager.getAcceptedIssuers();
+        return trustManager.getAcceptedIssuers();
     }
 
 }
