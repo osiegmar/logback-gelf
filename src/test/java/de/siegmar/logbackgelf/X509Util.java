@@ -20,6 +20,7 @@
 package de.siegmar.logbackgelf;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -54,6 +55,7 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder;
 import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
@@ -62,7 +64,7 @@ import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
 @SuppressWarnings({"checkstyle:classdataabstractioncoupling", "checkstyle:classfanoutcomplexity"})
-public class X509Util {
+final class X509Util {
 
     private static final String ALGORITHM = "RSA";
     private static final String SIG_ALGORITHM = "SHA256withRSA";
@@ -73,10 +75,22 @@ public class X509Util {
         Security.addProvider(new BouncyCastleProvider());
     }
 
+    private X509Util() {
+    }
+
     private static KeyPair generateKeyPair() throws NoSuchAlgorithmException {
         final KeyPairGenerator keyGen = KeyPairGenerator.getInstance(ALGORITHM);
         keyGen.initialize(KEY_SIZE);
         return keyGen.genKeyPair();
+    }
+
+    static String toPEM(final X509Certificate certificate) throws IOException {
+        final StringWriter sw = new StringWriter();
+        try (JcaPEMWriter jcaPEMWriter = new JcaPEMWriter(sw)) {
+            jcaPEMWriter.writeObject(certificate);
+        }
+
+        return sw.toString();
     }
 
     static class CABuilder {

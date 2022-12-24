@@ -19,12 +19,19 @@
 
 package de.siegmar.logbackgelf;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -39,12 +46,30 @@ public class GelfTcpTlsAppender extends GelfTcpAppender {
      */
     private boolean insecure;
 
+    private final List<X509Certificate> trustedServerCertificates = new ArrayList<>();
+
     public boolean isInsecure() {
         return insecure;
     }
 
     public void setInsecure(final boolean insecure) {
         this.insecure = insecure;
+    }
+
+    public List<X509Certificate> getTrustedServerCertificates() {
+        return trustedServerCertificates;
+    }
+
+    public void addTrustedServerCertificate(final String trustedServerCertificate)
+        throws CertificateException {
+
+        trustedServerCertificates.add(readCert(trustedServerCertificate));
+    }
+
+    private X509Certificate readCert(final String cert) throws CertificateException {
+        final CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+        return (X509Certificate) certificateFactory.generateCertificate(
+            new ByteArrayInputStream(cert.getBytes(StandardCharsets.US_ASCII)));
     }
 
     @Override
@@ -60,13 +85,20 @@ public class GelfTcpTlsAppender extends GelfTcpAppender {
         if (insecure) {
             addWarn("Enabled insecure mode (skip TLS certificate validation)"
                 + " - don't use this in production!");
+
+            if (!trustedServerCertificates.isEmpty()) {
+                throw new IllegalStateException("Configuration options 'insecure' and "
+                    + "'trustedServerCertificates' are mutually exclusive!");
+            }
+
             return new NoopX509TrustManager();
         }
 
-        return new CustomX509TrustManager(findDefaultX509TrustManager(), getGraylogHost());
+        return new CustomX509TrustManager(defaultTrustManager(), getGraylogHost(),
+            trustedServerCertificates);
     }
 
-    private static X509TrustManager findDefaultX509TrustManager()
+    private static X509TrustManager defaultTrustManager()
         throws NoSuchAlgorithmException, KeyStoreException {
 
         final TrustManagerFactory trustManagerFactory =

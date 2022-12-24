@@ -80,6 +80,12 @@ Simple TCP with TLS configuration:
     <appender name="GELF" class="de.siegmar.logbackgelf.GelfTcpTlsAppender">
         <graylogHost>localhost</graylogHost>
         <graylogPort>12201</graylogPort>
+        <trustedServerCertificate>
+            -----BEGIN CERTIFICATE-----
+            ...
+            -----END CERTIFICATE-----
+        </trustedServerCertificate>
+        <insecure>false</insecure>
     </appender>
 
     <!-- Use AsyncAppender to prevent slowdowns -->
@@ -141,6 +147,12 @@ Find more advanced examples in the [examples directory](examples).
 `de.siegmar.logbackgelf.GelfTcpTlsAppender`
 
 * Everything from GelfTcpAppender
+* **trustedServerCertificate**: An optionally configured X.509 server certificate (PEM encoded) to
+  trust (whitelist). Can be configured multiple times to ease certification renewal.
+  If configured, the server needs to offer one of these certificates in order to allow
+  communication. The certificate offered by the server needs to be valid (matching hostname and
+  not expired). If this property is configured, the server's certificate chain is not validated in
+  order to allow self-signed certificates. Default: none.
 * **insecure**: If true, skip the TLS certificate validation.
   You should not use this in production! Default: false.
 

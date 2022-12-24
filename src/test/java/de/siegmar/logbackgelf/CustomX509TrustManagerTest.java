@@ -33,6 +33,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -140,6 +141,21 @@ public class CustomX509TrustManagerTest {
 
         assertThrows(CertificateException.class,
             () -> validate(cert, caBuilder.getCaCertificate()));
+    }
+
+    @Test
+    public void caSignedNotWhitelisted() throws Exception {
+        final X509Util.CABuilder caBuilder = new X509Util.CABuilder();
+        final X509Certificate cert = prepareCaSigned(caBuilder)
+            .build(HOSTNAME);
+
+        tm = new CustomX509TrustManager(defaultTrustManager(null), HOSTNAME,
+            List.of(c.build(null, HOSTNAME)));
+
+        final CertificateException e = assertThrows(CertificateException.class,
+            () -> validate(cert, caBuilder.getCaCertificate()));
+
+        assertEquals("Server did not offer a whitelisted certificate", e.getMessage());
     }
 
     private void validate(final X509Certificate... certificates) throws CertificateException {

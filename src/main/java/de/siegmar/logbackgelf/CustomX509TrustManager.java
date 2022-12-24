@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
@@ -38,10 +39,17 @@ class CustomX509TrustManager implements X509TrustManager {
 
     private final X509TrustManager trustManager;
     private final String hostname;
+    private final List<X509Certificate> trustedServerCertificates;
 
     CustomX509TrustManager(final X509TrustManager trustManager, final String hostname) {
-        this.trustManager = trustManager;
-        this.hostname = hostname;
+        this(trustManager, hostname, Collections.emptyList());
+    }
+
+    CustomX509TrustManager(final X509TrustManager trustManager, final String hostname,
+                           final List<X509Certificate> trustedServerCertificates) {
+        this.trustManager = Objects.requireNonNull(trustManager);
+        this.hostname = Objects.requireNonNull(hostname);
+        this.trustedServerCertificates = Objects.requireNonNull(trustedServerCertificates);
     }
 
     @Override
@@ -53,34 +61,43 @@ class CustomX509TrustManager implements X509TrustManager {
     public void checkServerTrusted(final X509Certificate[] chain, final String authType)
         throws CertificateException {
 
-        // First, check the chain via the trust manager
-        trustManager.checkServerTrusted(chain, authType);
-
+        // The first certificate is the server certificate
         final X509Certificate serverCert = chain[0];
 
-        if (checkAlternativeNames(serverCert)) {
-            return;
+        if (trustedServerCertificates.isEmpty()) {
+            // If not explicitly trusted, check via the trust manager (chain validation)
+            trustManager.checkServerTrusted(chain, authType);
+        } else {
+            if (!trustedServerCertificates.contains(serverCert)) {
+                throw new CertificateException("Server did not offer a whitelisted certificate");
+            }
+
+            // Check if the certificate is valid. This is also done by the trust manager.
+            serverCert.checkValidity();
         }
 
-        // Check the deprecated common name
-        checkCommonName(serverCert);
+        if (!checkAlternativeNames(serverCert)) {
+            // Check the deprecated common name
+            checkCommonName(serverCert);
+        }
     }
 
     private boolean checkAlternativeNames(final X509Certificate serverCert)
         throws CertificateException {
 
         final List<String> alternativeNames = getAlternativeNames(serverCert);
-        if (!alternativeNames.isEmpty()) {
-            for (final String alternativeName : alternativeNames) {
-                if (HostnameVerifier.verify(hostname, alternativeName)) {
-                    return true;
-                }
-            }
-
-            throw new CertificateException(String.format("Server certificate mismatch. Tried to "
-                + "verify %s against subject alternative names: %s", hostname, alternativeNames));
+        if (alternativeNames.isEmpty()) {
+            return false;
         }
-        return false;
+
+        for (final String alternativeName : alternativeNames) {
+            if (HostnameVerifier.verify(hostname, alternativeName)) {
+                return true;
+            }
+        }
+
+        throw new CertificateException(String.format("Server certificate mismatch. Tried to "
+            + "verify %s against subject alternative names: %s", hostname, alternativeNames));
     }
 
     private static List<String> getAlternativeNames(final X509Certificate cert)
