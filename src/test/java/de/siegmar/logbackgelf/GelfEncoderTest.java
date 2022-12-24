@@ -27,9 +27,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -45,8 +47,6 @@ import org.slf4j.event.KeyValuePair;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.LineReader;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -79,8 +79,8 @@ public class GelfEncoderTest {
         final JsonNode jsonNode = om.readTree(logMsg);
         basicValidation(jsonNode);
 
-        final LineReader msg =
-            new LineReader(new StringReader(jsonNode.get("full_message").textValue()));
+        final BufferedReader msg =
+            new BufferedReader(new StringReader(jsonNode.get("full_message").textValue()));
         assertEquals("message 1", msg.readLine());
     }
 
@@ -160,8 +160,8 @@ public class GelfEncoderTest {
         final JsonNode jsonNode = om.readTree(logMsg);
         basicValidation(jsonNode);
 
-        final LineReader msg =
-            new LineReader(new StringReader(jsonNode.get("full_message").textValue()));
+        final BufferedReader msg =
+            new BufferedReader(new StringReader(jsonNode.get("full_message").textValue()));
 
         assertEquals("message 1", msg.readLine());
         assertEquals("java.lang.IllegalArgumentException: Example Exception", msg.readLine());
@@ -207,7 +207,7 @@ public class GelfEncoderTest {
 
         final LoggingEvent event = simpleLoggingEvent(logger, null);
 
-        event.setMDCPropertyMap(ImmutableMap.of("mdc_key", "mdc_value"));
+        event.setMDCPropertyMap(Map.of("mdc_key", "mdc_value"));
 
         final String logMsg = encodeToStr(event);
 
@@ -376,7 +376,7 @@ public class GelfEncoderTest {
 
         final LoggingEvent event = simpleLoggingEvent(logger, null);
 
-        event.setMDCPropertyMap(ImmutableMap.of("int", "200", "float", "0.00001"));
+        event.setMDCPropertyMap(Map.of("int", "200", "float", "0.00001"));
 
         final String logMsg = encodeToStr(event);
 
@@ -398,7 +398,7 @@ public class GelfEncoderTest {
 
         final LoggingEvent event = simpleLoggingEvent(logger, null);
 
-        event.setMDCPropertyMap(ImmutableMap.of("int", "200", "float", "0.00001"));
+        event.setMDCPropertyMap(Map.of("int", "200", "float", "0.00001"));
 
         final String logMsg = encodeToStr(event);
 

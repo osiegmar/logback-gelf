@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.ByteStreams;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -160,7 +159,7 @@ public class GelfTcpAppenderTest {
 
             try (Socket socket = server.accept()) {
                 try (DataInputStream in = new DataInputStream(socket.getInputStream())) {
-                    ret = ByteStreams.toByteArray(in);
+                    ret = in.readAllBytes();
                 }
             } finally {
                 server.close();

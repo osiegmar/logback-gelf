@@ -27,13 +27,11 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.ImmutableMap;
-
 public class GelfMessageTest {
 
     @Test
     public void simple() {
-        final Map<String, Object> additionalFields = ImmutableMap.of("foo", (Object) "bar");
+        final Map<String, Object> additionalFields = Map.of("foo", (Object) "bar");
 
         final GelfMessage message = new GelfMessage("host", "short message", null,
                 1584271169123L, 6, additionalFields);
@@ -58,7 +56,7 @@ public class GelfMessageTest {
 
     @Test
     public void complete() {
-        final Map<String, Object> additionalFields = ImmutableMap.of("foo", (Object) "bar");
+        final Map<String, Object> additionalFields = Map.of("foo", (Object) "bar");
 
         final GelfMessage message = new GelfMessage("host", "short message", "full message",
             1584271169123L, 6, additionalFields);
@@ -78,7 +76,7 @@ public class GelfMessageTest {
     @Test
     void filterEmptyFullMessage() {
         final GelfMessage message = new GelfMessage("host", "short message", "",
-                1584271169123L, 6, ImmutableMap.of());
+                1584271169123L, 6, Map.of());
 
         assertEquals("short message", message.getShortMessage());
         assertNull(message.getFullMessage());

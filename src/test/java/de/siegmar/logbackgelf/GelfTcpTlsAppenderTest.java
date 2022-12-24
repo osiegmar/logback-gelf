@@ -20,9 +20,9 @@
 package de.siegmar.logbackgelf;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.ByteStreams;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -162,7 +161,7 @@ public class GelfTcpTlsAppenderTest {
 
             try (Socket socket = server.accept()) {
                 try (DataInputStream in = new DataInputStream(socket.getInputStream())) {
-                    ret = ByteStreams.toByteArray(in);
+                    ret = in.readAllBytes();
                 }
             } finally {
                 server.close();

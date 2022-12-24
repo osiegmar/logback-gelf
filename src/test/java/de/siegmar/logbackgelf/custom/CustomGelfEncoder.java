@@ -19,7 +19,11 @@
 
 package de.siegmar.logbackgelf.custom;
 
-import com.google.common.hash.Hashing;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
+import org.bouncycastle.util.encoders.Hex;
 
 import de.siegmar.logbackgelf.GelfEncoder;
 import de.siegmar.logbackgelf.GelfMessage;
@@ -30,9 +34,18 @@ public class CustomGelfEncoder extends GelfEncoder {
     @Override
     protected byte[] gelfMessageToJson(final GelfMessage gelfMessage) {
         final byte[] json = super.gelfMessageToJson(gelfMessage);
-        final String sha256 = Hashing.sha256().hashBytes(json).toString();
-        gelfMessage.getAdditionalFields().put("sha256", sha256);
+        gelfMessage.getAdditionalFields().put("sha256", sha256(json));
         return super.gelfMessageToJson(gelfMessage);
+    }
+
+    private static String sha256(final byte[] data) {
+        try {
+            final MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            final byte[] hash = digest.digest(data);
+            return new String(Hex.encode(hash), StandardCharsets.US_ASCII);
+        } catch (final NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
 }
