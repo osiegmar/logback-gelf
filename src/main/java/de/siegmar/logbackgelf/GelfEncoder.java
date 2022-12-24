@@ -67,9 +67,9 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private boolean includeKeyValues = true;
 
     /**
-     * If true, logback markers will be sent, too. Default: true.
+     * If true, logback markers will be sent, too. Default: false.
      */
-    private boolean includeMarker = true;
+    private boolean includeMarker;
 
     /**
      * If true, MDC keys/values will be sent, too. Default: true.

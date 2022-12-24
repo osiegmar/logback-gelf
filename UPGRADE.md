@@ -5,6 +5,7 @@ Some changes may require to update your configuration.
 ## Upgrade from 4.x to 5.x
 * Version 5.0.0 of this library upgraded from Java 8 to Java 11.
 * UDP compression configuration changed from `useCompression` to `compressionMethod` and now defaults to GZIP instead of ZLIB.
+* Default of `includeMarker` changed to `false`. Serialization format of markers has changed.
 
 ## Upgrade from 3.x to 4.x
 * No changes on the configuration were introduced. All changes are only relevant if used programmatically.

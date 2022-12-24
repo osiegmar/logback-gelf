@@ -15,7 +15,7 @@
             <originHost>localhost</originHost>
             <includeRawMessage>false</includeRawMessage>
             <includeKeyValues>true</includeKeyValues>
-            <includeMarker>true</includeMarker>
+            <includeMarker>false</includeMarker>
             <includeMdcData>true</includeMdcData>
             <includeCallerData>false</includeCallerData>
             <includeRootCauseData>false</includeRootCauseData>

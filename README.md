@@ -153,7 +153,7 @@ Find more advanced examples in the [examples directory](examples).
 * **includeRawMessage**: If true, the raw message (with argument placeholders) will be sent, too.
   Default: false.
 * **includeKeyValues**: If true, key value pairs will be sent, too. Default: true.
-* **includeMarker**: If true, logback markers will be sent, too. Default: true.
+* **includeMarker**: If true, logback markers will be sent, too. Default: false.
 * **includeMdcData**: If true, MDC keys/values will be sent, too. Default: true.
 * **includeCallerData**: If true, caller data (source file-, method-, class name and line) will be
   sent, too. Default: false.
@@ -167,7 +167,7 @@ Find more advanced examples in the [examples directory](examples).
   Default: logger_name.
 * **threadNameKey**: The key (i.e. the field name) that should be used for the thread name. 
   Default: thread_name.
-* **appendNewline**: If true, a system depended newline separator will be added at the end of each message.
+* **appendNewline**: If true, a system dependent newline separator will be added at the end of each message.
   Don't use this in conjunction with TCP or UDP appenders, as this is only reasonable for
   console logging!
 * **shortPatternLayout**: Short message format. Default: `"%m%nopex"`.

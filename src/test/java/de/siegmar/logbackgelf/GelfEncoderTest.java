@@ -413,6 +413,7 @@ public class GelfEncoderTest {
     @Test
     public void singleMarker() throws IOException {
         encoder.setLoggerNameKey("Logger");
+        encoder.setIncludeMarker(true);
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -426,12 +427,13 @@ public class GelfEncoderTest {
         final ObjectMapper om = new ObjectMapper();
         final JsonNode jsonNode = om.readTree(logMsg);
         coreValidation(jsonNode);
-        assertEquals("SINGLE", jsonNode.get("_marker").textValue());
+        assertEquals("[SINGLE]", jsonNode.get("_marker").textValue());
     }
 
     @Test
     public void multipleMarker() throws IOException {
         encoder.setLoggerNameKey("Logger");
+        encoder.setIncludeMarker(true);
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -448,7 +450,7 @@ public class GelfEncoderTest {
         final ObjectMapper om = new ObjectMapper();
         final JsonNode jsonNode = om.readTree(logMsg);
         coreValidation(jsonNode);
-        assertEquals("FIRST, SECOND, THIRD", jsonNode.get("_marker").textValue());
+        assertEquals("[FIRST [ SECOND ], THIRD]", jsonNode.get("_marker").textValue());
     }
 
     private String encodeToStr(final LoggingEvent event) {
@@ -499,7 +501,7 @@ public class GelfEncoderTest {
     @Test
     void defaultValues() {
         assertFalse(encoder.isIncludeRawMessage());
-        assertTrue(encoder.isIncludeMarker());
+        assertFalse(encoder.isIncludeMarker());
         assertTrue(encoder.isIncludeMdcData());
         assertFalse(encoder.isIncludeCallerData());
         assertFalse(encoder.isIncludeRootCauseData());

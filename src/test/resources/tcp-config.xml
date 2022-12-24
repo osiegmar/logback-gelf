@@ -14,7 +14,7 @@
         <encoder class="de.siegmar.logbackgelf.GelfEncoder">
             <originHost>localhost</originHost>
             <includeRawMessage>false</includeRawMessage>
-            <includeMarker>true</includeMarker>
+            <includeMarker>false</includeMarker>
             <includeMdcData>true</includeMdcData>
             <includeCallerData>false</includeCallerData>
             <includeRootCauseData>false</includeRootCauseData>

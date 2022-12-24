@@ -19,12 +19,8 @@
 
 package de.siegmar.logbackgelf.mappers;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.slf4j.Marker;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 
@@ -37,28 +33,7 @@ public class MarkerFieldMapper extends AbstractFixedNameFieldMapper<String> {
     @Override
     protected Optional<String> getValue(final ILoggingEvent event) {
         return Optional.ofNullable(event.getMarkerList())
-            .map(MarkerFieldMapper::buildMarkerStr);
-    }
-
-    private static String buildMarkerStr(final List<Marker> markers) {
-        return markers.stream()
-            .map(MarkerFieldMapper::buildMarkerStr)
-            .collect(Collectors.joining(", "));
-    }
-
-    private static String buildMarkerStr(final Marker marker) {
-        if (!marker.hasReferences()) {
-            return marker.getName();
-        }
-
-        final StringBuilder sb = new StringBuilder(marker.getName());
-
-        final Iterator<Marker> it = marker.iterator();
-        do {
-            sb.append(", ").append(it.next().getName());
-        } while (it.hasNext());
-
-        return sb.toString();
+            .map(List::toString);
     }
 
 }
