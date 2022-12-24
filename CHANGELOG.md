@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support for key value pairs
   [\#86](https://github.com/osiegmar/logback-gelf/issues/86)
+- Add another method for adding static field to GelfEncoder
+  [\#80](https://github.com/osiegmar/logback-gelf/issues/80)
 
 ### Changed
 - Upgrade to Java 11 (Premier Support of Java 8 ended in March 2022).

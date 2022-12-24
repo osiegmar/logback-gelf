@@ -197,6 +197,7 @@ public class GelfEncoderTest {
         encoder.setIncludeRawMessage(true);
         encoder.setIncludeLevelName(true);
         encoder.addStaticField("foo:bar");
+        encoder.addStaticField("bar", "baz");
         encoder.setIncludeCallerData(true);
         encoder.setIncludeRootCauseData(true);
         encoder.start();
@@ -215,6 +216,7 @@ public class GelfEncoderTest {
         basicValidation(jsonNode);
         assertEquals("DEBUG", jsonNode.get("_level_name").textValue());
         assertEquals("bar", jsonNode.get("_foo").textValue());
+        assertEquals("baz", jsonNode.get("_bar").textValue());
         assertEquals("mdc_value", jsonNode.get("_mdc_key").textValue());
         assertEquals("message {}", jsonNode.get("_raw_message").textValue());
         assertNull(jsonNode.get("_exception"));

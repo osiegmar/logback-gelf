@@ -264,6 +264,14 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         return Collections.unmodifiableMap(staticFields);
     }
 
+    public void addStaticField(final String key, final Object value) {
+        try {
+            addField(staticFields, key, value);
+        } catch (final IllegalArgumentException e) {
+            addWarn("Could not add field " + key, e);
+        }
+    }
+
     public void addStaticField(final String staticField) {
         final String[] split = staticField.split(":", 2);
         if (split.length != 2) {
@@ -271,11 +279,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
             return;
         }
 
-        try {
-            addField(staticFields, split[0].trim(), split[1].trim());
-        } catch (final IllegalArgumentException e) {
-            addWarn("Could not add field " + staticField, e);
-        }
+        addStaticField(split[0].trim(), split[1].trim());
     }
 
     public List<GelfFieldMapper<?>> getFieldMappers() {
