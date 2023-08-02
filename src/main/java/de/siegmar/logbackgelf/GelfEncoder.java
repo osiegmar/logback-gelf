@@ -19,17 +19,6 @@
 
 package de.siegmar.logbackgelf;
 
-import java.math.BigDecimal;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-
 import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.util.LevelToSyslogSeverity;
@@ -39,6 +28,16 @@ import de.siegmar.logbackgelf.mappers.MarkerFieldMapper;
 import de.siegmar.logbackgelf.mappers.MdcDataFieldMapper;
 import de.siegmar.logbackgelf.mappers.RootExceptionDataFieldMapper;
 import de.siegmar.logbackgelf.mappers.SimpleFieldMapper;
+
+import java.math.BigDecimal;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * This class is responsible for transforming a Logback log event to a GELF message.
@@ -382,13 +381,13 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
         final byte[] json = gelfMessageToJson(gelfMessage);
 
-        if (appendNewline) {
-            final byte[] sep = System.lineSeparator().getBytes(StandardCharsets.UTF_8);
-            final ByteBuffer bb = ByteBuffer.allocate(json.length + sep.length);
+        if (appendNewline){
+            final byte sep = '\n';//System.lineSeparator().getBytes(StandardCharsets.UTF_8);
+            final ByteBuffer bb = ByteBuffer.allocate(json.length + 1);// sep.length
             bb.put(json);
-            for (final byte b : sep) {
-                bb.put(b);
-            }
+            //for (final byte b : sep) {
+            bb.put(sep); //    bb.put(b);
+            //}
             bb.flip();
             return bb.array();
         }
