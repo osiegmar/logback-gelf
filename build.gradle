@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "de.siegmar"
-version = "4.0.2"
+version = "4.0.3"
 
 java {
     toolchain {
@@ -23,11 +23,12 @@ repositories {
 }
 
 dependencies {
-    api 'ch.qos.logback:logback-classic:1.2.9'
+    api 'ch.qos.logback:logback-classic:1.2.12'
+
     testImplementation(platform('org.junit:junit-bom:5.7.0'))
     testImplementation('org.junit.jupiter:junit-jupiter')
     testImplementation 'com.google.guava:guava:31.0.1-jre'
-    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
     testImplementation 'org.bouncycastle:bcpkix-jdk15on:1.69'
 }
 
