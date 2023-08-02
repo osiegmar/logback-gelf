@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    api 'ch.qos.logback:logback-classic:1.2.12'
+    api 'ch.qos.logback:logback-classic:1.3.8'
 
     testImplementation(platform('org.junit:junit-bom:5.9.0'))
     testImplementation('org.junit.jupiter:junit-jupiter')
