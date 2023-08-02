@@ -19,26 +19,28 @@
 
 package de.siegmar.logbackgelf;
 
-import static de.siegmar.logbackgelf.GelfEncoderTest.basicValidation;
-import static de.siegmar.logbackgelf.GelfEncoderTest.simpleLoggingEvent;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.LoggingEvent;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.siegmar.logbackgelf.custom.CustomGelfEncoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.LoggingEvent;
-import de.siegmar.logbackgelf.custom.CustomGelfEncoder;
+import static de.siegmar.logbackgelf.GelfEncoderTest.basicValidation;
+import static de.siegmar.logbackgelf.GelfEncoderTest.simpleLoggingEvent;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CustomGelfEncoderTest {
+    static {
+        System.setProperty("line.separator", "\n");// logback uses platform dependent
+    }
+
 
     private static final String LOGGER_NAME = GelfEncoderTest.class.getCanonicalName();
     private static final String THREAD_NAME = "thread name";

@@ -48,10 +48,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.LoggingEvent;
+import static java.time.Duration.ofMillis;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SuppressWarnings("checkstyle:ClassDataAbstractionCoupling")
 public class GelfEncoderTest {
@@ -94,7 +92,7 @@ public class GelfEncoderTest {
 
         final String logMsg = encodeToStr(simpleLoggingEvent(logger, null));
 
-        assertTrue(logMsg.endsWith(System.lineSeparator()));
+        assertTrue(logMsg.endsWith("\n"));// System.lineSeparator()
     }
 
     @Test
