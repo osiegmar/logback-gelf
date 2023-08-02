@@ -19,13 +19,14 @@
 
 package de.siegmar.logbackgelf;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class HostnameVerifierTest {
+    static {
+        System.setProperty("line.separator", "\n");// logback uses platform dependent
+    }
 
     @Test
     public void testSimple() {

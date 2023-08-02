@@ -37,6 +37,10 @@ import static de.siegmar.logbackgelf.GelfEncoderTest.simpleLoggingEvent;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class CustomGelfEncoderTest {
+    static {
+        System.setProperty("line.separator", "\n");// logback uses platform dependent
+    }
+
 
     private static final String LOGGER_NAME = GelfEncoderTest.class.getCanonicalName();
     private static final String THREAD_NAME = "thread name";
@@ -66,12 +70,11 @@ public class CustomGelfEncoderTest {
         final JsonNode jsonNode = om.readTree(logMsg);
         basicValidation(jsonNode);
 
-        assertEquals("message 1"+System.lineSeparator(), jsonNode.get("full_message").textValue());
-        assertEquals("\r\n".equals(System.lineSeparator())
-             ? "86e17fbfde310ef7d43a9e9d1f323b29a865d88424816e4bb3a7e00ccb93fbb5"
-            : "ad4ab384b5b7dca879dc1b65132db321a67239f13c2cc0cd9867c8e607c7ce08",
+        assertEquals("message 1\n", jsonNode.get("full_message").textValue());
+        assertEquals(
+            "ad4ab384b5b7dca879dc1b65132db321a67239f13c2cc0cd9867c8e607c7ce08",
             jsonNode.get("_sha256").textValue(),
-            ()->"Log line: " + logMsg
+            "Log line: " + logMsg
         );
     }
 
