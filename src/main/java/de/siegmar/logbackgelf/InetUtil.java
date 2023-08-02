@@ -38,7 +38,7 @@ final class InetUtil {
     static String sysEnv (String envVarName){
         try {
             String value = System.getProperty(envVarName);
-            if (value != null && !value.isEmpty()){
+            if (value != null && !value.isBlank()){
                 return value;
             }
         } catch (Throwable ignore){
@@ -52,7 +52,7 @@ final class InetUtil {
 
     static String trim (String str){
         return str == null ? ""
-            : str.trim();
+            : str.trim().strip();
     }
 
     /**
@@ -147,6 +147,4 @@ final class InetUtil {
         }
         //s = trim(inetAddress.getHostAddress()); if (namesLoCase.add(s.toLowerCase())){ names.add(s); // e.g. 10.3.104.16 }
     }
-
-
 }
