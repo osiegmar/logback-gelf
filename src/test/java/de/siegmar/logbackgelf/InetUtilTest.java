@@ -19,11 +19,12 @@
 
 package de.siegmar.logbackgelf;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.net.UnknownHostException;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class InetUtilTest {
 
@@ -32,4 +33,9 @@ public class InetUtilTest {
         assertNotNull(InetUtil.getLocalHostName());
     }
 
+
+    @Disabled
+    @Test void flaky () throws UnknownHostException {
+        assertEquals("K39", InetUtil.getLocalHostName());
+    }
 }
