@@ -19,8 +19,6 @@
 
 package de.siegmar.logbackgelf;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -29,13 +27,15 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Objects;
 
+import static java.nio.charset.StandardCharsets.*;
+
 /**
  * Class for GELF 1.1 format representation.
  */
 public class GelfMessage {
 
     private static final String VERSION = "1.1";
-    private static final int INITIAL_SIZE = 256;
+    private static final int INITIAL_SIZE = 502;
 
     private final String host;
     private final String shortMessage;
