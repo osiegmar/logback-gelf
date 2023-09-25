@@ -392,7 +392,7 @@ public class GelfEncoderTest {
         final Logger logger = lc.getLogger(LOGGER_NAME);
 
         final LoggingEvent event = simpleLoggingEvent(logger, null);
-        event.setMarker(MarkerFactory.getMarker("SINGLE"));
+        event.addMarker(MarkerFactory.getMarker("SINGLE"));
 
         final String logMsg = encodeToStr(event);
 
@@ -413,7 +413,7 @@ public class GelfEncoderTest {
         final LoggingEvent event = simpleLoggingEvent(logger, null);
         final Marker marker = MarkerFactory.getMarker("FIRST");
         marker.add(MarkerFactory.getMarker("SECOND"));
-        event.setMarker(marker);
+        event.addMarker(marker);
 
         final String logMsg = encodeToStr(event);
 

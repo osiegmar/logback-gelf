@@ -8,11 +8,11 @@ plugins {
 }
 
 group = "de.siegmar"
-version = "4.0.2"
+version = "5.0.0"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
+        languageVersion = JavaLanguageVersion.of(11)
     }
     withJavadocJar()
     withSourcesJar()
@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    api 'ch.qos.logback:logback-classic:1.2.9'
+    api 'ch.qos.logback:logback-classic:1.4.11'
     testImplementation(platform('org.junit:junit-bom:5.7.0'))
     testImplementation('org.junit.jupiter:junit-jupiter')
     testImplementation 'com.google.guava:guava:31.0.1-jre'
