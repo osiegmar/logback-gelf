@@ -40,6 +40,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
+import org.slf4j.event.KeyValuePair;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -473,5 +474,24 @@ public class GelfEncoderTest {
     void addFieldMapper() {
         encoder.addFieldMapper((event, valueHandler) -> { });
         assertEquals(1, encoder.getFieldMappers().size());
+    }
+
+    @Test
+    void keyValuePairs() throws IOException {
+        encoder.setIncludeEventKeyValuesPairs(true);
+        encoder.start();
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+
+        final LoggingEvent event = simpleLoggingEvent(logger, null);
+        event.addKeyValuePair(new KeyValuePair("some", "value"));
+
+        final String logMsg = encodeToStr(event);
+
+        final ObjectMapper om = new ObjectMapper();
+        final JsonNode jsonNode = om.readTree(logMsg);
+        basicValidation(jsonNode);
+        assertEquals("value", jsonNode.get("_some").textValue());
     }
 }

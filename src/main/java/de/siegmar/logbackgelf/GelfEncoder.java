@@ -35,6 +35,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.util.LevelToSyslogSeverity;
 import ch.qos.logback.core.encoder.EncoderBase;
 import de.siegmar.logbackgelf.mappers.CallerDataFieldMapper;
+import de.siegmar.logbackgelf.mappers.KeyValuePairFieldMapper;
 import de.siegmar.logbackgelf.mappers.MarkerFieldMapper;
 import de.siegmar.logbackgelf.mappers.MdcDataFieldMapper;
 import de.siegmar.logbackgelf.mappers.RootExceptionDataFieldMapper;
@@ -86,6 +87,11 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      * If true, the log level name (e.g. DEBUG) will be sent, too. Default: false.
      */
     private boolean includeLevelName;
+
+    /**
+     * If true, the key value pairs from a log event will be sent, too. Default: false.
+     */
+    private boolean includeEventKeyValuesPairs;
 
     /**
      * The key that should be used for the levelName.
@@ -188,6 +194,14 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     public void setIncludeLevelName(final boolean includeLevelName) {
         this.includeLevelName = includeLevelName;
+    }
+
+    public boolean isIncludeEventKeyValuesPairs() {
+        return includeEventKeyValuesPairs;
+    }
+
+    public void setIncludeEventKeyValuesPairs(final boolean includeEventKeyValuesPairs) {
+        this.includeEventKeyValuesPairs = includeEventKeyValuesPairs;
     }
 
     public String getLevelNameKey() {
@@ -337,6 +351,10 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
         if (includeLevelName) {
             builtInFieldMappers.add(new SimpleFieldMapper<>(levelNameKey, event -> event.getLevel().toString()));
+        }
+
+        if (includeEventKeyValuesPairs) {
+            builtInFieldMappers.add(new KeyValuePairFieldMapper());
         }
 
         if (includeRawMessage) {
