@@ -414,13 +414,14 @@ public class GelfEncoderTest {
         final Marker marker = MarkerFactory.getMarker("FIRST");
         marker.add(MarkerFactory.getMarker("SECOND"));
         event.addMarker(marker);
+        event.addMarker(MarkerFactory.getMarker("THIRD"));
 
         final String logMsg = encodeToStr(event);
 
         final ObjectMapper om = new ObjectMapper();
         final JsonNode jsonNode = om.readTree(logMsg);
         coreValidation(jsonNode);
-        assertEquals("FIRST, SECOND", jsonNode.get("_marker").textValue());
+        assertEquals("FIRST, SECOND, THIRD", jsonNode.get("_marker").textValue());
     }
 
     private String encodeToStr(final LoggingEvent event) {
