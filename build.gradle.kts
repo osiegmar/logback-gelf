@@ -26,6 +26,7 @@ dependencies {
     api("ch.qos.logback:logback-classic:1.4.11")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("org.assertj:assertj-core:3.11.1")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     testImplementation("org.bouncycastle:bcpkix-jdk18on:1.76")
 }

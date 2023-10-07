@@ -86,6 +86,7 @@ public class GelfEncoderTest {
 
     @Test
     public void newline() {
+
         encoder.setAppendNewline(true);
         encoder.start();
 

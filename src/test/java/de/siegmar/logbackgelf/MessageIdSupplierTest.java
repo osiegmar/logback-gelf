@@ -19,25 +19,39 @@
 
 package de.siegmar.logbackgelf;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import org.junit.jupiter.api.Test;
 
-public class MessageIdSupplierTest {
-
-    private final MessageIdSupplier messageIdSupplier = new MessageIdSupplier();
+class MessageIdSupplierTest {
 
     @Test
-    public void test() {
-        final Long messageId = messageIdSupplier.getAsLong();
-        assertNotEquals(messageId, messageIdSupplier.getAsLong());
+    void random() {
+        final MessageIdSupplier mis = new MessageIdSupplier();
+        assertNotEquals(mis.getAsLong(), mis.getAsLong());
+
+        assertThat(mis.getAsLong())
+            .isNotZero()
+            .isNotEqualTo(mis.getAsLong());
     }
 
     @Test
-    void machinePart() {
-        messageIdSupplier.setMachinePart(23282);
-        final Long messageId = messageIdSupplier.getAsLong();
-        assertNotEquals(messageId, messageIdSupplier.getAsLong());
+    void fixed() {
+        final MessageIdSupplier mis = new MessageIdSupplier() {
+            @Override
+            long random() {
+                return 0x776D_11CF_72A6_B233L;
+            }
+
+            @Override
+            long currentTime() {
+                return 0x18B_0B3E_CA4CL;
+            }
+        };
+
+        assertThat(mis.getAsLong())
+            .isEqualTo(0x776D_11CF_72A6_AA4CL);
     }
 
 }
