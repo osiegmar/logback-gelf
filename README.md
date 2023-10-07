@@ -27,7 +27,7 @@ dependencies.
 ## Requirements
 
 - Java 11
-- Logback 1.4.5
+- Logback 1.4.11
 
 
 ## Examples
