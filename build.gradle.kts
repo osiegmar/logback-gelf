@@ -27,7 +27,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
-    testImplementation("org.bouncycastle:bcpkix-jdk15on:1.70")
+    testImplementation("org.bouncycastle:bcpkix-jdk18on:1.76")
 }
 
 tasks.test {
