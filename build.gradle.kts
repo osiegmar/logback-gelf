@@ -27,6 +27,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.assertj:assertj-core:3.11.1")
+    testImplementation("net.javacrumbs.json-unit:json-unit-assertj:2.38.0")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     testImplementation("org.bouncycastle:bcpkix-jdk18on:1.76")
 }
