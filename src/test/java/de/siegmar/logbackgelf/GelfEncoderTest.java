@@ -20,6 +20,7 @@
 package de.siegmar.logbackgelf;
 
 import static java.time.Duration.ofMillis;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -135,6 +136,30 @@ public class GelfEncoderTest {
         coreValidation(jsonNode);
         assertNotNull(jsonNode.get("_thread_name").textValue());
         assertEquals(LOGGER_NAME, jsonNode.get("_logger_name").textValue());
+    }
+
+    @Test
+    void shortenShortMessage() {
+        encoder.start();
+
+        final String expectedShortMessage = "A".repeat(250);
+        final String actualShortMessage = expectedShortMessage + "123";
+
+        final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger logger = lc.getLogger(LOGGER_NAME);
+        final String logMsg = encodeToStr(new LoggingEvent(
+            LOGGER_NAME,
+            logger,
+            Level.DEBUG,
+            actualShortMessage,
+            null,
+            null));
+
+        assertThatJson(logMsg)
+            .node("short_message")
+            .isString()
+            .hasSameSizeAs(expectedShortMessage)
+            .isEqualTo(expectedShortMessage);
     }
 
     @Test

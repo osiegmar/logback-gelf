@@ -50,6 +50,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private static final Pattern VALID_ADDITIONAL_FIELD_PATTERN = Pattern.compile("^[\\w.-]*$");
     private static final String DEFAULT_SHORT_PATTERN = "%m%nopex";
     private static final String DEFAULT_FULL_PATTERN = "%m%n";
+    private static final int MAX_SHORT_MESSAGE_LENGTH = 250;
 
     /**
      * Origin hostname - will be auto-detected if not specified.
@@ -397,6 +398,8 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         if (shortMessage.isBlank()) {
             shortMessage = "Empty message replaced by logback-gelf";
             addWarn("Log message was empty - replaced to prevent Graylog error");
+        } else if (shortMessage.length() > MAX_SHORT_MESSAGE_LENGTH) {
+            shortMessage = shortMessage.substring(0, MAX_SHORT_MESSAGE_LENGTH);
         }
 
         final GelfMessage gelfMessage = new GelfMessage(
