@@ -24,7 +24,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
-import java.util.function.Supplier;
+import java.util.function.LongSupplier;
 
 import de.siegmar.logbackgelf.compressor.Compressor;
 
@@ -41,7 +41,7 @@ public class GelfUdpAppender extends AbstractGelfAppender {
      */
     private CompressionMethod compressionMethod = CompressionMethod.GZIP;
 
-    private Supplier<Long> messageIdSupplier = new MessageIdSupplier();
+    private LongSupplier messageIdSupplier = new MessageIdSupplier();
 
     private RobustChannel robustChannel;
 
@@ -67,11 +67,11 @@ public class GelfUdpAppender extends AbstractGelfAppender {
         this.compressionMethod = compressionMethod;
     }
 
-    public Supplier<Long> getMessageIdSupplier() {
+    public LongSupplier getMessageIdSupplier() {
         return messageIdSupplier;
     }
 
-    public void setMessageIdSupplier(final Supplier<Long> messageIdSupplier) {
+    public void setMessageIdSupplier(final LongSupplier messageIdSupplier) {
         this.messageIdSupplier = messageIdSupplier;
     }
 

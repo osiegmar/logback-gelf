@@ -22,7 +22,7 @@ package de.siegmar.logbackgelf;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.function.Supplier;
+import java.util.function.LongSupplier;
 
 class GelfUdpChunker {
 
@@ -75,9 +75,9 @@ class GelfUdpChunker {
      */
     private final int maxChunkPayloadSize;
 
-    private final Supplier<Long> messageIdSupplier;
+    private final LongSupplier messageIdSupplier;
 
-    GelfUdpChunker(final Supplier<Long> messageIdSupplier, final Integer maxChunkSize) {
+    GelfUdpChunker(final LongSupplier messageIdSupplier, final Integer maxChunkSize) {
         this.messageIdSupplier = messageIdSupplier;
 
         if (maxChunkSize != null) {
@@ -157,7 +157,7 @@ class GelfUdpChunker {
             this.chunkSize = localChunkSize;
             this.chunkCount = (byte) localChunkCount;
 
-            messageId = localChunkCount > 1 ? messageIdSupplier.get() : 0;
+            messageId = localChunkCount > 1 ? messageIdSupplier.getAsLong() : 0;
         }
 
         private int calcChunkCount(final byte[] msg, final int cs) {
