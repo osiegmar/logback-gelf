@@ -2,6 +2,7 @@ plugins {
     `java-library`
     `maven-publish`
     signing
+    pmd
     checkstyle
     jacoco
     id("com.github.spotbugs") version "5.1.4"
@@ -35,6 +36,12 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
+}
+
+pmd {
+    isConsoleOutput = true
+    ruleSets = emptyList()
+    ruleSetFiles = files("${project.rootDir}/config/pmd/config.xml")
 }
 
 tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {

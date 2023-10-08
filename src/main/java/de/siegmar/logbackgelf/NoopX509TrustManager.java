@@ -25,12 +25,15 @@ import javax.net.ssl.X509TrustManager;
 
 class NoopX509TrustManager implements X509TrustManager {
 
+    @Override
     public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
     }
 
+    @Override
     public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
     }
 
+    @Override
     public X509Certificate[] getAcceptedIssuers() {
         return new X509Certificate[0];
     }

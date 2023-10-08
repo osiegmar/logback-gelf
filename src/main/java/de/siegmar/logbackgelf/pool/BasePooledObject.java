@@ -19,7 +19,9 @@
 
 package de.siegmar.logbackgelf.pool;
 
-public abstract class AbstractPooledObject {
+import java.io.Closeable;
+
+public class BasePooledObject implements Closeable {
 
     private final long createdAt = System.currentTimeMillis();
     private long lastBorrowed = createdAt;
@@ -36,7 +38,8 @@ public abstract class AbstractPooledObject {
         lastBorrowed = System.currentTimeMillis();
     }
 
-    protected void close() {
+    @Override
+    public void close() {
     }
 
 }

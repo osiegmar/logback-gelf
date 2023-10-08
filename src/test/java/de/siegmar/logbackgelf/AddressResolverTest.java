@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("PMD.AvoidUsingHardCodedIP")
 class AddressResolverTest {
 
     @Test

@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class GelfMessageTest {
 
     @Test

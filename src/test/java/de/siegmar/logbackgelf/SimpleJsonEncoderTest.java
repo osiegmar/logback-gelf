@@ -28,6 +28,7 @@ import java.io.StringWriter;
 
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class SimpleJsonEncoderTest {
 
     private final StringWriter writer = new StringWriter();

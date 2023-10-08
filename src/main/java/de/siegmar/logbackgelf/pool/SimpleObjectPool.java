@@ -19,13 +19,14 @@
 
 package de.siegmar.logbackgelf.pool;
 
+import java.io.Closeable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-public class SimpleObjectPool<T extends AbstractPooledObject> {
+public class SimpleObjectPool<T extends BasePooledObject> implements Closeable {
 
     private static final int MILLIS_PER_SECOND = 1000;
 
@@ -57,7 +58,7 @@ public class SimpleObjectPool<T extends AbstractPooledObject> {
         }
     }
 
-    @SuppressWarnings("checkstyle:illegalcatch")
+    @SuppressWarnings({"checkstyle:illegalcatch", "PMD.NullAssignment"})
     public void execute(final PooledObjectConsumer<T> consumer) throws Exception {
         T pooledObject = null;
         try {
@@ -121,6 +122,7 @@ public class SimpleObjectPool<T extends AbstractPooledObject> {
         pool.add(recycle(pooledObject));
     }
 
+    @Override
     public void close() {
         synchronized (allObjects) {
             for (T object : allObjects) {

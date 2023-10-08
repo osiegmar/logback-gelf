@@ -126,6 +126,7 @@ public class X509Util {
 
     }
 
+    @SuppressWarnings("PMD.AvoidFieldNameMatchingMethodName")
     static class CertBuilder {
 
         private final KeyPair keyPair;

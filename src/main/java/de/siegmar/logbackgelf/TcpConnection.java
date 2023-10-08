@@ -27,9 +27,10 @@ import java.net.Socket;
 
 import javax.net.SocketFactory;
 
-import de.siegmar.logbackgelf.pool.AbstractPooledObject;
+import ch.qos.logback.core.util.CloseUtil;
+import de.siegmar.logbackgelf.pool.BasePooledObject;
 
-public class TcpConnection extends AbstractPooledObject {
+public class TcpConnection extends BasePooledObject {
 
     private final AddressResolver addressResolver;
     private final SocketFactory socketFactory;
@@ -64,7 +65,9 @@ public class TcpConnection extends AbstractPooledObject {
     }
 
     private void connect() throws IOException {
+        @SuppressWarnings("PMD.CloseResource")
         final Socket socket = socketFactory.createSocket();
+
         socket.setSoTimeout(socketTimeout);
         final InetAddress ip = addressResolver.resolve();
         socket.connect(new InetSocketAddress(ip, port), connectTimeout);
@@ -72,14 +75,8 @@ public class TcpConnection extends AbstractPooledObject {
     }
 
     @Override
-    protected void close() {
-        if (outputStream != null) {
-            try {
-                outputStream.close();
-            } catch (IOException e) {
-                // ignore
-            }
-        }
+    public void close() {
+        CloseUtil.closeQuietly(outputStream);
     }
 
 }

@@ -42,7 +42,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.LoggingEvent;
 
-@SuppressWarnings("checkstyle:ClassDataAbstractionCoupling")
+@SuppressWarnings({"checkstyle:ClassDataAbstractionCoupling", "PMD.AvoidDuplicateLiterals"})
 class GelfEncoderTest {
 
     private static final String LOGGER_NAME = GelfEncoderTest.class.getCanonicalName();
@@ -131,7 +131,7 @@ class GelfEncoderTest {
     }
 
     @Test
-    void exception() throws IOException {
+    void exception() {
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();

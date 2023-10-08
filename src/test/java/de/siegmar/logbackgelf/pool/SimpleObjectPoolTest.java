@@ -46,11 +46,13 @@ class SimpleObjectPoolTest {
         final SimpleObjectPool<MyPooledObject> pool =
             new SimpleObjectPool<>(factory, 2, 100, 100, 100);
 
-        for (int i = 0; i < 10; i++) {
-            for (int y = 1; y < 3; y++) {
-                final MyPooledObject o1 = pool.borrowObject();
-                assertThat(o1.getId()).isEqualTo(y);
-                pool.returnObject(o1);
+        try (pool) {
+            for (int i = 0; i < 10; i++) {
+                for (int y = 1; y < 3; y++) {
+                    final MyPooledObject o1 = pool.borrowObject();
+                    assertThat(o1.getId()).isEqualTo(y);
+                    pool.returnObject(o1);
+                }
             }
         }
     }
@@ -60,10 +62,12 @@ class SimpleObjectPoolTest {
         final SimpleObjectPool<MyPooledObject> pool =
             new SimpleObjectPool<>(factory, 2, 100, 100, 100);
 
-        for (int i = 1; i < 4; i++) {
-            final MyPooledObject o1 = pool.borrowObject();
-            assertThat(o1.getId()).isEqualTo(i);
-            pool.invalidateObject(o1);
+        try (pool) {
+            for (int i = 1; i < 4; i++) {
+                final MyPooledObject o1 = pool.borrowObject();
+                assertThat(o1.getId()).isEqualTo(i);
+                pool.invalidateObject(o1);
+            }
         }
     }
 
@@ -72,14 +76,16 @@ class SimpleObjectPoolTest {
         final SimpleObjectPool<MyPooledObject> pool =
             new SimpleObjectPool<>(factory, 1, 100, 100, 0);
 
-        for (int i = 1; i < 4; i++) {
-            if (i > 1) {
-                Thread.sleep(2);
-            }
+        try (pool) {
+            for (int i = 1; i < 4; i++) {
+                if (i > 1) {
+                    Thread.sleep(2);
+                }
 
-            final MyPooledObject o1 = pool.borrowObject();
-            assertThat(o1.getId()).isEqualTo(i);
-            pool.returnObject(o1);
+                final MyPooledObject o1 = pool.borrowObject();
+                assertThat(o1.getId()).isEqualTo(i);
+                pool.returnObject(o1);
+            }
         }
     }
 
@@ -88,12 +94,14 @@ class SimpleObjectPoolTest {
         final SimpleObjectPool<MyPooledObject> pool =
             new SimpleObjectPool<>(factory, 1, 100, 100, 0);
 
-        final Object o1 = pool.borrowObject();
-        assertThat(o1).isNotNull();
+        try (pool) {
+            final Object o1 = pool.borrowObject();
+            assertThat(o1).isNotNull();
 
-        assertThatThrownBy(pool::borrowObject)
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Couldn't acquire connection from pool");
+            assertThatThrownBy(pool::borrowObject)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Couldn't acquire connection from pool");
+        }
     }
 
     @Test
@@ -108,19 +116,21 @@ class SimpleObjectPoolTest {
         final SimpleObjectPool<MyPooledObject> pool =
             new SimpleObjectPool<>(factory, 1, -1, 100, 0);
 
-        final MyPooledObject o1 = pool.borrowObject();
-        final long before = System.nanoTime();
+        try (pool) {
+            final MyPooledObject o1 = pool.borrowObject();
+            final long before = System.nanoTime();
 
-        Executors.newScheduledThreadPool(1)
-            .schedule(() -> pool.returnObject(o1), 200, TimeUnit.MILLISECONDS);
+            Executors.newScheduledThreadPool(1)
+                .schedule(() -> pool.returnObject(o1), 200, TimeUnit.MILLISECONDS);
 
-        final MyPooledObject o2 = pool.borrowObject();
-        final long after = System.nanoTime();
+            final MyPooledObject o2 = pool.borrowObject();
+            final long after = System.nanoTime();
 
-        final long elapsedTimeMillis = TimeUnit.NANOSECONDS.toMillis(after - before);
+            final long elapsedTimeMillis = TimeUnit.NANOSECONDS.toMillis(after - before);
 
-        assertThat(o2).isNotNull();
-        assertThat(elapsedTimeMillis).isGreaterThan(200);
+            assertThat(o2).isNotNull();
+            assertThat(elapsedTimeMillis).isGreaterThan(200);
+        }
     }
 
     @Test
@@ -128,12 +138,14 @@ class SimpleObjectPoolTest {
         final SimpleObjectPool<MyPooledObject> pool =
             new SimpleObjectPool<>(factory, 1, 100, -1, -1);
 
-        final MyPooledObject o1 = pool.borrowObject();
-        pool.returnObject(o1);
+        try (pool) {
+            final MyPooledObject o1 = pool.borrowObject();
+            pool.returnObject(o1);
 
-        final MyPooledObject o2 = pool.borrowObject();
+            final MyPooledObject o2 = pool.borrowObject();
 
-        assertThat(o2).isEqualTo(o1);
+            assertThat(o2).isEqualTo(o1);
+        }
     }
 
     @Test
@@ -141,18 +153,20 @@ class SimpleObjectPoolTest {
         final SimpleObjectPool<MyPooledObject> pool =
             new SimpleObjectPool<>(factory, 1, -1, 0, -1);
 
-        final MyPooledObject o1 = pool.borrowObject();
-        pool.returnObject(o1);
+        try (pool) {
+            final MyPooledObject o1 = pool.borrowObject();
+            pool.returnObject(o1);
 
-        // Force the objects to be recycled in the pool
-        Thread.sleep(2);
+            // Force the objects to be recycled in the pool
+            Thread.sleep(2);
 
-        final MyPooledObject o2 = pool.borrowObject();
+            final MyPooledObject o2 = pool.borrowObject();
 
-        assertThat(o2).isNotEqualTo(o1);
+            assertThat(o2).isNotEqualTo(o1);
+        }
     }
 
-    private static final class MyPooledObject extends AbstractPooledObject {
+    private static final class MyPooledObject extends BasePooledObject {
 
         private final int id;
 

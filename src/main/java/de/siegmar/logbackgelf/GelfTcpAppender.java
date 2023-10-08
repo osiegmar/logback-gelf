@@ -148,6 +148,7 @@ public class GelfTcpAppender extends AbstractGelfAppender {
         this.poolMaxIdleTime = poolMaxIdleTime;
     }
 
+    @Override
     protected void startAppender() {
         final AddressResolver addressResolver = new AddressResolver(getGraylogHost());
 

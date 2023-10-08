@@ -157,12 +157,10 @@ class GelfTcpTlsAppenderTest {
         public byte[] call() throws Exception {
             final byte[] ret;
 
-            try (Socket socket = server.accept()) {
+            try (server; Socket socket = server.accept()) {
                 try (DataInputStream in = new DataInputStream(socket.getInputStream())) {
                     ret = in.readAllBytes();
                 }
-            } finally {
-                server.close();
             }
 
             return ret;

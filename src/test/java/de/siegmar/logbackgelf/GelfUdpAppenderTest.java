@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class GelfUdpAppenderTest {
 
     private static final String LOGGER_NAME = GelfUdpAppenderTest.class.getCanonicalName();
@@ -62,7 +63,7 @@ class GelfUdpAppenderTest {
 
     @Test
     void simple() {
-        final Logger logger = setupLogger(false);
+        final Logger logger = setupLogger();
 
         logger.error("Test message");
 
@@ -82,7 +83,7 @@ class GelfUdpAppenderTest {
 
     @Test
     void compressionZLIB() {
-        final Logger logger = setupLogger(true, CompressionMethod.ZLIB);
+        final Logger logger = setupLogger(CompressionMethod.ZLIB);
 
         logger.error("Test message");
 
@@ -102,7 +103,7 @@ class GelfUdpAppenderTest {
 
     @Test
     void compressionGZIP() {
-        final Logger logger = setupLogger(true, CompressionMethod.GZIP);
+        final Logger logger = setupLogger(CompressionMethod.GZIP);
 
         logger.error("Test message");
 
@@ -120,11 +121,11 @@ class GelfUdpAppenderTest {
         );
     }
 
-    private Logger setupLogger(final boolean useCompression) {
-        return setupLogger(useCompression, CompressionMethod.GZIP);
+    private Logger setupLogger() {
+        return setupLogger(CompressionMethod.GZIP);
     }
 
-    private Logger setupLogger(final boolean useCompression, final CompressionMethod compressionMethod) {
+    private Logger setupLogger(final CompressionMethod compressionMethod) {
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         final GelfEncoder gelfEncoder = new GelfEncoder();
@@ -133,14 +134,13 @@ class GelfUdpAppenderTest {
         gelfEncoder.start();
 
         final Logger logger = (Logger) LoggerFactory.getLogger(LOGGER_NAME);
-        logger.addAppender(buildAppender(useCompression, compressionMethod, lc, gelfEncoder));
+        logger.addAppender(buildAppender(compressionMethod, lc, gelfEncoder));
         logger.setAdditive(false);
 
         return logger;
     }
 
-    private GelfUdpAppender buildAppender(final boolean useCompression,
-                                          final CompressionMethod compressionMethod,
+    private GelfUdpAppender buildAppender(final CompressionMethod compressionMethod,
                                           final LoggerContext lc,
                                           final GelfEncoder gelfEncoder) {
         final GelfUdpAppender gelfAppender = new GelfUdpAppender();
@@ -194,10 +194,8 @@ class GelfUdpAppenderTest {
         public byte[] call() throws Exception {
             final byte[] receiveData = new byte[1024];
             final DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
-            try {
+            try (server) {
                 server.receive(packet);
-            } finally {
-                server.close();
             }
 
             return Arrays.copyOf(packet.getData(), packet.getLength());

@@ -119,7 +119,11 @@ class SimpleJsonEncoder implements Closeable {
      *
      * @param str string to be escaped.
      */
-    @SuppressWarnings("checkstyle:cyclomaticcomplexity")
+    @SuppressWarnings({
+        "checkstyle:cyclomaticcomplexity",
+        "PMD.ImplicitSwitchFallThrough",
+        "PMD.AvoidLiteralsInIfCondition"
+    })
     private void escapeString(final String str) throws IOException {
         for (int i = 0; i < str.length(); i++) {
             final char ch = str.charAt(i);
@@ -161,7 +165,7 @@ class SimpleJsonEncoder implements Closeable {
      * @param ch character to be escaped.
      * @return escaped representation of character.
      */
-    @SuppressWarnings("checkstyle:magicnumber")
+    @SuppressWarnings({"checkstyle:magicnumber", "PMD.AvoidLiteralsInIfCondition"})
     private static String escapeCharacter(final char ch) {
         final String prefix;
 

@@ -24,6 +24,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.util.Objects;
 import java.util.function.LongSupplier;
 
 import de.siegmar.logbackgelf.compressor.Compressor;
@@ -64,7 +65,7 @@ public class GelfUdpAppender extends AbstractGelfAppender {
     }
 
     public void setCompressionMethod(final CompressionMethod compressionMethod) {
-        this.compressionMethod = compressionMethod;
+        this.compressionMethod = Objects.requireNonNull(compressionMethod, "compressionMethod must not be null");
     }
 
     public LongSupplier getMessageIdSupplier() {
@@ -72,7 +73,7 @@ public class GelfUdpAppender extends AbstractGelfAppender {
     }
 
     public void setMessageIdSupplier(final LongSupplier messageIdSupplier) {
-        this.messageIdSupplier = messageIdSupplier;
+        this.messageIdSupplier = Objects.requireNonNull(messageIdSupplier, "messageIdSupplier must not be null");
     }
 
     @Override
@@ -115,6 +116,7 @@ public class GelfUdpAppender extends AbstractGelfAppender {
             getChannel().send(src, target);
         }
 
+        @SuppressWarnings("PMD.CloseResource")
         private DatagramChannel getChannel() throws IOException {
             DatagramChannel tmp = channel;
 

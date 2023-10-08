@@ -19,7 +19,7 @@
 
 package de.siegmar.logbackgelf.pool;
 
-public interface PooledObjectFactory<T extends AbstractPooledObject> {
+public interface PooledObjectFactory<T extends BasePooledObject> {
 
     T newInstance();
 

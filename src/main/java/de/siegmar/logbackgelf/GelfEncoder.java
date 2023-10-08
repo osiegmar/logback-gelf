@@ -275,6 +275,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
     }
 
+    @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
     public void addStaticField(final String staticField) {
         final String[] split = staticField.split(":", 2);
         if (split.length != 2) {
@@ -380,6 +381,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
     }
 
+    @SuppressWarnings({"PMD.ReturnEmptyArrayRatherThanNull", "PMD.ReturnEmptyCollectionRatherThanNull"})
     @Override
     public byte[] headerBytes() {
         return null;
@@ -475,6 +477,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
     }
 
+    @SuppressWarnings({"PMD.ReturnEmptyArrayRatherThanNull", "PMD.ReturnEmptyCollectionRatherThanNull"})
     @Override
     public byte[] footerBytes() {
         return null;

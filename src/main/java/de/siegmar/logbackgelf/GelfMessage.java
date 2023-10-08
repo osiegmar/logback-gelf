@@ -45,15 +45,18 @@ public class GelfMessage {
     private final Map<String, Object> additionalFields;
 
     GelfMessage(final String host, final String shortMessage, final String fullMessage,
-                       final long timestamp, final int level,
-                       final Map<String, Object> additionalFields) {
+                final long timestamp, final int level, final Map<String, Object> additionalFields) {
         this.host = Objects.requireNonNull(host, "host must not be null");
         this.shortMessage = Objects.requireNonNull(shortMessage, "shortMessage must not be null");
-        this.fullMessage = fullMessage == null || fullMessage.isEmpty() ? null : fullMessage;
+        this.fullMessage = nullIfEmpty(fullMessage);
         this.timestamp = timestamp;
         this.level = level;
         this.additionalFields =
             Objects.requireNonNull(additionalFields, "additionalFields must not be null");
+    }
+
+    private String nullIfEmpty(final String s) {
+        return s != null && !s.isEmpty() ? s : null;
     }
 
     public String getHost() {
