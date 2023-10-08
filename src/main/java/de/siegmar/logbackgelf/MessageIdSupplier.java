@@ -30,7 +30,6 @@ public class MessageIdSupplier implements LongSupplier {
 
     private static final long BITS_13 = 0b1_1111_1111_1111;
 
-    @SuppressWarnings("checkstyle:magicnumber")
     @Override
     public long getAsLong() {
         /*
