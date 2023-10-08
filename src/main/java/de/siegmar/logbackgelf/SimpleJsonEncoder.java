@@ -140,7 +140,7 @@ class SimpleJsonEncoder implements Closeable {
                     writer.write("\\n");
                     break;
                 case '\r':
-                    writer.write("\\r");
+                    // Graylog doesn't like carriage-return: https://github.com/Graylog2/graylog2-server/issues/4470
                     break;
                 case '\t':
                     writer.write("\\t");

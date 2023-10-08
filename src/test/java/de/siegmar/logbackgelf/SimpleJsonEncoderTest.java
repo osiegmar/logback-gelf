@@ -93,8 +93,8 @@ public class SimpleJsonEncoderTest {
 
     @Test
     public void carriageReturn() throws IOException {
-        enc.appendToJSON("aaa", "\r").close();
-        assertEquals("{\"aaa\":\"\\r\"}", writer.toString());
+        enc.appendToJSON("aaa", "\r\n").close();
+        assertEquals("{\"aaa\":\"\\n\"}", writer.toString());
     }
 
     @Test
