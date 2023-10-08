@@ -390,17 +390,9 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         addFieldMapperData(event, additionalFields, builtInFieldMappers);
         addFieldMapperData(event, additionalFields, fieldMappers);
 
-        String shortMessage = shortPatternLayout.doLayout(event);
-        if (shortMessage.isBlank()) {
-            shortMessage = "Empty message replaced by logback-gelf";
-            addWarn("Log message was empty - replaced to prevent Graylog error");
-        } else if (shortMessage.length() > MAX_SHORT_MESSAGE_LENGTH) {
-            shortMessage = shortMessage.substring(0, MAX_SHORT_MESSAGE_LENGTH);
-        }
-
         final GelfMessage gelfMessage = new GelfMessage(
             originHost,
-            shortMessage,
+            normalizeShortMessage(shortPatternLayout.doLayout(event)),
             fullPatternLayout.doLayout(event),
             event.getTimeStamp(),
             LevelToSyslogSeverity.convert(event),
@@ -421,6 +413,46 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
 
         return json;
+    }
+
+    String normalizeShortMessage(final String shortMessage) {
+        // Graylog doesn't like newlines in short messages: https://github.com/Graylog2/graylog2-server/issues/4842
+        final String sanitizedShortMessage = sanitizeShortMessage(shortMessage);
+
+        // Short message is mandatory per GELF spec
+        if (sanitizedShortMessage.isEmpty()) {
+            addWarn("Log message was empty - replaced to prevent Graylog error");
+            return "Empty message replaced by logback-gelf";
+        }
+
+        return sanitizedShortMessage;
+    }
+
+    private static String sanitizeShortMessage(final String sanitizedShortMessage) {
+        if (sanitizedShortMessage.isEmpty()) {
+            return sanitizedShortMessage;
+        }
+
+        final char[] tmp = new char[Math.min(sanitizedShortMessage.length(), MAX_SHORT_MESSAGE_LENGTH)];
+
+        int iDst = 0;
+        boolean whitspaceLast = false;
+        boolean whitespaceStart = true;
+        for (int iSrc = 0; iSrc < sanitizedShortMessage.length() && iDst < tmp.length; iSrc++) {
+            final char c = sanitizedShortMessage.charAt(iSrc);
+            if (Character.isWhitespace(c)) {
+                if (!whitespaceStart && !whitspaceLast) {
+                    tmp[iDst++] = ' ';
+                }
+                whitspaceLast = true;
+            } else {
+                tmp[iDst++] = c;
+                whitspaceLast = false;
+                whitespaceStart = false;
+            }
+        }
+
+        return new String(tmp, 0, iDst).trim();
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
