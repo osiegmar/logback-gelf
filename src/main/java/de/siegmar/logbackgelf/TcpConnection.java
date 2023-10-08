@@ -75,7 +75,7 @@ public class TcpConnection extends BasePooledObject {
     }
 
     @Override
-    public void close() {
+    protected void close() {
         CloseUtil.closeQuietly(outputStream);
     }
 

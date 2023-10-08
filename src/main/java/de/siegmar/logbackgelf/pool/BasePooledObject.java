@@ -19,9 +19,7 @@
 
 package de.siegmar.logbackgelf.pool;
 
-import java.io.Closeable;
-
-public class BasePooledObject implements Closeable {
+public class BasePooledObject {
 
     private final long createdAt = System.currentTimeMillis();
     private long lastBorrowed = createdAt;
@@ -38,8 +36,7 @@ public class BasePooledObject implements Closeable {
         lastBorrowed = System.currentTimeMillis();
     }
 
-    @Override
-    public void close() {
+    protected void close() {
     }
 
 }
