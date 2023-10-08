@@ -21,11 +21,12 @@ package de.siegmar.logbackgelf;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UncheckedIOException;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
@@ -35,7 +36,6 @@ import java.util.Objects;
 public class GelfMessage {
 
     private static final String VERSION = "1.1";
-    private static final int INITIAL_SIZE = 256;
 
     private final String host;
     private final String shortMessage;
@@ -45,8 +45,8 @@ public class GelfMessage {
     private final Map<String, Object> additionalFields;
 
     GelfMessage(final String host, final String shortMessage, final String fullMessage,
-                final long timestamp, final int level,
-                final Map<String, Object> additionalFields) {
+                       final long timestamp, final int level,
+                       final Map<String, Object> additionalFields) {
         this.host = Objects.requireNonNull(host, "host must not be null");
         this.shortMessage = Objects.requireNonNull(shortMessage, "shortMessage must not be null");
         this.fullMessage = fullMessage == null || fullMessage.isEmpty() ? null : fullMessage;
@@ -77,12 +77,10 @@ public class GelfMessage {
     }
 
     public Map<String, Object> getAdditionalFields() {
-        return additionalFields;
+        return Collections.unmodifiableMap(additionalFields);
     }
 
-    byte[] toJSON() {
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream(INITIAL_SIZE);
-
+    public void toJSON(final OutputStream bos) {
         try (SimpleJsonEncoder jsonEncoder = new SimpleJsonEncoder(new OutputStreamWriter(bos, UTF_8))) {
             jsonEncoder
                 .appendToJSON("version", VERSION)
@@ -97,8 +95,6 @@ public class GelfMessage {
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }
-
-        return bos.toByteArray();
     }
 
     @SuppressWarnings("checkstyle:MagicNumber")

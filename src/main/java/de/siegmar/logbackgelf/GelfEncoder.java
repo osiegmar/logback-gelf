@@ -19,8 +19,8 @@
 
 package de.siegmar.logbackgelf;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,6 +52,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private static final String DEFAULT_SHORT_PATTERN = "%m%nopex";
     private static final String DEFAULT_FULL_PATTERN = "%m%n";
     private static final int MAX_SHORT_MESSAGE_LENGTH = 250;
+    private static final int INITIAL_JSON_SIZE = 256;
 
     /**
      * Origin hostname - will be auto-detected if not specified.
@@ -386,11 +387,20 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     @Override
     public byte[] encode(final ILoggingEvent event) {
-        final Map<String, Object> additionalFields = new HashMap<>(staticFields);
-        addFieldMapperData(event, additionalFields, builtInFieldMappers);
-        addFieldMapperData(event, additionalFields, fieldMappers);
+        final GelfMessage gelfMessage = buildGelfMessage(event, collectAdditionalFields(event));
 
-        final GelfMessage gelfMessage = new GelfMessage(
+        final var bos = new ByteArrayOutputStream(INITIAL_JSON_SIZE);
+        gelfMessage.toJSON(bos);
+
+        if (appendNewline) {
+            bos.writeBytes(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
+        }
+
+        return bos.toByteArray();
+    }
+
+    protected GelfMessage buildGelfMessage(final ILoggingEvent event, final Map<String, Object> additionalFields) {
+        return new GelfMessage(
             originHost,
             normalizeShortMessage(shortPatternLayout.doLayout(event)),
             fullPatternLayout.doLayout(event),
@@ -398,24 +408,9 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
             LevelToSyslogSeverity.convert(event),
             additionalFields
         );
-
-        final byte[] json = gelfMessageToJson(gelfMessage);
-
-        if (appendNewline) {
-            final byte[] sep = System.lineSeparator().getBytes(StandardCharsets.UTF_8);
-            final ByteBuffer bb = ByteBuffer.allocate(json.length + sep.length);
-            bb.put(json);
-            for (final byte b : sep) {
-                bb.put(b);
-            }
-            bb.flip();
-            return bb.array();
-        }
-
-        return json;
     }
 
-    String normalizeShortMessage(final String shortMessage) {
+    protected String normalizeShortMessage(final String shortMessage) {
         // Graylog doesn't like newlines in short messages: https://github.com/Graylog2/graylog2-server/issues/4842
         final String sanitizedShortMessage = sanitizeShortMessage(shortMessage);
 
@@ -426,6 +421,13 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
 
         return sanitizedShortMessage;
+    }
+
+    protected Map<String, Object> collectAdditionalFields(final ILoggingEvent event) {
+        final Map<String, Object> additionalFields = new HashMap<>(staticFields);
+        addFieldMapperData(event, additionalFields, builtInFieldMappers);
+        addFieldMapperData(event, additionalFields, fieldMappers);
+        return additionalFields;
     }
 
     private static String sanitizeShortMessage(final String sanitizedShortMessage) {
@@ -471,16 +473,6 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
                 addError("Exception in field mapper", e);
             }
         }
-    }
-
-    /**
-     * Allow subclasses to customize the message before it is converted to String.
-     *
-     * @param gelfMessage the GELF message to serialize.
-     * @return the serialized GELF message (in JSON format).
-     */
-    protected byte[] gelfMessageToJson(final GelfMessage gelfMessage) {
-        return gelfMessage.toJSON();
     }
 
     @Override

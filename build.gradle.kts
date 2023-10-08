@@ -4,7 +4,7 @@ plugins {
     signing
     checkstyle
     jacoco
-    id("com.github.spotbugs") version "4.5.0"
+    id("com.github.spotbugs") version "5.1.4"
 }
 
 group = "de.siegmar"
@@ -38,6 +38,7 @@ tasks.test {
 }
 
 tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
+    excludeFilter = file("${project.rootDir}/config/spotbugs/config.xml")
     reports.maybeCreate("xml").required = false
     reports.maybeCreate("html").required = true
 }

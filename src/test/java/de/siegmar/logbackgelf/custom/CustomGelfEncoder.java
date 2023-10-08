@@ -19,12 +19,18 @@
 
 package de.siegmar.logbackgelf.custom;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.security.DigestOutputStream;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 
+import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.bouncycastle.util.encoders.Hex;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import de.siegmar.logbackgelf.GelfEncoder;
 import de.siegmar.logbackgelf.GelfMessage;
 
@@ -32,20 +38,26 @@ import de.siegmar.logbackgelf.GelfMessage;
 public class CustomGelfEncoder extends GelfEncoder {
 
     @Override
-    protected byte[] gelfMessageToJson(final GelfMessage gelfMessage) {
-        final byte[] json = super.gelfMessageToJson(gelfMessage);
-        gelfMessage.getAdditionalFields().put("sha256", sha256(json));
-        return super.gelfMessageToJson(gelfMessage);
+    protected GelfMessage buildGelfMessage(final ILoggingEvent event, final Map<String, Object> additionalFields) {
+        final GelfMessage gelfMessage = super.buildGelfMessage(event, additionalFields);
+        additionalFields.put("sha256", buildHash(gelfMessage));
+        return super.buildGelfMessage(event, additionalFields);
     }
 
-    private static String sha256(final byte[] data) {
-        try {
-            final MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            final byte[] hash = digest.digest(data);
-            return new String(Hex.encode(hash), StandardCharsets.US_ASCII);
-        } catch (final NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
+    private static String buildHash(final GelfMessage gelfMessage) {
+        final MessageDigest digest = new SHA256.Digest();
+
+        try (DigestOutputStream dos = new DigestOutputStream(OutputStream.nullOutputStream(), digest)) {
+            gelfMessage.toJSON(dos);
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
         }
+
+        return toHex(digest.digest());
+    }
+
+    private static String toHex(final byte[] data) {
+        return new String(Hex.encode(data), StandardCharsets.US_ASCII);
     }
 
 }
