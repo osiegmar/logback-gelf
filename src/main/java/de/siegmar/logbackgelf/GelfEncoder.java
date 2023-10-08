@@ -20,7 +20,6 @@
 package de.siegmar.logbackgelf;
 
 import java.math.BigDecimal;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -28,11 +27,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.util.LevelToSyslogSeverity;
+import ch.qos.logback.core.CoreConstants;
 import ch.qos.logback.core.encoder.EncoderBase;
 import de.siegmar.logbackgelf.mappers.CallerDataFieldMapper;
 import de.siegmar.logbackgelf.mappers.KeyValueFieldMapper;
@@ -324,12 +325,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     @Override
     public void start() {
         if (originHost == null || originHost.isBlank()) {
-            try {
-                originHost = InetUtil.getLocalHostName();
-            } catch (final UnknownHostException e) {
-                addWarn("Could not determine local hostname", e);
-                originHost = "unknown";
-            }
+            originHost = Optional.ofNullable(context.getProperty(CoreConstants.HOSTNAME_KEY)).orElse("unknown");
         }
         if (shortPatternLayout == null) {
             shortPatternLayout = buildPattern(DEFAULT_SHORT_PATTERN);

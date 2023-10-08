@@ -21,6 +21,7 @@ package de.siegmar.logbackgelf;
 
 import static java.time.Duration.ofMillis;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -500,13 +501,13 @@ public class GelfEncoderTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    void originHostDefaultToLocalHostNameIfEmpty(final String configuredHostname) throws IOException {
+    void originHostDefaultToLocalHostNameIfEmpty(final String configuredHostname) {
         encoder.setOriginHost(configuredHostname);
         encoder.start();
 
-        final String localhost = InetUtil.getLocalHostName();
-
-        assertEquals(localhost, encoder.getOriginHost());
+        assertThat(encoder.getOriginHost())
+            .isNotBlank()
+            .isNotEqualTo("unknown");
     }
 
     @Test
