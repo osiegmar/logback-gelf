@@ -5,4 +5,9 @@ module de.siegmar.logbackgelf {
     requires java.naming;
     requires org.slf4j;
 
+    exports de.siegmar.logbackgelf;
+    exports de.siegmar.logbackgelf.compressor;
+    exports de.siegmar.logbackgelf.mappers;
+    exports de.siegmar.logbackgelf.pool;
+
 }
