@@ -19,11 +19,9 @@
 
 package de.siegmar.logbackgelf;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.security.KeyStore;
@@ -32,7 +30,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.LocalDate;
-import java.util.Arrays;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -41,7 +38,7 @@ import javax.net.ssl.X509TrustManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class CustomX509TrustManagerTest {
+class CustomX509TrustManagerTest {
 
     private static final String HOSTNAME = "graylog.foo.bar";
 
@@ -50,28 +47,26 @@ public class CustomX509TrustManagerTest {
     private X509Util.CertBuilder c;
 
     @BeforeEach
-    public void before() throws Exception {
+    void before() throws Exception {
         c = new X509Util.CertBuilder();
     }
 
     @SuppressWarnings("checkstyle:illegalcatch")
     @Test
-    public void selfSigned() {
+    void selfSigned() {
         // The default trust manager will reject a self-signed certificate
-        try {
-            validate(c.build(null, HOSTNAME));
-            fail();
-        } catch (Exception e) {
-            assertTrue(e.getMessage().contains("unable to find valid certification path"));
-        }
+        assertThatThrownBy(() -> validate(c.build(null, HOSTNAME)))
+            .hasRootCauseMessage("unable to find valid certification path to requested target");
 
         // Using the NoopX509TrustManager the same certificate will be allowed
         tm = new CustomX509TrustManager(new NoopX509TrustManager(), HOSTNAME);
-        assertDoesNotThrow(() -> validate(c.build(null, HOSTNAME)));
+
+        assertThatCode(() -> validate(c.build(null, HOSTNAME)))
+            .doesNotThrowAnyException();
     }
 
     @Test
-    public void validCert() throws Exception {
+    void validCert() throws Exception {
         tm = new CustomX509TrustManager(new NoopX509TrustManager(), HOSTNAME);
 
         validate(c.build(null, HOSTNAME));
@@ -81,23 +76,24 @@ public class CustomX509TrustManagerTest {
     }
 
     @Test
-    public void nameMismatch() {
+    void nameMismatch() {
         tm = new CustomX509TrustManager(new NoopX509TrustManager(), HOSTNAME);
 
         final String wrongName = "graylog2.foo.bar";
 
-        CertificateException e = assertThrows(CertificateException.class,
-            () -> validate(c.build(null, wrongName)));
-        assertEquals("Server certificate mismatch. Tried to verify graylog.foo.bar "
-            + "against subject alternative names: [graylog2.foo.bar]", e.getMessage());
+        assertThatThrownBy(() -> validate(c.build(null, wrongName)))
+            .isInstanceOf(CertificateException.class)
+            .hasMessage("Server certificate mismatch. Tried to verify graylog.foo.bar "
+                        + "against subject alternative names: [%s]", wrongName);
 
-        e = assertThrows(CertificateException.class, () -> validate(c.build(wrongName)));
-        assertEquals("Server certificate mismatch. Tried to verify graylog.foo.bar "
-            + "against common name: graylog2.foo.bar", e.getMessage());
+        assertThatThrownBy(() -> validate(c.build(wrongName)))
+            .isInstanceOf(CertificateException.class)
+            .hasMessage("Server certificate mismatch. Tried to verify graylog.foo.bar "
+                        + "against common name: %s", wrongName);
     }
 
     @Test
-    public void caSigned() throws Exception {
+    void caSigned() throws Exception {
         final X509Util.CABuilder caBuilder = new X509Util.CABuilder();
         final X509Certificate cert = prepareCaSigned(caBuilder)
             .build(HOSTNAME);
@@ -107,13 +103,15 @@ public class CustomX509TrustManagerTest {
 
     @Test
     void clientValidation() {
-        assertThrows(UnsupportedOperationException.class,
-            () -> tm.checkClientTrusted(new X509Certificate[] {}, "RSA"));
+        assertThatThrownBy(() -> tm.checkClientTrusted(new X509Certificate[]{}, "RSA"))
+            .isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test
     void acceptedIssuers() {
-        assertTrue(Arrays.equals(defaultTrustManager(null).getAcceptedIssuers(), tm.getAcceptedIssuers()));
+        assertThat(defaultTrustManager(null)).satisfies(
+            t -> assertThat(t.getAcceptedIssuers()).containsExactly(tm.getAcceptedIssuers())
+        );
     }
 
     private X509Util.CertBuilder prepareCaSigned(final X509Util.CABuilder caBuilder)
@@ -131,15 +129,15 @@ public class CustomX509TrustManagerTest {
     }
 
     @Test
-    public void expired() throws Exception {
+    void expired() throws Exception {
         final X509Util.CABuilder caBuilder = new X509Util.CABuilder();
         final X509Certificate cert = prepareCaSigned(caBuilder)
             .validFrom(LocalDate.now().minusYears(2))
             .validTo(LocalDate.now().minusYears(1))
             .build(HOSTNAME);
 
-        assertThrows(CertificateException.class,
-            () -> validate(cert, caBuilder.getCaCertificate()));
+        assertThatThrownBy(() -> validate(cert, caBuilder.getCaCertificate()))
+            .isInstanceOf(CertificateException.class);
     }
 
     private void validate(final X509Certificate... certificates) throws CertificateException {

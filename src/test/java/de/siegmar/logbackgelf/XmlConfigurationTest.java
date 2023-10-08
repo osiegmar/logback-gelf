@@ -19,11 +19,10 @@
 
 package de.siegmar.logbackgelf;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,33 +35,33 @@ import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.status.Status;
 
-public class XmlConfigurationTest {
+class XmlConfigurationTest {
 
     private LoggerContext context;
 
     @BeforeEach
-    public void init() {
+    void init() {
         context = (LoggerContext) LoggerFactory.getILoggerFactory();
         context.getStatusManager().clear();
         context.reset();
     }
 
     @Test
-    public void udpConfiguration() throws IOException, JoranException {
+    void udpConfiguration() throws IOException, JoranException {
         configure("/udp-config.xml");
-        assertEquals(Collections.emptyList(), filterWarningsErrors());
+        assertThat(filterWarningsErrors()).isEmpty();
     }
 
     @Test
-    public void tcpConfiguration() throws IOException, JoranException {
+    void tcpConfiguration() throws IOException, JoranException {
         configure("/tcp-config.xml");
-        assertEquals(Collections.emptyList(), filterWarningsErrors());
+        assertThat(filterWarningsErrors()).isEmpty();
     }
 
     @Test
-    public void tcpTlsConfiguration() throws IOException, JoranException {
+    void tcpTlsConfiguration() throws IOException, JoranException {
         configure("/tcp_tls-config.xml");
-        assertEquals(Collections.emptyList(), filterWarningsErrors());
+        assertThat(filterWarningsErrors()).isEmpty();
     }
 
     private void configure(final String name) throws IOException, JoranException {

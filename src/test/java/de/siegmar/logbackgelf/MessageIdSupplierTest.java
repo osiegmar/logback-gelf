@@ -20,7 +20,6 @@
 package de.siegmar.logbackgelf;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import org.junit.jupiter.api.Test;
 
@@ -29,8 +28,6 @@ class MessageIdSupplierTest {
     @Test
     void random() {
         final MessageIdSupplier mis = new MessageIdSupplier();
-        assertNotEquals(mis.getAsLong(), mis.getAsLong());
-
         assertThat(mis.getAsLong())
             .isNotZero()
             .isNotEqualTo(mis.getAsLong());

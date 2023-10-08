@@ -19,18 +19,16 @@
 
 package de.siegmar.logbackgelf;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -45,13 +43,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 
-public class GelfUdpAppenderTest {
+class GelfUdpAppenderTest {
 
     private static final String LOGGER_NAME = GelfUdpAppenderTest.class.getCanonicalName();
 
@@ -59,64 +54,70 @@ public class GelfUdpAppenderTest {
     private Future<byte[]> future;
 
     @BeforeEach
-    public void before() throws IOException {
+    void before() throws IOException {
         final UdpServer server = new UdpServer();
         port = server.getPort();
         future = Executors.newSingleThreadExecutor().submit(server);
     }
 
     @Test
-    public void simple() {
+    void simple() {
         final Logger logger = setupLogger(false);
 
         logger.error("Test message");
 
         stopLogger(logger);
 
-        final JsonNode jsonNode = receiveCompressedMessage(CompressionMethod.GZIP);
-        assertEquals("1.1", jsonNode.get("version").textValue());
-        assertEquals("localhost", jsonNode.get("host").textValue());
-        assertEquals("Test message", jsonNode.get("short_message").textValue());
-        assertTrue(jsonNode.get("timestamp").isNumber());
-        assertEquals(3, jsonNode.get("level").intValue());
-        assertNotNull(jsonNode.get("_thread_name").textValue());
-        assertEquals(LOGGER_NAME, jsonNode.get("_logger_name").textValue());
+        final String json = receiveCompressedMessage(CompressionMethod.GZIP);
+        assertThatJson(json).and(
+            j -> j.node("version").isString().isEqualTo("1.1"),
+            j -> j.node("host").isEqualTo("localhost"),
+            j -> j.node("short_message").isEqualTo("Test message"),
+            j -> j.node("timestamp").isNumber(),
+            j -> j.node("level").isEqualTo(3),
+            j -> j.node("_thread_name").isNotNull(),
+            j -> j.node("_logger_name").isEqualTo(LOGGER_NAME)
+        );
     }
 
     @Test
-    public void compressionZLIB() {
+    void compressionZLIB() {
         final Logger logger = setupLogger(true, CompressionMethod.ZLIB);
 
         logger.error("Test message");
 
         stopLogger(logger);
 
-        final JsonNode jsonNode = receiveCompressedMessage(CompressionMethod.ZLIB);
-        assertEquals("1.1", jsonNode.get("version").textValue());
-        assertEquals("localhost", jsonNode.get("host").textValue());
-        assertEquals("Test message", jsonNode.get("short_message").textValue());
-        assertTrue(jsonNode.get("timestamp").isNumber());
-        assertEquals(3, jsonNode.get("level").intValue());
-        assertNotNull(jsonNode.get("_thread_name").textValue());
-        assertEquals(LOGGER_NAME, jsonNode.get("_logger_name").textValue());
+        final String json = receiveCompressedMessage(CompressionMethod.ZLIB);
+        assertThatJson(json).and(
+            j -> j.node("version").isString().isEqualTo("1.1"),
+            j -> j.node("host").isEqualTo("localhost"),
+            j -> j.node("short_message").isEqualTo("Test message"),
+            j -> j.node("timestamp").isNumber(),
+            j -> j.node("level").isEqualTo(3),
+            j -> j.node("_thread_name").isNotNull(),
+            j -> j.node("_logger_name").isEqualTo(LOGGER_NAME)
+        );
     }
 
     @Test
-    public void compressionGZIP() {
+    void compressionGZIP() {
         final Logger logger = setupLogger(true, CompressionMethod.GZIP);
 
         logger.error("Test message");
 
         stopLogger(logger);
 
-        final JsonNode jsonNode = receiveCompressedMessage(CompressionMethod.GZIP);
-        assertEquals("1.1", jsonNode.get("version").textValue());
-        assertEquals("localhost", jsonNode.get("host").textValue());
-        assertEquals("Test message", jsonNode.get("short_message").textValue());
-        assertTrue(jsonNode.get("timestamp").isNumber());
-        assertEquals(3, jsonNode.get("level").intValue());
-        assertNotNull(jsonNode.get("_thread_name").textValue());
-        assertEquals(LOGGER_NAME, jsonNode.get("_logger_name").textValue());
+        final String json = receiveCompressedMessage(CompressionMethod.GZIP);
+        assertThatJson(json).and(
+            j -> j.node("version").isString().isEqualTo("1.1"),
+            j -> j.node("host").isEqualTo("localhost"),
+            j -> j.node("short_message").isEqualTo("Test message"),
+            j -> j.node("timestamp").isNumber(),
+            j -> j.node("level").isEqualTo(3),
+            j -> j.node("_thread_name").isNotNull(),
+            j -> j.node("_logger_name").isEqualTo(LOGGER_NAME)
+        );
     }
 
     private Logger setupLogger(final boolean useCompression) {
@@ -153,15 +154,14 @@ public class GelfUdpAppenderTest {
         return gelfAppender;
     }
 
-    private JsonNode receiveCompressedMessage(final CompressionMethod compressionMethod) {
-        try {
-            if (compressionMethod == CompressionMethod.GZIP) {
-                return new ObjectMapper().readTree(Decompressor.gzipDecompress(receive()));
-            } else {
-                return new ObjectMapper().readTree(Decompressor.zlibDecompress(receive()));
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+    private String receiveCompressedMessage(final CompressionMethod compressionMethod) {
+        switch (compressionMethod) {
+            case GZIP:
+                return new String(Decompressor.gzipDecompress(receive()), StandardCharsets.UTF_8);
+            case ZLIB:
+                return new String(Decompressor.zlibDecompress(receive()), StandardCharsets.UTF_8);
+            default:
+                throw new IllegalStateException();
         }
     }
 
@@ -206,7 +206,7 @@ public class GelfUdpAppenderTest {
 
     private static final class Decompressor {
 
-        public static byte[] zlibDecompress(final byte[] bytesIn) {
+        static byte[] zlibDecompress(final byte[] bytesIn) {
             final ByteArrayOutputStream bos = new ByteArrayOutputStream();
             final OutputStream inflaterOutputStream = new InflaterOutputStream(bos);
 
@@ -220,9 +220,9 @@ public class GelfUdpAppenderTest {
             }
         }
 
-        public static InputStream gzipDecompress(final byte[] bytesIn) {
+        static byte[] gzipDecompress(final byte[] bytesIn) {
             try {
-                return new GZIPInputStream(new ByteArrayInputStream(bytesIn));
+                return new GZIPInputStream(new ByteArrayInputStream(bytesIn)).readAllBytes();
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

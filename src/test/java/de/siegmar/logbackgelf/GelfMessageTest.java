@@ -19,71 +19,76 @@
 
 package de.siegmar.logbackgelf;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-public class GelfMessageTest {
+class GelfMessageTest {
 
     @Test
-    public void simple() {
-        final Map<String, Object> additionalFields = Map.of("foo", (Object) "bar");
+    void simple() {
+        final Map<String, Object> additionalFields = Map.of("foo", "bar");
 
         final GelfMessage message = new GelfMessage("host", "short message", null,
-                1584271169123L, 6, additionalFields);
+            1584271169123L, 6, additionalFields);
 
-        assertEquals("host", message.getHost());
-        assertEquals("short message", message.getShortMessage());
-        assertNull(message.getFullMessage());
-        assertEquals(1584271169123L, message.getTimestamp());
-        assertEquals(6, message.getLevel());
-        assertEquals(additionalFields, message.getAdditionalFields());
-
-        assertEquals("{"
-            + "\"version\":\"1.1\","
-            + "\"host\":\"host\","
-            + "\"short_message\":\"short message\","
-            + "\"timestamp\":1584271169.123,"
-            + "\"level\":6,"
-            + "\"_foo\":\"bar\""
-            + "}",
-            asString(message.toJSON()));
+        assertThat(message).satisfies(
+            a -> assertThat(a.getHost()).isEqualTo("host"),
+            a -> assertThat(a.getShortMessage()).isEqualTo("short message"),
+            a -> assertThat(a.getFullMessage()).isNull(),
+            a -> assertThat(a.getTimestamp()).isEqualTo(1584271169123L),
+            a -> assertThat(a.getLevel()).isEqualTo(6),
+            a -> assertThat(a.getAdditionalFields()).isEqualTo(additionalFields),
+            a -> assertThat(a.toJSON()).asString().isEqualTo(
+                "{"
+                + "\"version\":\"1.1\","
+                + "\"host\":\"host\","
+                + "\"short_message\":\"short message\","
+                + "\"timestamp\":1584271169.123,"
+                + "\"level\":6,"
+                + "\"_foo\":\"bar\""
+                + "}")
+        );
     }
 
     @Test
-    public void complete() {
-        final Map<String, Object> additionalFields = Map.of("foo", (Object) "bar");
+    void complete() {
+        final Map<String, Object> additionalFields = Map.of("foo", "bar");
 
         final GelfMessage message = new GelfMessage("host", "short message", "full message",
             1584271169123L, 6, additionalFields);
 
-        assertEquals("{"
-            + "\"version\":\"1.1\","
-            + "\"host\":\"host\","
-            + "\"short_message\":\"short message\","
-            + "\"full_message\":\"full message\","
-            + "\"timestamp\":1584271169.123,"
-            + "\"level\":6,"
-            + "\"_foo\":\"bar\""
-            + "}",
-            asString(message.toJSON()));
+        assertThat(message).satisfies(
+            a -> assertThat(a.getHost()).isEqualTo("host"),
+            a -> assertThat(a.getShortMessage()).isEqualTo("short message"),
+            a -> assertThat(a.getFullMessage()).isEqualTo("full message"),
+            a -> assertThat(a.getTimestamp()).isEqualTo(1584271169123L),
+            a -> assertThat(a.getLevel()).isEqualTo(6),
+            a -> assertThat(a.getAdditionalFields()).isEqualTo(additionalFields),
+            a -> assertThat(a.toJSON()).asString().isEqualTo(
+                "{"
+                + "\"version\":\"1.1\","
+                + "\"host\":\"host\","
+                + "\"short_message\":\"short message\","
+                + "\"full_message\":\"full message\","
+                + "\"timestamp\":1584271169.123,"
+                + "\"level\":6,"
+                + "\"_foo\":\"bar\""
+                + "}")
+        );
     }
 
     @Test
     void filterEmptyFullMessage() {
         final GelfMessage message = new GelfMessage("host", "short message", "",
-                1584271169123L, 6, Map.of());
+            1584271169123L, 6, Map.of());
 
-        assertEquals("short message", message.getShortMessage());
-        assertNull(message.getFullMessage());
-    }
-
-    private String asString(final byte[] data) {
-        return new String(data, UTF_8);
+        assertThat(message).satisfies(
+            a -> assertThat(a.getShortMessage()).isEqualTo("short message"),
+            a -> assertThat(a.getFullMessage()).isNull()
+        );
     }
 
 }

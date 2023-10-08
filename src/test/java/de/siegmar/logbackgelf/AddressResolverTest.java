@@ -19,7 +19,7 @@
 
 package de.siegmar.logbackgelf;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -27,10 +27,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 
-public class AddressResolverTest {
+class AddressResolverTest {
 
     @Test
-    public void test() throws UnknownHostException {
+    void test() throws UnknownHostException {
         final AddressResolver resolver =
             new AddressResolver("foo", new AtomicInteger(Integer.MAX_VALUE)) {
                 @Override
@@ -42,9 +42,9 @@ public class AddressResolverTest {
                 }
             };
 
-        assertEquals("8.8.8.8", resolver.resolve().getHostAddress());
-        assertEquals("127.0.0.1", resolver.resolve().getHostAddress());
-        assertEquals("8.8.8.8", resolver.resolve().getHostAddress());
+        assertThat(resolver.resolve().getHostAddress()).isEqualTo("8.8.8.8");
+        assertThat(resolver.resolve().getHostAddress()).isEqualTo("127.0.0.1");
+        assertThat(resolver.resolve().getHostAddress()).isEqualTo("8.8.8.8");
     }
 
 }

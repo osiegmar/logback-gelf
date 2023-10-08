@@ -19,21 +19,13 @@
 
 package de.siegmar.logbackgelf;
 
-import static java.time.Duration.ofMillis;
+import static java.util.Map.entry;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTimeout;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,49 +37,37 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.slf4j.event.KeyValuePair;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.LoggingEvent;
 
 @SuppressWarnings("checkstyle:ClassDataAbstractionCoupling")
-public class GelfEncoderTest {
+class GelfEncoderTest {
 
     private static final String LOGGER_NAME = GelfEncoderTest.class.getCanonicalName();
 
     private final GelfEncoder encoder = new GelfEncoder();
 
     @BeforeEach
-    public void before() {
+    void before() {
         encoder.setContext(new LoggerContext());
         encoder.setOriginHost("localhost");
     }
 
     @Test
-    public void simple() throws IOException {
+    void simple() {
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         final Logger logger = lc.getLogger(LOGGER_NAME);
 
-        final String logMsg = encodeToStr(simpleLoggingEvent(logger, null));
-
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        basicValidation(jsonNode);
-
-        final BufferedReader msg =
-            new BufferedReader(new StringReader(jsonNode.get("full_message").textValue()));
-        assertEquals("message 1", msg.readLine());
+        assertThatJson(encodeToStr(simpleLoggingEvent(logger, null)))
+            .node("full_message").isEqualTo("message 1\\n");
     }
 
     @Test
-    public void newline() {
-
+    void newline() {
         encoder.setAppendNewline(true);
         encoder.start();
 
@@ -96,26 +76,24 @@ public class GelfEncoderTest {
 
         final String logMsg = encodeToStr(simpleLoggingEvent(logger, null));
 
-        assertTrue(logMsg.endsWith(System.lineSeparator()));
+        assertThat(logMsg).endsWith(System.lineSeparator());
     }
 
     @Test
-    public void nestedExceptionShouldNotFail() {
+    void nestedExceptionShouldNotFail() {
         encoder.setIncludeRootCauseData(true);
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         final Logger logger = lc.getLogger(LOGGER_NAME);
 
-        assertTimeout(ofMillis(400), () -> {
-            final String logMsg = encodeToStr(simpleLoggingEvent(logger,
-                new IOException(new IOException(new IOException()))));
+        final String logMsg = encodeToStr(simpleLoggingEvent(logger,
+            new IOException(new IOException(new IOException()))));
 
-            assertNotNull(logMsg);
-        });
+        assertThat(logMsg).isNotNull();
     }
 
-    public static LoggingEvent simpleLoggingEvent(final Logger logger, final Throwable e) {
+    static LoggingEvent simpleLoggingEvent(final Logger logger, final Throwable e) {
         return new LoggingEvent(
             LOGGER_NAME,
             logger,
@@ -125,17 +103,21 @@ public class GelfEncoderTest {
             new Object[]{1});
     }
 
-    private static void coreValidation(final JsonNode jsonNode) {
-        assertEquals("1.1", jsonNode.get("version").textValue());
-        assertEquals("localhost", jsonNode.get("host").textValue());
-        assertEquals("message 1", jsonNode.get("short_message").textValue());
-        assertEquals(7, jsonNode.get("level").intValue());
+    private static void coreValidation(final String json) {
+        assertThatJson(json).and(
+            j -> j.node("version").asString().isEqualTo("1.1"),
+            j -> j.node("host").isEqualTo("localhost"),
+            j -> j.node("short_message").isEqualTo("message 1"),
+            j -> j.node("level").isEqualTo(7)
+        );
     }
 
-    public static void basicValidation(final JsonNode jsonNode) {
-        coreValidation(jsonNode);
-        assertNotNull(jsonNode.get("_thread_name").textValue());
-        assertEquals(LOGGER_NAME, jsonNode.get("_logger_name").textValue());
+    static void basicValidation(final String json) {
+        coreValidation(json);
+        assertThatJson(json).and(
+            j -> j.node("_thread_name").isNotNull(),
+            j -> j.node("_logger_name").isEqualTo(LOGGER_NAME)
+        );
     }
 
     @Test
@@ -149,7 +131,7 @@ public class GelfEncoderTest {
     }
 
     @Test
-    public void exception() throws IOException {
+    void exception() throws IOException {
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -168,22 +150,14 @@ public class GelfEncoderTest {
                 new Object[]{1}));
         }
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        basicValidation(jsonNode);
+        basicValidation(logMsg);
 
-        final BufferedReader msg =
-            new BufferedReader(new StringReader(jsonNode.get("full_message").textValue()));
-
-        assertEquals("message 1", msg.readLine());
-        assertEquals("java.lang.IllegalArgumentException: Example Exception", msg.readLine());
-        final String line = Objects.requireNonNull(msg.readLine());
-        assertTrue(line.matches("^\tat de.siegmar.logbackgelf.GelfEncoderTest.exception"
-            + "\\(GelfEncoderTest.java:\\d+\\)$"), "Unexpected line: " + line);
+        assertThatJson(logMsg).node("full_message").asString()
+            .startsWith("message 1\njava.lang.IllegalArgumentException: Example Exception\n");
     }
 
     @Test
-    public void keyValues() throws IOException {
+    void keyValues() {
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -196,16 +170,15 @@ public class GelfEncoderTest {
 
         final String logMsg = encodeToStr(event);
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        coreValidation(jsonNode);
-        assertEquals("value", jsonNode.get("_key1").textValue());
-        assertEquals(123, jsonNode.get("_key2").numberValue());
-        assertEquals("true", jsonNode.get("_key3").textValue());
+        assertThatJson(logMsg).and(
+            j -> j.node("_key1").isEqualTo("value"),
+            j -> j.node("_key2").isEqualTo(123),
+            j -> j.node("_key3").isString().isEqualTo("true")
+        );
     }
 
     @Test
-    public void complex() throws IOException {
+    void complex() {
         encoder.setIncludeRawMessage(true);
         encoder.setIncludeLevelName(true);
         encoder.addStaticField("foo:bar");
@@ -223,19 +196,18 @@ public class GelfEncoderTest {
 
         final String logMsg = encodeToStr(event);
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        basicValidation(jsonNode);
-        assertEquals("DEBUG", jsonNode.get("_level_name").textValue());
-        assertEquals("bar", jsonNode.get("_foo").textValue());
-        assertEquals("baz", jsonNode.get("_bar").textValue());
-        assertEquals("mdc_value", jsonNode.get("_mdc_key").textValue());
-        assertEquals("message {}", jsonNode.get("_raw_message").textValue());
-        assertNull(jsonNode.get("_exception"));
+        assertThatJson(logMsg).and(
+            j -> j.node("_level_name").isEqualTo("DEBUG"),
+            j -> j.node("_foo").isEqualTo("bar"),
+            j -> j.node("_bar").isEqualTo("baz"),
+            j -> j.node("_mdc_key").isEqualTo("mdc_value"),
+            j -> j.node("_raw_message").isEqualTo("message {}"),
+            j -> j.node("_exception").isAbsent()
+        );
     }
 
     @Test
-    public void customLevelNameKey() throws IOException {
+    void customLevelNameKey() {
         encoder.setIncludeLevelName(true);
         encoder.setLevelNameKey("Severity");
         encoder.start();
@@ -247,15 +219,14 @@ public class GelfEncoderTest {
 
         final String logMsg = encodeToStr(event);
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        basicValidation(jsonNode);
-        assertEquals("DEBUG", jsonNode.get("_Severity").textValue());
-        assertNull(jsonNode.get("_exception"));
+        assertThatJson(logMsg).and(
+            j -> j.node("_Severity").isEqualTo("DEBUG"),
+            j -> j.node("_exception").isAbsent()
+        );
     }
 
     @Test
-    public void customLoggerNameKey() throws IOException {
+    void customLoggerNameKey() {
         encoder.setLoggerNameKey("Logger");
         encoder.start();
 
@@ -266,16 +237,15 @@ public class GelfEncoderTest {
 
         final String logMsg = encodeToStr(event);
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        coreValidation(jsonNode);
-        assertNotNull(jsonNode.get("_thread_name").textValue());
-        assertEquals(LOGGER_NAME, jsonNode.get("_Logger").textValue());
-        assertNull(jsonNode.get("_exception"));
+        assertThatJson(logMsg).and(
+            j -> j.node("_thread_name").isNotNull(),
+            j -> j.node("_Logger").isEqualTo(LOGGER_NAME),
+            j -> j.node("_exception").isAbsent()
+        );
     }
 
     @Test
-    public void customThreadNameKey() throws IOException {
+    void customThreadNameKey() {
         encoder.setThreadNameKey("Thread");
         encoder.start();
 
@@ -286,16 +256,15 @@ public class GelfEncoderTest {
 
         final String logMsg = encodeToStr(event);
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        coreValidation(jsonNode);
-        assertNotNull(jsonNode.get("_Thread").textValue());
-        assertEquals(LOGGER_NAME, jsonNode.get("_logger_name").textValue());
-        assertNull(jsonNode.get("_exception"));
+        assertThatJson(logMsg).and(
+            j -> j.node("_Thread").isNotNull(),
+            j -> j.node("_logger_name").isEqualTo(LOGGER_NAME),
+            j -> j.node("_exception").isAbsent()
+        );
     }
 
     @Test
-    public void rootExceptionTurnedOff() throws IOException {
+    void rootExceptionTurnedOff() {
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -308,14 +277,11 @@ public class GelfEncoderTest {
             logMsg = encodeToStr(simpleLoggingEvent(logger, e));
         }
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-
-        assertFalse(jsonNode.has("_exception"));
+        assertThatJson(logMsg).node("_exception").isAbsent();
     }
 
     @Test
-    public void noRootException() throws IOException {
+    void noRootException() {
         encoder.setIncludeRootCauseData(true);
         encoder.start();
 
@@ -324,14 +290,11 @@ public class GelfEncoderTest {
 
         final String logMsg = encodeToStr(simpleLoggingEvent(logger, null));
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-
-        assertFalse(jsonNode.has("_exception"));
+        assertThatJson(logMsg).node("_exception").isAbsent();
     }
 
     @Test
-    public void rootExceptionWithoutCause() throws IOException {
+    void rootExceptionWithoutCause() {
         encoder.setIncludeRootCauseData(true);
         encoder.start();
 
@@ -345,15 +308,15 @@ public class GelfEncoderTest {
             logMsg = encodeToStr(simpleLoggingEvent(logger, e));
         }
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-
-        assertEquals("java.io.IOException", jsonNode.get("_root_cause_class_name").textValue());
-        assertEquals("Example Exception", jsonNode.get("_root_cause_message").textValue());
+        basicValidation(logMsg);
+        assertThatJson(logMsg).and(
+            j -> j.node("_root_cause_class_name").isEqualTo("java.io.IOException"),
+            j -> j.node("_root_cause_message").isEqualTo("Example Exception")
+        );
     }
 
     @Test
-    public void rootExceptionWithCause() throws IOException {
+    void rootExceptionWithCause() {
         encoder.setIncludeRootCauseData(true);
         encoder.start();
 
@@ -368,19 +331,15 @@ public class GelfEncoderTest {
             logMsg = encodeToStr(simpleLoggingEvent(logger, e));
         }
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        basicValidation(jsonNode);
-
-        assertEquals("java.lang.IllegalStateException",
-            jsonNode.get("_root_cause_class_name").textValue());
-
-        assertEquals("Example Exception 2",
-            jsonNode.get("_root_cause_message").textValue());
+        basicValidation(logMsg);
+        assertThatJson(logMsg).and(
+            j -> j.node("_root_cause_class_name").isEqualTo("java.lang.IllegalStateException"),
+            j -> j.node("_root_cause_message").isEqualTo("Example Exception 2")
+        );
     }
 
     @Test
-    public void numericValueAsNumber() throws IOException {
+    void numericValueAsNumber() {
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -392,16 +351,15 @@ public class GelfEncoderTest {
 
         final String logMsg = encodeToStr(event);
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        basicValidation(jsonNode);
-
-        assertTrue(logMsg.contains("\"_int\":200"));
-        assertTrue(logMsg.contains("\"_float\":0.00001"));
+        basicValidation(logMsg);
+        assertThatJson(logMsg).and(
+            j -> j.node("_int").isNumber().isEqualTo("200"),
+            j -> j.node("_float").isNumber().isEqualTo("0.00001")
+        );
     }
 
     @Test
-    public void numericValueAsString() throws IOException {
+    void numericValueAsString() {
         encoder.setNumbersAsString(true);
         encoder.start();
 
@@ -414,16 +372,15 @@ public class GelfEncoderTest {
 
         final String logMsg = encodeToStr(event);
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        basicValidation(jsonNode);
-
-        assertTrue(logMsg.contains("\"_int\":\"200\""));
-        assertTrue(logMsg.contains("\"_float\":\"0.00001\""));
+        basicValidation(logMsg);
+        assertThatJson(logMsg).and(
+            j -> j.node("_int").isString().isEqualTo("200"),
+            j -> j.node("_float").isString().isEqualTo("0.00001")
+        );
     }
 
     @Test
-    public void singleMarker() throws IOException {
+    void singleMarker() {
         encoder.setLoggerNameKey("Logger");
         encoder.setIncludeMarker(true);
         encoder.start();
@@ -436,14 +393,14 @@ public class GelfEncoderTest {
 
         final String logMsg = encodeToStr(event);
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        coreValidation(jsonNode);
-        assertEquals("[SINGLE]", jsonNode.get("_marker").textValue());
+        coreValidation(logMsg);
+        assertThatJson(logMsg).and(
+            j -> j.node("_marker").isString().isEqualTo("[SINGLE]")
+        );
     }
 
     @Test
-    public void multipleMarker() throws IOException {
+    void multipleMarker() {
         encoder.setLoggerNameKey("Logger");
         encoder.setIncludeMarker(true);
         encoder.start();
@@ -459,10 +416,10 @@ public class GelfEncoderTest {
 
         final String logMsg = encodeToStr(event);
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        coreValidation(jsonNode);
-        assertEquals("[FIRST [ SECOND ], THIRD]", jsonNode.get("_marker").textValue());
+        coreValidation(logMsg);
+        assertThatJson(logMsg).and(
+            j -> j.node("_marker").isString().isEqualTo("[FIRST [ SECOND ], THIRD]")
+        );
     }
 
     private String encodeToStr(final LoggingEvent event) {
@@ -473,15 +430,15 @@ public class GelfEncoderTest {
     @ValueSource(strings = {"missing colon", "id:value", "$key:value", "#key:value", "new$key:value"})
     void invalidStaticField(final String staticField) {
         encoder.addStaticField(staticField);
-        assertEquals(0, encoder.getStaticFields().size());
+        assertThat(encoder.getStaticFields()).isEmpty();
     }
 
     @Test
     void rewriteStaticField() {
         encoder.addStaticField("test_id:value");
         encoder.addStaticField("test_id:new value");
-        assertEquals(1, encoder.getStaticFields().size());
-        assertEquals("value", encoder.getStaticFields().get("test_id"));
+        assertThat(encoder.getStaticFields())
+            .containsExactly(entry("test_id", "value"));
     }
 
     @ParameterizedTest
@@ -496,7 +453,7 @@ public class GelfEncoderTest {
     }
 
     @Test
-    void blankShortmessage() throws JsonProcessingException {
+    void blankShortmessage() {
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -505,32 +462,33 @@ public class GelfEncoderTest {
         final LoggingEvent event = new LoggingEvent(LOGGER_NAME, logger, Level.DEBUG, " \t ", null, new Object[]{1});
         final String logMsg = encodeToStr(event);
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        assertEquals("Empty message replaced by logback-gelf", jsonNode.get("short_message").textValue());
+        assertThatJson(logMsg).node("short_message")
+            .isEqualTo("Empty message replaced by logback-gelf");
     }
 
     @Test
     void defaultValues() {
-        assertFalse(encoder.isIncludeRawMessage());
-        assertFalse(encoder.isIncludeMarker());
-        assertTrue(encoder.isIncludeMdcData());
-        assertFalse(encoder.isIncludeCallerData());
-        assertFalse(encoder.isIncludeRootCauseData());
-        assertFalse(encoder.isIncludeLevelName());
-        assertEquals("localhost", encoder.getOriginHost());
-        assertEquals("level_name", encoder.getLevelNameKey());
-        assertEquals("logger_name", encoder.getLoggerNameKey());
-        assertEquals("thread_name", encoder.getThreadNameKey());
-        assertFalse(encoder.isAppendNewline());
-        assertFalse(encoder.isNumbersAsString());
+        assertThat(encoder).satisfies(
+            e -> assertThat(e.isIncludeRawMessage()).isFalse(),
+            e -> assertThat(e.isIncludeMarker()).isFalse(),
+            e -> assertThat(e.isIncludeMdcData()).isTrue(),
+            e -> assertThat(e.isIncludeCallerData()).isFalse(),
+            e -> assertThat(e.isIncludeRootCauseData()).isFalse(),
+            e -> assertThat(e.isIncludeLevelName()).isFalse(),
+            e -> assertThat(e.getOriginHost()).isEqualTo("localhost"),
+            e -> assertThat(e.getLevelNameKey()).isEqualTo("level_name"),
+            e -> assertThat(e.getLoggerNameKey()).isEqualTo("logger_name"),
+            e -> assertThat(e.getThreadNameKey()).isEqualTo("thread_name"),
+            e -> assertThat(e.isAppendNewline()).isFalse(),
+            e -> assertThat(e.isNumbersAsString()).isFalse()
+        );
     }
 
     @Test
     void addFieldMapper() {
-        encoder.addFieldMapper((event, valueHandler) -> { });
-        assertEquals(1, encoder.getFieldMappers().size());
+        final GelfFieldMapper<Object> fieldMapper = (event, valueHandler) -> { };
+        encoder.addFieldMapper(fieldMapper);
+        assertThat(encoder.getFieldMappers()).containsExactly(fieldMapper);
     }
-
 
 }

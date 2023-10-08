@@ -19,15 +19,14 @@
 
 package de.siegmar.logbackgelf;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -42,20 +41,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 
-public class GelfTcpTlsAppenderTest {
+class GelfTcpTlsAppenderTest {
 
     private static final String LOGGER_NAME = GelfTcpTlsAppenderTest.class.getCanonicalName();
 
     private int port;
     private Future<byte[]> future;
 
-    public GelfTcpTlsAppenderTest() {
+    GelfTcpTlsAppenderTest() {
         final String mySrvKeystore =
             GelfTcpTlsAppenderTest.class.getResource("/mySrvKeystore").getFile();
         System.setProperty("javax.net.ssl.keyStore", mySrvKeystore);
@@ -63,7 +59,7 @@ public class GelfTcpTlsAppenderTest {
     }
 
     @BeforeEach
-    public void before() throws IOException {
+    void before() throws IOException {
         final TcpServer server = new TcpServer();
         port = server.getPort();
         future = Executors.newSingleThreadExecutor().submit(server);
@@ -72,25 +68,27 @@ public class GelfTcpTlsAppenderTest {
     @Test
     void defaultValues() {
         final GelfTcpTlsAppender appender = new GelfTcpTlsAppender();
-        assertFalse(appender.isInsecure());
+        assertThat(appender.isInsecure()).isFalse();
     }
 
     @Test
-    public void simple() {
+    void simple() {
         final Logger logger = setupLogger();
 
         logger.error("Test message");
 
         stopLogger(logger);
 
-        final JsonNode jsonNode = receiveMessage();
-        assertEquals("1.1", jsonNode.get("version").textValue());
-        assertEquals("localhost", jsonNode.get("host").textValue());
-        assertEquals("Test message", jsonNode.get("short_message").textValue());
-        assertTrue(jsonNode.get("timestamp").isNumber());
-        assertEquals(3, jsonNode.get("level").intValue());
-        assertNotNull(jsonNode.get("_thread_name").textValue());
-        assertEquals(LOGGER_NAME, jsonNode.get("_logger_name").textValue());
+        final String json = receiveMessage();
+        assertThatJson(json).and(
+            j -> j.node("version").isString().isEqualTo("1.1"),
+            j -> j.node("host").isEqualTo("localhost"),
+            j -> j.node("short_message").isEqualTo("Test message"),
+            j -> j.node("timestamp").isNumber(),
+            j -> j.node("level").isEqualTo(3),
+            j -> j.node("_thread_name").isNotNull(),
+            j -> j.node("_logger_name").isEqualTo(LOGGER_NAME)
+        );
     }
 
     private Logger setupLogger() {
@@ -120,12 +118,8 @@ public class GelfTcpTlsAppenderTest {
         return gelfAppender;
     }
 
-    private JsonNode receiveMessage() {
-        try {
-            return new ObjectMapper().readTree(receive());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+    private String receiveMessage() {
+        return new String(receive(), StandardCharsets.UTF_8);
     }
 
     private void stopLogger(final Logger logger) {
@@ -135,7 +129,11 @@ public class GelfTcpTlsAppenderTest {
 
     private byte[] receive() {
         try {
-            return future.get(5, TimeUnit.SECONDS);
+            final byte[] bytes = future.get(5, TimeUnit.SECONDS);
+            if (bytes[bytes.length - 1] != 0) {
+                throw new IllegalStateException("Data stream is not terminated by 0");
+            }
+            return Arrays.copyOf(bytes, bytes.length - 1);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             throw new IllegalStateException(e);
         }

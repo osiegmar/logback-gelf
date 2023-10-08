@@ -19,21 +19,18 @@
 
 package de.siegmar.logbackgelf.pool;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
-public class SimpleObjectPoolTest {
+class SimpleObjectPoolTest {
 
     private final PooledObjectFactory<MyPooledObject> factory =
-        new PooledObjectFactory<MyPooledObject>() {
+        new PooledObjectFactory<>() {
 
             private int i = 1;
 
@@ -45,117 +42,104 @@ public class SimpleObjectPoolTest {
         };
 
     @Test
-    public void simple() throws InterruptedException {
+    void simple() throws InterruptedException {
         final SimpleObjectPool<MyPooledObject> pool =
             new SimpleObjectPool<>(factory, 2, 100, 100, 100);
 
         for (int i = 0; i < 10; i++) {
-            final MyPooledObject o1 = pool.borrowObject();
-            assertEquals(1, o1.getId());
-            pool.returnObject(o1);
-
-            final MyPooledObject o2 = pool.borrowObject();
-            assertEquals(2, o2.getId());
-            pool.returnObject(o2);
+            for (int y = 1; y < 3; y++) {
+                final MyPooledObject o1 = pool.borrowObject();
+                assertThat(o1.getId()).isEqualTo(y);
+                pool.returnObject(o1);
+            }
         }
     }
 
     @Test
-    public void invalidate() throws InterruptedException {
+    void invalidate() throws InterruptedException {
         final SimpleObjectPool<MyPooledObject> pool =
             new SimpleObjectPool<>(factory, 2, 100, 100, 100);
 
-        final MyPooledObject o1 = pool.borrowObject();
-        assertEquals(1, o1.getId());
-        pool.invalidateObject(o1);
-
-        final MyPooledObject o2 = pool.borrowObject();
-        assertEquals(2, o2.getId());
-        pool.returnObject(o2);
-
-        final MyPooledObject o3 = pool.borrowObject();
-        assertEquals(3, o3.getId());
-        pool.returnObject(o3);
+        for (int i = 1; i < 4; i++) {
+            final MyPooledObject o1 = pool.borrowObject();
+            assertThat(o1.getId()).isEqualTo(i);
+            pool.invalidateObject(o1);
+        }
     }
 
     @Test
-    public void maxLastBorrowed() throws InterruptedException {
+    void maxLastBorrowed() throws InterruptedException {
         final SimpleObjectPool<MyPooledObject> pool =
-                new SimpleObjectPool<>(factory, 1, 100, 100, 0);
+            new SimpleObjectPool<>(factory, 1, 100, 100, 0);
 
-        final MyPooledObject o1 = pool.borrowObject();
-        assertEquals(1, o1.getId());
-        pool.returnObject(o1);
+        for (int i = 1; i < 4; i++) {
+            if (i > 1) {
+                Thread.sleep(2);
+            }
 
-        Thread.sleep(2);
-
-        final MyPooledObject o2 = pool.borrowObject();
-        assertEquals(2, o2.getId());
-        pool.returnObject(o2);
-
-        Thread.sleep(2);
-
-        final MyPooledObject o3 = pool.borrowObject();
-        assertEquals(3, o3.getId());
-        pool.returnObject(o3);
+            final MyPooledObject o1 = pool.borrowObject();
+            assertThat(o1.getId()).isEqualTo(i);
+            pool.returnObject(o1);
+        }
     }
 
     @Test
     void availableObjectsExhausted() throws InterruptedException {
         final SimpleObjectPool<MyPooledObject> pool =
-                new SimpleObjectPool<>(factory, 1, 100, 100, 0);
+            new SimpleObjectPool<>(factory, 1, 100, 100, 0);
 
         final Object o1 = pool.borrowObject();
-        assertNotNull(o1);
+        assertThat(o1).isNotNull();
 
-        assertThrows(IllegalStateException.class, pool::borrowObject,
-                "Couldn't acquire connection from pool");
+        assertThatThrownBy(pool::borrowObject)
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Couldn't acquire connection from pool");
     }
 
     @Test
     void validatePoolSize() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new SimpleObjectPool<>(factory, 0, 100, 100, 0),
-                "poolSize must be > 0");
+        assertThatThrownBy(() -> new SimpleObjectPool<>(factory, 0, 100, 100, 0))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("poolSize must be > 0");
     }
 
     @Test
     void infinitePollWaitTime() throws InterruptedException {
         final SimpleObjectPool<MyPooledObject> pool =
-                new SimpleObjectPool<>(factory, 1, -1, 100, 0);
+            new SimpleObjectPool<>(factory, 1, -1, 100, 0);
 
         final MyPooledObject o1 = pool.borrowObject();
         final long before = System.nanoTime();
 
         Executors.newScheduledThreadPool(1)
-                .schedule(() -> pool.returnObject(o1), 200, TimeUnit.MILLISECONDS);
+            .schedule(() -> pool.returnObject(o1), 200, TimeUnit.MILLISECONDS);
 
         final MyPooledObject o2 = pool.borrowObject();
         final long after = System.nanoTime();
 
         final long elapsedTimeMillis = TimeUnit.NANOSECONDS.toMillis(after - before);
 
-        assertNotNull(o2);
-        assertTrue(elapsedTimeMillis > 200);
+        assertThat(o2).isNotNull();
+        assertThat(elapsedTimeMillis).isGreaterThan(200);
     }
 
     @Test
     void infiniteLifeTime() throws InterruptedException {
         final SimpleObjectPool<MyPooledObject> pool =
-                new SimpleObjectPool<>(factory, 1, 100, -1, -1);
+            new SimpleObjectPool<>(factory, 1, 100, -1, -1);
 
         final MyPooledObject o1 = pool.borrowObject();
         pool.returnObject(o1);
 
         final MyPooledObject o2 = pool.borrowObject();
 
-        assertEquals(o1, o2);
+        assertThat(o2).isEqualTo(o1);
     }
 
     @Test
     void recycleByLifeTime() throws InterruptedException {
         final SimpleObjectPool<MyPooledObject> pool =
-                new SimpleObjectPool<>(factory, 1, -1, 0, -1);
+            new SimpleObjectPool<>(factory, 1, -1, 0, -1);
 
         final MyPooledObject o1 = pool.borrowObject();
         pool.returnObject(o1);
@@ -165,7 +149,7 @@ public class SimpleObjectPoolTest {
 
         final MyPooledObject o2 = pool.borrowObject();
 
-        assertNotEquals(o1, o2);
+        assertThat(o2).isNotEqualTo(o1);
     }
 
     private static final class MyPooledObject extends AbstractPooledObject {

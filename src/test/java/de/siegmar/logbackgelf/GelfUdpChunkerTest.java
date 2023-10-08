@@ -19,9 +19,8 @@
 
 package de.siegmar.logbackgelf;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -31,20 +30,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public class GelfUdpChunkerTest {
+class GelfUdpChunkerTest {
 
     @Test
-    public void singleChunk() {
+    void singleChunk() {
         final GelfUdpChunker chunker = new GelfUdpChunker(new MessageIdSupplier(), null);
         final Iterator<? extends ByteBuffer> chunks =
             chunker.chunks("hello".getBytes(StandardCharsets.UTF_8)).iterator();
-        final String actual = new String(chunks.next().array(), StandardCharsets.UTF_8);
-        assertEquals("hello", actual);
-        assertFalse(chunks.hasNext());
+        assertThat(chunks.next().array()).asString().isEqualTo("hello");
+        assertThat(chunks).isExhausted();
     }
 
     @Test
-    public void multipleChunks() {
+    void multipleChunks() {
         final GelfUdpChunker chunker = new GelfUdpChunker(new MessageIdSupplier(), 13);
         final Iterator<? extends ByteBuffer> chunks =
             chunker.chunks("hello".getBytes(StandardCharsets.UTF_8)).iterator();
@@ -53,32 +51,30 @@ public class GelfUdpChunkerTest {
         expectedChunk(chunks.next().array(), 2, 5, 'l');
         expectedChunk(chunks.next().array(), 3, 5, 'l');
         expectedChunk(chunks.next().array(), 4, 5, 'o');
-        assertFalse(chunks.hasNext());
+        assertThat(chunks).isExhausted();
     }
 
-    private void expectedChunk(final byte[] data, final int chunkNo, final int chunkCount,
-                               final char payload) {
-        assertEquals(0x1e, data[0]);
-        assertEquals(0x0f, data[1]);
-        // Skip message id (2-9)
-        assertEquals(chunkNo, data[10]);
-        assertEquals(chunkCount, data[11]);
-        assertEquals(payload, data[12]);
+    private void expectedChunk(final byte[] data, final int chunkNo, final int chunkCount, final char payload) {
+        assertThat(data)
+            .startsWith(0x1e, 0x0f)
+            .endsWith(chunkNo, chunkCount, payload);
     }
 
     @Test
     void removeNotPermitted() {
         final GelfUdpChunker chunker = new GelfUdpChunker(new MessageIdSupplier(), 13);
         final Iterator<? extends ByteBuffer> chunks =
-                chunker.chunks("hello".getBytes(StandardCharsets.UTF_8)).iterator();
+            chunker.chunks("hello".getBytes(StandardCharsets.UTF_8)).iterator();
 
-        assertThrows(UnsupportedOperationException.class, chunks::remove);
+        assertThatThrownBy(chunks::remove)
+            .isInstanceOf(UnsupportedOperationException.class);
     }
 
     @ParameterizedTest
     @ValueSource(ints = {12, 65468})
     void maxChunkSizeLimitRange(final int maxChunkSize) {
-        assertThrows(IllegalArgumentException.class,
-            () -> new GelfUdpChunker(new MessageIdSupplier(), maxChunkSize));
+        assertThatThrownBy(() -> new GelfUdpChunker(new MessageIdSupplier(), maxChunkSize))
+            .isInstanceOf(IllegalArgumentException.class);
     }
+
 }

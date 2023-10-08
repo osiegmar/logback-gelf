@@ -19,63 +19,64 @@
 
 package de.siegmar.logbackgelf;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
-public class HostnameVerifierTest {
+class HostnameVerifierTest {
 
     @Test
-    public void testSimple() {
-        assertTrue(HostnameVerifier.verify("foo.com", "foo.com"));
-        assertFalse(HostnameVerifier.verify("foo", "foo.com"));
+    void testSimple() {
+        assertThat(HostnameVerifier.verify("foo.com", "foo.com")).isTrue();
+        assertThat(HostnameVerifier.verify("foo", "foo.com")).isFalse();
     }
 
     @Test
-    public void testWildcard() {
-        assertTrue(HostnameVerifier.verify("foo.a.com", "*.a.com"));
-        assertFalse(HostnameVerifier.verify("bar.foo.a.com", "*.a.com"));
+    void testWildcard() {
+        assertThat(HostnameVerifier.verify("foo.a.com", "*.a.com")).isTrue();
+        assertThat(HostnameVerifier.verify("bar.foo.a.com", "*.a.com")).isFalse();
     }
 
     @Test
-    public void testPartial() {
+    void testPartial() {
         // Partial-wildcard is not supported
-        assertFalse(HostnameVerifier.verify("foo.com", "f*.com"));
+        assertThat(HostnameVerifier.verify("foo.com", "f*.com")).isFalse();
     }
 
     @Test
-    public void invalidCN() {
-        assertFalse(HostnameVerifier.verify("foo.com", "*"));
-        assertFalse(HostnameVerifier.verify("foo.com", "*.com"));
-        assertFalse(HostnameVerifier.verify("foo.a.com", "*.*.com"));
-        assertFalse(HostnameVerifier.verify("foo.a.com", "foo.*.com"));
-        assertFalse(HostnameVerifier.verify("foo.com", "foo.*"));
+    void invalidCN() {
+        assertThat(HostnameVerifier.verify("foo.com", "*")).isFalse();
+        assertThat(HostnameVerifier.verify("foo.com", "*.com")).isFalse();
+        assertThat(HostnameVerifier.verify("foo.a.com", "*.*.com")).isFalse();
+        assertThat(HostnameVerifier.verify("foo.a.com", "foo.*.com")).isFalse();
+        assertThat(HostnameVerifier.verify("foo.com", "foo.*")).isFalse();
     }
 
     @Test
-    public void testCase() {
-        assertTrue(HostnameVerifier.verify("foo.COM", "FOO.com"));
-        assertTrue(HostnameVerifier.verify("FOO.a.com", "*.a.COM"));
+    void testCase() {
+        assertThat(HostnameVerifier.verify("foo.COM", "FOO.com")).isTrue();
+        assertThat(HostnameVerifier.verify("FOO.a.com", "*.a.COM")).isTrue();
     }
 
     @Test
-    public void testPuny() {
-        assertTrue(HostnameVerifier.verify("www.xn--caf-dma.com", "*.xn--caf-dma.com"));
-        assertTrue(HostnameVerifier.verify("WWW.xn--CAF-dma.com", "*.xn--caf-DMA.COM"));
+    void testPuny() {
+        assertThat(HostnameVerifier.verify("www.xn--caf-dma.com", "*.xn--caf-dma.com")).isTrue();
+        assertThat(HostnameVerifier.verify("WWW.xn--CAF-dma.com", "*.xn--caf-DMA.COM")).isTrue();
     }
 
     @Test
-    public void testNull() {
-        assertThrows(NullPointerException.class, () -> HostnameVerifier.verify(null, "foo.com"));
-        assertThrows(NullPointerException.class, () -> HostnameVerifier.verify("foo.com", null));
+    void testNull() {
+        assertThatThrownBy(() -> HostnameVerifier.verify(null, "foo.com"))
+            .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> HostnameVerifier.verify("foo.com", null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void testEmpty() {
-        HostnameVerifier.verify("", "foo.com");
-        HostnameVerifier.verify("foo.com", "");
+    void testEmpty() {
+        assertThat(HostnameVerifier.verify("", "foo.com")).isFalse();
+        assertThat(HostnameVerifier.verify("foo.com", "")).isFalse();
     }
 
 }

@@ -19,15 +19,15 @@
 
 package de.siegmar.logbackgelf;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -39,13 +39,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 
-public class GelfTcpAppenderTest {
+class GelfTcpAppenderTest {
 
     private static final String LOGGER_NAME = GelfTcpAppenderTest.class.getCanonicalName();
 
@@ -53,7 +50,7 @@ public class GelfTcpAppenderTest {
     private Future<byte[]> future;
 
     @BeforeEach
-    public void before() throws IOException {
+    void before() throws IOException {
         final TcpServer server = new TcpServer();
         port = server.getPort();
         future = Executors.newSingleThreadExecutor().submit(server);
@@ -62,32 +59,36 @@ public class GelfTcpAppenderTest {
     @Test
     void defaultValues() {
         final GelfTcpAppender appender = new GelfTcpAppender();
-        assertEquals(15000, appender.getConnectTimeout());
-        assertEquals(5000, appender.getSocketTimeout());
-        assertEquals(2, appender.getMaxRetries());
-        assertEquals(-1, appender.getPoolMaxIdleTime());
-        assertEquals(2, appender.getPoolSize());
-        assertEquals(5000, appender.getPoolMaxWaitTime());
-        assertEquals(60, appender.getReconnectInterval());
-        assertEquals(3000, appender.getRetryDelay());
+        assertThat(appender).satisfies(
+            a -> assertThat(a.getConnectTimeout()).isEqualTo(15000),
+            a -> assertThat(a.getSocketTimeout()).isEqualTo(5000),
+            a -> assertThat(a.getMaxRetries()).isEqualTo(2),
+            a -> assertThat(a.getPoolMaxIdleTime()).isEqualTo(-1),
+            a -> assertThat(a.getPoolSize()).isEqualTo(2),
+            a -> assertThat(a.getPoolMaxWaitTime()).isEqualTo(5000),
+            a -> assertThat(a.getReconnectInterval()).isEqualTo(60),
+            a -> assertThat(a.getRetryDelay()).isEqualTo(3000)
+        );
     }
 
     @Test
-    public void simple() {
+    void simple() {
         final Logger logger = setupLogger();
 
         logger.error("Test message");
 
         stopLogger(logger);
 
-        final JsonNode jsonNode = receiveMessage();
-        assertEquals("1.1", jsonNode.get("version").textValue());
-        assertEquals("localhost", jsonNode.get("host").textValue());
-        assertEquals("Test message", jsonNode.get("short_message").textValue());
-        assertTrue(jsonNode.get("timestamp").isNumber());
-        assertEquals(3, jsonNode.get("level").intValue());
-        assertNotNull(jsonNode.get("_thread_name").textValue());
-        assertEquals(LOGGER_NAME, jsonNode.get("_logger_name").textValue());
+        final String json = receiveMessage();
+        assertThatJson(json).and(
+            j -> j.node("version").isString().isEqualTo("1.1"),
+            j -> j.node("host").isEqualTo("localhost"),
+            j -> j.node("short_message").isEqualTo("Test message"),
+            j -> j.node("timestamp").isNumber(),
+            j -> j.node("level").isEqualTo(3),
+            j -> j.node("_thread_name").isNotNull(),
+            j -> j.node("_logger_name").isEqualTo(LOGGER_NAME)
+        );
     }
 
     private Logger setupLogger() {
@@ -116,12 +117,8 @@ public class GelfTcpAppenderTest {
         return gelfAppender;
     }
 
-    private JsonNode receiveMessage() {
-        try {
-            return new ObjectMapper().readTree(receive());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+    private String receiveMessage() {
+        return new String(receive(), StandardCharsets.UTF_8);
     }
 
     private void stopLogger(final Logger logger) {
@@ -135,7 +132,7 @@ public class GelfTcpAppenderTest {
             if (bytes[bytes.length - 1] != 0) {
                 throw new IllegalStateException("Data stream is not terminated by 0");
             }
-            return bytes;
+            return Arrays.copyOf(bytes, bytes.length - 1);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             throw new IllegalStateException(e);
         }

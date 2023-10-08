@@ -21,24 +21,20 @@ package de.siegmar.logbackgelf;
 
 import static de.siegmar.logbackgelf.GelfEncoderTest.basicValidation;
 import static de.siegmar.logbackgelf.GelfEncoderTest.simpleLoggingEvent;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import de.siegmar.logbackgelf.custom.CustomGelfEncoder;
 
-public class CustomGelfEncoderTest {
+class CustomGelfEncoderTest {
 
     private static final String LOGGER_NAME = GelfEncoderTest.class.getCanonicalName();
     private static final String THREAD_NAME = "thread name";
@@ -47,13 +43,13 @@ public class CustomGelfEncoderTest {
     private final CustomGelfEncoder encoder = new CustomGelfEncoder();
 
     @BeforeEach
-    public void before() {
+    void before() {
         encoder.setContext(new LoggerContext());
         encoder.setOriginHost("localhost");
     }
 
     @Test
-    public void custom() throws IOException {
+    void custom() {
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -64,15 +60,11 @@ public class CustomGelfEncoderTest {
         event.setThreadName(THREAD_NAME);
         final String logMsg = encodeToStr(event);
 
-        final ObjectMapper om = new ObjectMapper();
-        final JsonNode jsonNode = om.readTree(logMsg);
-        basicValidation(jsonNode);
+        basicValidation(logMsg);
 
-        assertEquals("message 1\n", jsonNode.get("full_message").textValue());
-        assertEquals(
-            "ad4ab384b5b7dca879dc1b65132db321a67239f13c2cc0cd9867c8e607c7ce08",
-            jsonNode.get("_sha256").textValue(),
-            "Log line: " + logMsg
+        assertThatJson(logMsg).and(
+            j -> j.node("full_message").isEqualTo("message 1\\n"),
+            j -> j.node("_sha256").isEqualTo("ad4ab384b5b7dca879dc1b65132db321a67239f13c2cc0cd9867c8e607c7ce08")
         );
     }
 
