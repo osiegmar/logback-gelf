@@ -76,9 +76,7 @@ public abstract class AbstractGelfAppender extends UnsynchronizedAppenderBase<IL
             encoder = new GelfEncoder();
             encoder.setContext(getContext());
             encoder.start();
-        }
-
-        if (encoder.isAppendNewline()) {
+        } else if (encoder.isAppendNewline()) {
             addError("Newline separator must not be enabled in layout");
             return;
         }
