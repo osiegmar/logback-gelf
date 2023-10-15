@@ -30,7 +30,6 @@ import java.util.Map;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.bouncycastle.util.encoders.Hex;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
 import de.siegmar.logbackgelf.GelfEncoder;
 import de.siegmar.logbackgelf.GelfMessage;
 
@@ -38,17 +37,21 @@ import de.siegmar.logbackgelf.GelfMessage;
 public class CustomGelfEncoder extends GelfEncoder {
 
     @Override
-    protected GelfMessage buildGelfMessage(final ILoggingEvent event, final Map<String, Object> additionalFields) {
-        final GelfMessage gelfMessage = super.buildGelfMessage(event, additionalFields);
+    protected GelfMessage buildGelfMessage(final long timestamp, final int logLevel, final String shortMessage,
+                                           final String fullMessage, final Map<String, Object> additionalFields) {
+        final GelfMessage gelfMessage =
+            super.buildGelfMessage(timestamp, logLevel, shortMessage, fullMessage, additionalFields);
+
         additionalFields.put("sha256", buildHash(gelfMessage));
-        return super.buildGelfMessage(event, additionalFields);
+
+        return super.buildGelfMessage(timestamp, logLevel, shortMessage, fullMessage, additionalFields);
     }
 
     private static String buildHash(final GelfMessage gelfMessage) {
         final MessageDigest digest = new SHA256.Digest();
 
         try (DigestOutputStream dos = new DigestOutputStream(OutputStream.nullOutputStream(), digest)) {
-            gelfMessage.toJSON(dos);
+            gelfMessage.appendJSON(dos);
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }

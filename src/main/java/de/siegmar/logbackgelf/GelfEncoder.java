@@ -53,6 +53,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private static final String DEFAULT_FULL_PATTERN = "%m%n";
     private static final int MAX_SHORT_MESSAGE_LENGTH = 250;
     private static final int INITIAL_JSON_SIZE = 256;
+    private static final byte[] SYSTEM_LINE_SEPARATOR = System.lineSeparator().getBytes(StandardCharsets.US_ASCII);
 
     /**
      * Origin hostname - will be auto-detected if not specified.
@@ -120,12 +121,12 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private boolean appendNewline;
 
     /**
-     * Short message format. Default: `"%m%nopex"`.
+     * Short message format. Default: {@value DEFAULT_SHORT_PATTERN}.
      */
     private PatternLayout shortPatternLayout;
 
     /**
-     * Full message format (Stacktrace). Default: `"%m%n"`.
+     * Full message format (Stacktrace). Default: {@value DEFAULT_FULL_PATTERN}.
      */
     private PatternLayout fullPatternLayout;
 
@@ -389,27 +390,28 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     @Override
     public byte[] encode(final ILoggingEvent event) {
-        final GelfMessage gelfMessage = buildGelfMessage(event, collectAdditionalFields(event));
-
         final var bos = new ByteArrayOutputStream(INITIAL_JSON_SIZE);
-        gelfMessage.toJSON(bos);
+
+        final GelfMessage gelfMessage = buildGelfMessage(
+            event.getTimeStamp(),
+            LevelToSyslogSeverity.convert(event),
+            normalizeShortMessage(buildShortMessage(event)),
+            buildFullMessage(event),
+            collectAdditionalFields(event)
+        );
+
+        gelfMessage.appendJSON(bos);
 
         if (appendNewline) {
-            bos.writeBytes(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
+            bos.writeBytes(SYSTEM_LINE_SEPARATOR);
         }
 
         return bos.toByteArray();
     }
 
-    protected GelfMessage buildGelfMessage(final ILoggingEvent event, final Map<String, Object> additionalFields) {
-        return new GelfMessage(
-            originHost,
-            normalizeShortMessage(shortPatternLayout.doLayout(event)),
-            fullPatternLayout.doLayout(event),
-            event.getTimeStamp(),
-            LevelToSyslogSeverity.convert(event),
-            additionalFields
-        );
+    protected GelfMessage buildGelfMessage(final long timestamp, final int logLevel, final String shortMessage,
+                                           final String fullMessage, final Map<String, Object> additionalFields) {
+        return new GelfMessage(originHost, shortMessage, fullMessage, timestamp, logLevel, additionalFields);
     }
 
     protected String normalizeShortMessage(final String shortMessage) {
@@ -423,13 +425,6 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
 
         return sanitizedShortMessage;
-    }
-
-    protected Map<String, Object> collectAdditionalFields(final ILoggingEvent event) {
-        final Map<String, Object> additionalFields = new HashMap<>(staticFields);
-        addFieldMapperData(event, additionalFields, builtInFieldMappers);
-        addFieldMapperData(event, additionalFields, fieldMappers);
-        return additionalFields;
     }
 
     private static String sanitizeShortMessage(final String sanitizedShortMessage) {
@@ -457,6 +452,21 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
 
         return new String(tmp, 0, iDst).trim();
+    }
+
+    protected String buildShortMessage(final ILoggingEvent event) {
+        return shortPatternLayout.doLayout(event);
+    }
+
+    protected String buildFullMessage(final ILoggingEvent event) {
+        return fullPatternLayout.doLayout(event);
+    }
+
+    protected Map<String, Object> collectAdditionalFields(final ILoggingEvent event) {
+        final Map<String, Object> additionalFields = new HashMap<>(staticFields);
+        addFieldMapperData(event, additionalFields, builtInFieldMappers);
+        addFieldMapperData(event, additionalFields, fieldMappers);
+        return additionalFields;
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")

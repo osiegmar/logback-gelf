@@ -86,7 +86,7 @@ class GelfMessageTest {
 
     private String toJSON(final GelfMessage gelfMessage) {
         final var bos = new ByteArrayOutputStream();
-        gelfMessage.toJSON(bos);
+        gelfMessage.appendJSON(bos);
         return bos.toString(StandardCharsets.UTF_8);
     }
 

@@ -79,7 +79,7 @@ public class GelfMessage {
         return Collections.unmodifiableMap(additionalFields);
     }
 
-    public void toJSON(final OutputStream bos) {
+    public void appendJSON(final OutputStream bos) {
         try (var jsonEncoder = new SimpleJsonEncoder(new OutputStreamWriter(bos, UTF_8))) {
             jsonEncoder
                 .appendToJSON("version", VERSION)
