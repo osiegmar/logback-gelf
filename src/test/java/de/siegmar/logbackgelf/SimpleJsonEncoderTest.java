@@ -34,7 +34,7 @@ class SimpleJsonEncoderTest {
     private final StringWriter writer = new StringWriter();
     private final SimpleJsonEncoder enc;
 
-    SimpleJsonEncoderTest() {
+    SimpleJsonEncoderTest() throws IOException {
         enc = new SimpleJsonEncoder(writer);
     }
 

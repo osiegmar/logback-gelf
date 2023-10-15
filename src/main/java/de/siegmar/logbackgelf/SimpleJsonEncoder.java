@@ -21,7 +21,6 @@ package de.siegmar.logbackgelf;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.io.Writer;
 
 /**
@@ -46,13 +45,9 @@ class SimpleJsonEncoder implements Closeable {
      */
     private boolean closed;
 
-    SimpleJsonEncoder(final Writer writer) {
+    SimpleJsonEncoder(final Writer writer) throws IOException {
         this.writer = writer;
-        try {
-            writer.write('{');
-        } catch (final IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        writer.write('{');
     }
 
     /**
@@ -60,22 +55,18 @@ class SimpleJsonEncoder implements Closeable {
      *
      * @return this
      */
-    SimpleJsonEncoder appendToJSON(final String key, final Object value) {
+    SimpleJsonEncoder appendToJSON(final String key, final Object value) throws IOException {
         if (closed) {
             throw new IllegalStateException("Encoder already closed");
         }
         if (value != null) {
-            try {
-                appendKey(key);
-                if (value instanceof Number) {
-                    writer.write(value.toString());
-                } else {
-                    writer.write(QUOTE);
-                    escapeString(value.toString());
-                    writer.write(QUOTE);
-                }
-            } catch (final IOException e) {
-                throw new UncheckedIOException(e);
+            appendKey(key);
+            if (value instanceof Number) {
+                writer.write(value.toString());
+            } else {
+                writer.write(QUOTE);
+                escapeString(value.toString());
+                writer.write(QUOTE);
             }
         }
         return this;
@@ -87,17 +78,13 @@ class SimpleJsonEncoder implements Closeable {
      *
      * @return this
      */
-    SimpleJsonEncoder appendToJSONUnquoted(final String key, final Object value) {
+    SimpleJsonEncoder appendToJSONUnquoted(final String key, final Object value) throws IOException {
         if (closed) {
             throw new IllegalStateException("Encoder already closed");
         }
         if (value != null) {
-            try {
-                appendKey(key);
-                writer.write(value.toString());
-            } catch (final IOException e) {
-                throw new UncheckedIOException(e);
-            }
+            appendKey(key);
+            writer.write(value.toString());
         }
         return this;
     }

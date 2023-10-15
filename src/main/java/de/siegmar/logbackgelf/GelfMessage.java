@@ -94,8 +94,9 @@ public class GelfMessage {
                 .appendToJSONUnquoted("timestamp", timestampToGelfNotation(timestamp))
                 .appendToJSONUnquoted("level", level);
 
-            additionalFields.forEach((key, value) ->
-                jsonEncoder.appendToJSON('_' + key, value));
+            for (final Map.Entry<String, Object> entry : additionalFields.entrySet()) {
+                jsonEncoder.appendToJSON('_' + entry.getKey(), entry.getValue());
+            }
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }
