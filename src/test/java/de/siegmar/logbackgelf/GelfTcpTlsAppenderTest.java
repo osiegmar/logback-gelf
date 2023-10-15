@@ -22,12 +22,11 @@ package de.siegmar.logbackgelf;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -37,7 +36,6 @@ import java.util.concurrent.TimeoutException;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
@@ -48,21 +46,10 @@ class GelfTcpTlsAppenderTest {
 
     private static final String LOGGER_NAME = GelfTcpTlsAppenderTest.class.getCanonicalName();
 
-    private int port;
-    private Future<byte[]> future;
+    private final TlsServer server;
 
-    GelfTcpTlsAppenderTest() {
-        final String mySrvKeystore =
-            GelfTcpTlsAppenderTest.class.getResource("/mySrvKeystore").getFile();
-        System.setProperty("javax.net.ssl.keyStore", mySrvKeystore);
-        System.setProperty("javax.net.ssl.keyStorePassword", "secret");
-    }
-
-    @BeforeEach
-    void before() throws IOException {
-        final TcpServer server = new TcpServer();
-        port = server.getPort();
-        future = Executors.newSingleThreadExecutor().submit(server);
+    GelfTcpTlsAppenderTest() throws IOException {
+        server = new TlsServer();
     }
 
     @Test
@@ -72,14 +59,14 @@ class GelfTcpTlsAppenderTest {
     }
 
     @Test
-    void simple() {
+    void simple() throws ExecutionException, InterruptedException, TimeoutException {
         final Logger logger = setupLogger();
 
         logger.error("Test message");
 
         stopLogger(logger);
 
-        final String json = receiveMessage();
+        final String json = awaitMessage();
         assertThatJson(json).and(
             j -> j.node("version").isString().isEqualTo("1.1"),
             j -> j.node("host").isEqualTo("localhost"),
@@ -112,14 +99,10 @@ class GelfTcpTlsAppenderTest {
         gelfAppender.setName("GELF");
         gelfAppender.setEncoder(encoder);
         gelfAppender.setGraylogHost("localhost");
-        gelfAppender.setGraylogPort(port);
+        gelfAppender.setGraylogPort(server.getPort());
         gelfAppender.setInsecure(true);
         gelfAppender.start();
         return gelfAppender;
-    }
-
-    private String receiveMessage() {
-        return new String(receive(), StandardCharsets.UTF_8);
     }
 
     private void stopLogger(final Logger logger) {
@@ -127,43 +110,56 @@ class GelfTcpTlsAppenderTest {
         gelfAppender.stop();
     }
 
-    private byte[] receive() {
-        try {
-            final byte[] bytes = future.get(5, TimeUnit.SECONDS);
-            if (bytes[bytes.length - 1] != 0) {
-                throw new IllegalStateException("Data stream is not terminated by 0");
-            }
-            return Arrays.copyOf(bytes, bytes.length - 1);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            throw new IllegalStateException(e);
+    private String awaitMessage() throws ExecutionException, InterruptedException, TimeoutException {
+        final byte[] data = server.receiveMessage().get(5, TimeUnit.SECONDS);
+        if (data[data.length - 1] != 0) {
+            throw new IllegalStateException("Data stream is not terminated by 0");
         }
+
+        return new String(data, 0, data.length - 1, StandardCharsets.UTF_8);
     }
 
-    private static final class TcpServer implements Callable<byte[]> {
+    private static final class TlsServer implements Closeable {
 
-        private final SSLServerSocket server;
+        private final SSLServerSocket socket;
+        private final Future<byte[]> receivedMessage;
 
-        TcpServer() throws IOException {
-            final SSLServerSocketFactory sslserversocketfactory =
+        TlsServer() throws IOException {
+            socket = initSocket();
+
+            receivedMessage = Executors.newSingleThreadExecutor()
+                .submit(this::receive);
+        }
+
+        private SSLServerSocket initSocket() throws IOException {
+            System.setProperty("javax.net.ssl.keyStore", "src/test/resources/mySrvKeystore");
+            System.setProperty("javax.net.ssl.keyStorePassword", "secret");
+
+            final SSLServerSocketFactory socketFactory =
                 (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-            server = (SSLServerSocket) sslserversocketfactory.createServerSocket(0);
+
+            return (SSLServerSocket) socketFactory.createServerSocket(0);
         }
 
         int getPort() {
-            return server.getLocalPort();
+            return socket.getLocalPort();
+        }
+
+        Future<byte[]> receiveMessage() {
+            return receivedMessage;
+        }
+
+        private byte[] receive() throws IOException {
+            try (Socket socket = this.socket.accept()) {
+                try (DataInputStream in = new DataInputStream(socket.getInputStream())) {
+                    return in.readAllBytes();
+                }
+            }
         }
 
         @Override
-        public byte[] call() throws Exception {
-            final byte[] ret;
-
-            try (server; Socket socket = server.accept()) {
-                try (DataInputStream in = new DataInputStream(socket.getInputStream())) {
-                    ret = in.readAllBytes();
-                }
-            }
-
-            return ret;
+        public void close() throws IOException {
+            socket.close();
         }
 
     }

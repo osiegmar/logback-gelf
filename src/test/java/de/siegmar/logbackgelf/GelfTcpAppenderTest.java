@@ -22,20 +22,20 @@ package de.siegmar.logbackgelf;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
@@ -46,14 +46,15 @@ class GelfTcpAppenderTest {
 
     private static final String LOGGER_NAME = GelfTcpAppenderTest.class.getCanonicalName();
 
-    private int port;
-    private Future<byte[]> future;
+    private final TcpServer server;
 
-    @BeforeEach
-    void before() throws IOException {
-        final TcpServer server = new TcpServer();
-        port = server.getPort();
-        future = Executors.newSingleThreadExecutor().submit(server);
+    GelfTcpAppenderTest() throws IOException {
+        server = new TcpServer();
+    }
+
+    @AfterEach
+    void after() throws IOException {
+        server.close();
     }
 
     @Test
@@ -72,14 +73,14 @@ class GelfTcpAppenderTest {
     }
 
     @Test
-    void simple() {
+    void simple() throws ExecutionException, InterruptedException, TimeoutException {
         final Logger logger = setupLogger();
 
         logger.error("Test message");
 
         stopLogger(logger);
 
-        final String json = receiveMessage();
+        final String json = awaitMessage();
         assertThatJson(json).and(
             j -> j.node("version").isString().isEqualTo("1.1"),
             j -> j.node("host").isEqualTo("localhost"),
@@ -112,13 +113,9 @@ class GelfTcpAppenderTest {
         gelfAppender.setName("GELF");
         gelfAppender.setEncoder(gelfEncoder);
         gelfAppender.setGraylogHost("localhost");
-        gelfAppender.setGraylogPort(port);
+        gelfAppender.setGraylogPort(server.getPort());
         gelfAppender.start();
         return gelfAppender;
-    }
-
-    private String receiveMessage() {
-        return new String(receive(), StandardCharsets.UTF_8);
     }
 
     private void stopLogger(final Logger logger) {
@@ -126,41 +123,48 @@ class GelfTcpAppenderTest {
         gelfAppender.stop();
     }
 
-    private byte[] receive() {
-        try {
-            final byte[] bytes = future.get(5, TimeUnit.SECONDS);
-            if (bytes[bytes.length - 1] != 0) {
-                throw new IllegalStateException("Data stream is not terminated by 0");
-            }
-            return Arrays.copyOf(bytes, bytes.length - 1);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            throw new IllegalStateException(e);
+    private String awaitMessage() throws ExecutionException, InterruptedException, TimeoutException {
+        final byte[] data = server.receiveMessage().get(5, TimeUnit.SECONDS);
+        if (data[data.length - 1] != 0) {
+            throw new IllegalStateException("Data stream is not terminated by 0");
         }
+
+        return new String(data, 0, data.length - 1, StandardCharsets.UTF_8);
     }
 
-    private static final class TcpServer implements Callable<byte[]> {
+    private static final class TcpServer implements Closeable {
 
-        private final ServerSocket server;
+        private final ServerSocket socket;
+        private final Future<byte[]> receivedMessage;
 
         TcpServer() throws IOException {
-            server = new ServerSocket(0);
+            socket = new ServerSocket(0);
+
+            receivedMessage = Executors.newSingleThreadExecutor()
+                .submit(this::receive);
         }
 
         int getPort() {
-            return server.getLocalPort();
+            return socket.getLocalPort();
+        }
+
+        Future<byte[]> receiveMessage() {
+            return receivedMessage;
+        }
+
+        private byte[] receive() {
+            try (Socket socket = this.socket.accept()) {
+                try (DataInputStream in = new DataInputStream(socket.getInputStream())) {
+                    return in.readAllBytes();
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
 
         @Override
-        public byte[] call() throws Exception {
-            final byte[] ret;
-
-            try (server; Socket socket = server.accept()) {
-                try (DataInputStream in = new DataInputStream(socket.getInputStream())) {
-                    ret = in.readAllBytes();
-                }
-            }
-
-            return ret;
+        public void close() throws IOException {
+            socket.close();
         }
 
     }

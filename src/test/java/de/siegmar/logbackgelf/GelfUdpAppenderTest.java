@@ -23,14 +23,15 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -39,8 +40,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterOutputStream;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Logger;
@@ -51,25 +54,28 @@ class GelfUdpAppenderTest {
 
     private static final String LOGGER_NAME = GelfUdpAppenderTest.class.getCanonicalName();
 
-    private int port;
-    private Future<byte[]> future;
+    private final UdpServer server;
 
-    @BeforeEach
-    void before() throws IOException {
-        final UdpServer server = new UdpServer();
-        port = server.getPort();
-        future = Executors.newSingleThreadExecutor().submit(server);
+    GelfUdpAppenderTest() throws SocketException {
+        server = new UdpServer();
     }
 
-    @Test
-    void simple() {
-        final Logger logger = setupLogger();
+    @AfterEach
+    void after() {
+        server.close();
+    }
+
+    @Timeout(3)
+    @ParameterizedTest
+    @EnumSource(CompressionMethod.class)
+    void simple(final CompressionMethod method) throws ExecutionException, InterruptedException, TimeoutException {
+        final Logger logger = setupLogger(method);
 
         logger.error("Test message");
 
         stopLogger(logger);
 
-        final String json = receiveCompressedMessage(CompressionMethod.GZIP);
+        final String json = awaitMessage(method);
         assertThatJson(json).and(
             j -> j.node("version").isString().isEqualTo("1.1"),
             j -> j.node("host").isEqualTo("localhost"),
@@ -79,50 +85,6 @@ class GelfUdpAppenderTest {
             j -> j.node("_thread_name").isNotNull(),
             j -> j.node("_logger_name").isEqualTo(LOGGER_NAME)
         );
-    }
-
-    @Test
-    void compressionZLIB() {
-        final Logger logger = setupLogger(CompressionMethod.ZLIB);
-
-        logger.error("Test message");
-
-        stopLogger(logger);
-
-        final String json = receiveCompressedMessage(CompressionMethod.ZLIB);
-        assertThatJson(json).and(
-            j -> j.node("version").isString().isEqualTo("1.1"),
-            j -> j.node("host").isEqualTo("localhost"),
-            j -> j.node("short_message").isEqualTo("Test message"),
-            j -> j.node("timestamp").isNumber(),
-            j -> j.node("level").isEqualTo(3),
-            j -> j.node("_thread_name").isNotNull(),
-            j -> j.node("_logger_name").isEqualTo(LOGGER_NAME)
-        );
-    }
-
-    @Test
-    void compressionGZIP() {
-        final Logger logger = setupLogger(CompressionMethod.GZIP);
-
-        logger.error("Test message");
-
-        stopLogger(logger);
-
-        final String json = receiveCompressedMessage(CompressionMethod.GZIP);
-        assertThatJson(json).and(
-            j -> j.node("version").isString().isEqualTo("1.1"),
-            j -> j.node("host").isEqualTo("localhost"),
-            j -> j.node("short_message").isEqualTo("Test message"),
-            j -> j.node("timestamp").isNumber(),
-            j -> j.node("level").isEqualTo(3),
-            j -> j.node("_thread_name").isNotNull(),
-            j -> j.node("_logger_name").isEqualTo(LOGGER_NAME)
-        );
-    }
-
-    private Logger setupLogger() {
-        return setupLogger(CompressionMethod.GZIP);
     }
 
     private Logger setupLogger(final CompressionMethod compressionMethod) {
@@ -148,21 +110,10 @@ class GelfUdpAppenderTest {
         gelfAppender.setName("GELF");
         gelfAppender.setEncoder(gelfEncoder);
         gelfAppender.setGraylogHost("localhost");
-        gelfAppender.setGraylogPort(port);
+        gelfAppender.setGraylogPort(server.getPort());
         gelfAppender.setCompressionMethod(compressionMethod);
         gelfAppender.start();
         return gelfAppender;
-    }
-
-    private String receiveCompressedMessage(final CompressionMethod compressionMethod) {
-        switch (compressionMethod) {
-            case GZIP:
-                return new String(Decompressor.gzipDecompress(receive()), StandardCharsets.UTF_8);
-            case ZLIB:
-                return new String(Decompressor.zlibDecompress(receive()), StandardCharsets.UTF_8);
-            default:
-                throw new IllegalStateException();
-        }
     }
 
     private void stopLogger(final Logger logger) {
@@ -170,41 +121,67 @@ class GelfUdpAppenderTest {
         gelfAppender.stop();
     }
 
-    private byte[] receive() {
-        try {
-            return future.get(5, TimeUnit.SECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            throw new IllegalStateException(e);
-        }
+    private String awaitMessage(final CompressionMethod compressionMethod)
+        throws ExecutionException, InterruptedException, TimeoutException {
+
+        final byte[] receivedData = server.receiveMessage().get(5, TimeUnit.SECONDS);
+        return new String(Decompressor.decompress(receivedData, compressionMethod), StandardCharsets.UTF_8);
     }
 
-    private static final class UdpServer implements Callable<byte[]> {
+    private static final class UdpServer implements Closeable {
 
-        private final DatagramSocket server;
+        private final DatagramSocket socket;
+        private final Future<byte[]> receivedMessage;
 
-        UdpServer() throws IOException {
-            server = new DatagramSocket(0);
+        UdpServer() throws SocketException {
+            socket = new DatagramSocket(0);
+
+            receivedMessage = Executors.newSingleThreadExecutor()
+                .submit(this::receive);
         }
 
         int getPort() {
-            return server.getLocalPort();
+            return socket.getLocalPort();
+        }
+
+        Future<byte[]> receiveMessage() {
+            return receivedMessage;
+        }
+
+        private byte[] receive() {
+            final byte[] receiveData = new byte[1024];
+            final DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
+            try {
+                socket.receive(packet);
+            } catch (final IOException e) {
+                throw new UncheckedIOException(e);
+            }
+            return Arrays.copyOf(packet.getData(), packet.getLength());
         }
 
         @Override
-        public byte[] call() throws Exception {
-            final byte[] receiveData = new byte[1024];
-            final DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
-            try (server) {
-                server.receive(packet);
-            }
-
-            return Arrays.copyOf(packet.getData(), packet.getLength());
+        public void close() {
+            socket.close();
         }
+
     }
 
     private static final class Decompressor {
 
-        static byte[] zlibDecompress(final byte[] bytesIn) {
+        static byte[] decompress(final byte[] bytesIn, final CompressionMethod compressionMethod) {
+            switch (compressionMethod) {
+                case NONE:
+                    return bytesIn;
+                case GZIP:
+                    return gzipDecompress(bytesIn);
+                case ZLIB:
+                    return zlibDecompress(bytesIn);
+                default:
+                    throw new IllegalStateException();
+            }
+        }
+
+        private static byte[] zlibDecompress(final byte[] bytesIn) {
             final ByteArrayOutputStream bos = new ByteArrayOutputStream();
             final OutputStream inflaterOutputStream = new InflaterOutputStream(bos);
 
@@ -218,7 +195,7 @@ class GelfUdpAppenderTest {
             }
         }
 
-        static byte[] gzipDecompress(final byte[] bytesIn) {
+        private static byte[] gzipDecompress(final byte[] bytesIn) {
             try {
                 return new GZIPInputStream(new ByteArrayInputStream(bytesIn)).readAllBytes();
             } catch (IOException e) {

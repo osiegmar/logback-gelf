@@ -21,13 +21,13 @@ package de.siegmar.logbackgelf;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.LoggerContext;
@@ -37,43 +37,32 @@ import ch.qos.logback.core.status.Status;
 
 class XmlConfigurationTest {
 
-    private LoggerContext context;
+    @ParameterizedTest
+    @MethodSource
+    void xmlConfiguration(final Path file) throws JoranException {
+        final LoggerContext context = configure(file);
+        assertThat(context)
+            .satisfies(c -> assertThat(filterWarningsErrors(c)).isEmpty());
+    }
 
-    @BeforeEach
-    void init() {
-        context = (LoggerContext) LoggerFactory.getILoggerFactory();
+    static Stream<Path> xmlConfiguration() {
+        return Stream.of("udp-config.xml", "tcp-config.xml", "tcp_tls-config.xml")
+            .map(name -> Path.of("src", "test", "resources", name));
+    }
+
+    private LoggerContext configure(final Path file) throws JoranException {
+        final LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         context.getStatusManager().clear();
         context.reset();
-    }
 
-    @Test
-    void udpConfiguration() throws IOException, JoranException {
-        configure("/udp-config.xml");
-        assertThat(filterWarningsErrors()).isEmpty();
-    }
-
-    @Test
-    void tcpConfiguration() throws IOException, JoranException {
-        configure("/tcp-config.xml");
-        assertThat(filterWarningsErrors()).isEmpty();
-    }
-
-    @Test
-    void tcpTlsConfiguration() throws IOException, JoranException {
-        configure("/tcp_tls-config.xml");
-        assertThat(filterWarningsErrors()).isEmpty();
-    }
-
-    private void configure(final String name) throws IOException, JoranException {
         final JoranConfigurator configurator = new JoranConfigurator();
         configurator.setContext(context);
+        configurator.doConfigure(file.toFile());
 
-        try (InputStream config = XmlConfigurationTest.class.getResourceAsStream(name)) {
-            configurator.doConfigure(config);
-        }
+        return context;
     }
 
-    private List<Status> filterWarningsErrors() {
+    private List<Status> filterWarningsErrors(final LoggerContext context) {
         return context.getStatusManager().getCopyOfStatusList().stream()
             .filter(s -> s.getLevel() > Status.INFO)
             .collect(Collectors.toList());
