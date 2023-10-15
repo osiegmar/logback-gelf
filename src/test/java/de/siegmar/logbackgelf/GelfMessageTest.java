@@ -19,9 +19,11 @@
 
 package de.siegmar.logbackgelf;
 
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -43,7 +45,7 @@ class GelfMessageTest {
             a -> assertThat(a.getTimestamp()).isEqualTo(1584271169123L),
             a -> assertThat(a.getLevel()).isEqualTo(6),
             a -> assertThat(a.getAdditionalFields()).isEqualTo(additionalFields),
-            a -> assertThat(toJSON(a)).asString().isEqualTo(
+            a -> assertThatJson(toJSON(a)).isEqualTo(
                 "{"
                 + "\"version\":\"1.1\","
                 + "\"host\":\"host\","
@@ -69,7 +71,7 @@ class GelfMessageTest {
             a -> assertThat(a.getTimestamp()).isEqualTo(1584271169123L),
             a -> assertThat(a.getLevel()).isEqualTo(6),
             a -> assertThat(a.getAdditionalFields()).isEqualTo(additionalFields),
-            a -> assertThat(toJSON(a)).asString().isEqualTo(
+            a -> assertThatJson(toJSON(a)).isEqualTo(
                 "{"
                 + "\"version\":\"1.1\","
                 + "\"host\":\"host\","
@@ -82,21 +84,10 @@ class GelfMessageTest {
         );
     }
 
-    @Test
-    void filterEmptyFullMessage() {
-        final GelfMessage message = new GelfMessage("host", "short message", "",
-            1584271169123L, 6, Map.of());
-
-        assertThat(message).satisfies(
-            a -> assertThat(a.getShortMessage()).isEqualTo("short message"),
-            a -> assertThat(a.getFullMessage()).isNull()
-        );
-    }
-
-    private byte[] toJSON(final GelfMessage gelfMessage) {
+    private String toJSON(final GelfMessage gelfMessage) {
         final var bos = new ByteArrayOutputStream();
         gelfMessage.toJSON(bos);
-        return bos.toByteArray();
+        return bos.toString(StandardCharsets.UTF_8);
     }
 
 }

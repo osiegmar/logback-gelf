@@ -48,15 +48,11 @@ public class GelfMessage {
                 final long timestamp, final int level, final Map<String, Object> additionalFields) {
         this.host = Objects.requireNonNull(host, "host must not be null");
         this.shortMessage = Objects.requireNonNull(shortMessage, "shortMessage must not be null");
-        this.fullMessage = nullIfEmpty(fullMessage);
+        this.fullMessage = fullMessage;
         this.timestamp = timestamp;
         this.level = level;
         this.additionalFields =
             Objects.requireNonNull(additionalFields, "additionalFields must not be null");
-    }
-
-    private String nullIfEmpty(final String s) {
-        return s != null && !s.isEmpty() ? s : null;
     }
 
     public String getHost() {
@@ -84,12 +80,17 @@ public class GelfMessage {
     }
 
     public void toJSON(final OutputStream bos) {
-        try (SimpleJsonEncoder jsonEncoder = new SimpleJsonEncoder(new OutputStreamWriter(bos, UTF_8))) {
+        try (var jsonEncoder = new SimpleJsonEncoder(new OutputStreamWriter(bos, UTF_8))) {
             jsonEncoder
                 .appendToJSON("version", VERSION)
                 .appendToJSON("host", host)
-                .appendToJSON("short_message", shortMessage)
-                .appendToJSON("full_message", fullMessage)
+                .appendToJSON("short_message", shortMessage);
+
+            if (fullMessage != null && !fullMessage.isEmpty()) {
+                jsonEncoder.appendToJSON("full_message", fullMessage);
+            }
+
+            jsonEncoder
                 .appendToJSONUnquoted("timestamp", timestampToGelfNotation(timestamp))
                 .appendToJSONUnquoted("level", level);
 
