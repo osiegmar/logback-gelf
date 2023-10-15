@@ -22,6 +22,8 @@ package de.siegmar.logbackgelf.pool;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -113,23 +115,25 @@ class SimpleObjectPoolTest {
 
     @Test
     void infinitePollWaitTime() throws InterruptedException {
+        final Duration waitTime = Duration.ofMillis(200);
+
         final SimpleObjectPool<MyPooledObject> pool =
             new SimpleObjectPool<>(factory, 1, -1, 100, 0);
 
         try (pool) {
             final MyPooledObject o1 = pool.borrowObject();
-            final long before = System.nanoTime();
+            final Instant before = Instant.now();
 
             Executors.newScheduledThreadPool(1)
-                .schedule(() -> pool.returnObject(o1), 200, TimeUnit.MILLISECONDS);
+                .schedule(() -> pool.returnObject(o1), waitTime.toMillis(), TimeUnit.MILLISECONDS);
 
             final MyPooledObject o2 = pool.borrowObject();
-            final long after = System.nanoTime();
+            final Instant after = Instant.now();
 
-            final long elapsedTimeMillis = TimeUnit.NANOSECONDS.toMillis(after - before);
+            final Duration elapsedTime = Duration.between(before, after);
 
             assertThat(o2).isNotNull();
-            assertThat(elapsedTimeMillis).isGreaterThan(200);
+            assertThat(elapsedTime).isGreaterThanOrEqualTo(waitTime);
         }
     }
 
