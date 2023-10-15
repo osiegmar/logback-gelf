@@ -19,7 +19,6 @@
 
 package de.siegmar.logbackgelf;
 
-import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -52,8 +51,6 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private static final String DEFAULT_SHORT_PATTERN = "%m%nopex";
     private static final String DEFAULT_FULL_PATTERN = "%m%n";
     private static final int MAX_SHORT_MESSAGE_LENGTH = 250;
-    private static final int INITIAL_JSON_SIZE = 256;
-    private static final byte[] SYSTEM_LINE_SEPARATOR = System.lineSeparator().getBytes(StandardCharsets.US_ASCII);
 
     /**
      * Origin hostname - will be auto-detected if not specified.
@@ -390,8 +387,6 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     @Override
     public byte[] encode(final ILoggingEvent event) {
-        final var bos = new ByteArrayOutputStream(INITIAL_JSON_SIZE);
-
         final GelfMessage gelfMessage = buildGelfMessage(
             event.getTimeStamp(),
             LevelToSyslogSeverity.convert(event),
@@ -400,13 +395,13 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
             collectAdditionalFields(event)
         );
 
-        gelfMessage.appendJSON(bos);
+        final var sb = gelfMessage.toJSON();
 
         if (appendNewline) {
-            bos.writeBytes(SYSTEM_LINE_SEPARATOR);
+            sb.append(System.lineSeparator());
         }
 
-        return bos.toByteArray();
+        return sb.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     protected GelfMessage buildGelfMessage(final long timestamp, final int logLevel, final String shortMessage,

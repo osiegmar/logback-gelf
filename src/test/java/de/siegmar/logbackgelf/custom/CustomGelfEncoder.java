@@ -51,7 +51,7 @@ public class CustomGelfEncoder extends GelfEncoder {
         final MessageDigest digest = new SHA256.Digest();
 
         try (DigestOutputStream dos = new DigestOutputStream(OutputStream.nullOutputStream(), digest)) {
-            gelfMessage.appendJSON(dos);
+            dos.write(gelfMessage.toJSON().toString().getBytes(StandardCharsets.UTF_8));
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }

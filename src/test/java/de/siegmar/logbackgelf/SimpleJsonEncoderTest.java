@@ -24,105 +24,105 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
-import java.io.StringWriter;
 
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class SimpleJsonEncoderTest {
 
-    private final StringWriter writer = new StringWriter();
+    @SuppressWarnings("PMD.AvoidStringBufferField")
+    private final StringBuilder sb = new StringBuilder();
     private final SimpleJsonEncoder enc;
 
-    SimpleJsonEncoderTest() throws IOException {
-        enc = new SimpleJsonEncoder(writer);
+    SimpleJsonEncoderTest() {
+        enc = new SimpleJsonEncoder(sb);
     }
 
     @Test
-    void unquoted() throws IOException {
+    void unquoted() {
         enc.appendToJSONUnquoted("aaa", 123).close();
-        assertThat(writer).hasToString("{\"aaa\":123}");
+        assertThat(sb).hasToString("{\"aaa\":123}");
     }
 
     @Test
-    void string() throws IOException {
+    void string() {
         enc.appendToJSON("aaa", "bbb").close();
-        assertThat(writer.toString()).hasToString("{\"aaa\":\"bbb\"}");
+        assertThat(sb).hasToString("{\"aaa\":\"bbb\"}");
     }
 
     @Test
-    void number() throws IOException {
+    void number() {
         enc.appendToJSON("aaa", 123).close();
-        assertThat(writer.toString()).hasToString("{\"aaa\":123}");
+        assertThat(sb).hasToString("{\"aaa\":123}");
     }
 
     @Test
-    void quote() throws IOException {
+    void quote() {
         enc.appendToJSON("aaa", "\"").close();
-        assertThat(writer.toString()).hasToString("{\"aaa\":\"\\\"\"}");
+        assertThat(sb).hasToString("{\"aaa\":\"\\\"\"}");
     }
 
     @Test
-    void reverseSolidus() throws IOException {
+    void reverseSolidus() {
         enc.appendToJSON("aaa", "\\").close();
-        assertThat(writer.toString()).hasToString("{\"aaa\":\"\\\\\"}");
+        assertThat(sb).hasToString("{\"aaa\":\"\\\\\"}");
     }
 
     @Test
-    void solidus() throws IOException {
+    void solidus() {
         enc.appendToJSON("aaa", "/").close();
-        assertThat(writer.toString()).hasToString("{\"aaa\":\"\\/\"}");
+        assertThat(sb).hasToString("{\"aaa\":\"\\/\"}");
     }
 
     @Test
-    void backspace() throws IOException {
+    void backspace() {
         enc.appendToJSON("aaa", "\b").close();
-        assertThat(writer.toString()).hasToString("{\"aaa\":\"\\b\"}");
+        assertThat(sb).hasToString("{\"aaa\":\"\\b\"}");
     }
 
     @Test
-    void formFeed() throws IOException {
+    void formFeed() {
         enc.appendToJSON("aaa", "\f").close();
-        assertThat(writer.toString()).hasToString("{\"aaa\":\"\\f\"}");
+        assertThat(sb).hasToString("{\"aaa\":\"\\f\"}");
     }
 
     @Test
-    void newline() throws IOException {
+    void newline() {
         enc.appendToJSON("aaa", "\n").close();
-        assertThat(writer.toString()).hasToString("{\"aaa\":\"\\n\"}");
+        assertThat(sb).hasToString("{\"aaa\":\"\\n\"}");
     }
 
     @Test
-    void carriageReturn() throws IOException {
+    void carriageReturn() {
         enc.appendToJSON("aaa", "\r\n").close();
-        assertThat(writer.toString()).hasToString("{\"aaa\":\"\\n\"}");
+        assertThat(sb).hasToString("{\"aaa\":\"\\n\"}");
     }
 
     @Test
     void tab() throws IOException {
         enc.appendToJSON("aaa", "\t").close();
-        assertThat(writer.toString()).hasToString("{\"aaa\":\"\\t\"}");
+        assertThat(sb).hasToString("{\"aaa\":\"\\t\"}");
     }
 
     @Test
     @SuppressWarnings("checkstyle:avoidescapedunicodecharacters")
-    void unicode() throws IOException {
+    void unicode() {
         enc.appendToJSON("\u0002", "\u0007\u0019").close();
-        assertThat(writer.toString()).hasToString("{\"\\u0002\":\"\\u0007\\u0019\"}");
+        assertThat(sb).hasToString("{\"\\u0002\":\"\\u0007\\u0019\"}");
     }
 
     @Test
-    void multipleFields() throws IOException {
+    void multipleFields() {
         enc.appendToJSONUnquoted("aaa", 123);
         enc.appendToJSON("bbb", "ccc");
         enc.appendToJSON("ddd", 123);
         enc.close();
 
-        assertThat(writer.toString()).hasToString("{\"aaa\":123,\"bbb\":\"ccc\",\"ddd\":123}");
+        assertThat(sb).hasToString("{\"aaa\":123,\"bbb\":\"ccc\",\"ddd\":123}");
     }
 
     @Test
-    void appendToJSONClosed() throws IOException {
+    void appendToJSONClosed() {
         enc.close();
 
         assertThatThrownBy(() -> enc.appendToJSON("field", "value"))
@@ -130,7 +130,7 @@ class SimpleJsonEncoderTest {
     }
 
     @Test
-    void appendToUnquotedJSONClosed() throws IOException {
+    void appendToUnquotedJSONClosed() {
         enc.close();
 
         assertThatThrownBy(() -> enc.appendToJSONUnquoted("field", "value"))
@@ -138,20 +138,20 @@ class SimpleJsonEncoderTest {
     }
 
     @Test
-    void multipleCloses() throws IOException {
+    void multipleCloses() {
         enc.close();
         assertThatNoException().isThrownBy(enc::close);
     }
 
     @Test
-    void ignoreNullValues() throws IOException {
+    void ignoreNullValues() {
         enc.appendToJSONUnquoted("key1", null);
         enc.appendToJSON("key2", null);
         enc.appendToJSONUnquoted("key3", 123);
         enc.appendToJSON("key4", "321");
         enc.close();
 
-        assertThat(writer.toString()).hasToString("{\"key3\":123,\"key4\":\"321\"}");
+        assertThat(sb).hasToString("{\"key3\":123,\"key4\":\"321\"}");
     }
 
 }

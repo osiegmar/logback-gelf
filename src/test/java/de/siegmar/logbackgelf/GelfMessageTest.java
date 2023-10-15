@@ -22,8 +22,6 @@ package de.siegmar.logbackgelf;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayOutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -45,7 +43,7 @@ class GelfMessageTest {
             a -> assertThat(a.getTimestamp()).isEqualTo(1584271169123L),
             a -> assertThat(a.getLevel()).isEqualTo(6),
             a -> assertThat(a.getAdditionalFields()).isEqualTo(additionalFields),
-            a -> assertThatJson(toJSON(a)).isEqualTo(
+            a -> assertThatJson(a.toJSON().toString()).isEqualTo(
                 "{"
                 + "\"version\":\"1.1\","
                 + "\"host\":\"host\","
@@ -71,7 +69,7 @@ class GelfMessageTest {
             a -> assertThat(a.getTimestamp()).isEqualTo(1584271169123L),
             a -> assertThat(a.getLevel()).isEqualTo(6),
             a -> assertThat(a.getAdditionalFields()).isEqualTo(additionalFields),
-            a -> assertThatJson(toJSON(a)).isEqualTo(
+            a -> assertThatJson(a.toJSON().toString()).isEqualTo(
                 "{"
                 + "\"version\":\"1.1\","
                 + "\"host\":\"host\","
@@ -82,12 +80,6 @@ class GelfMessageTest {
                 + "\"_foo\":\"bar\""
                 + "}")
         );
-    }
-
-    private String toJSON(final GelfMessage gelfMessage) {
-        final var bos = new ByteArrayOutputStream();
-        gelfMessage.appendJSON(bos);
-        return bos.toString(StandardCharsets.UTF_8);
     }
 
 }

@@ -20,8 +20,6 @@
 package de.siegmar.logbackgelf;
 
 import java.io.Closeable;
-import java.io.IOException;
-import java.io.Writer;
 
 /**
  * Simple JSON encoder with very basic functionality that is required by this library.
@@ -33,7 +31,8 @@ class SimpleJsonEncoder implements Closeable {
     /**
      * Wrapped writer.
      */
-    private final Writer writer;
+    @SuppressWarnings("PMD.AvoidStringBufferField")
+    private final StringBuilder sb;
 
     /**
      * Flag to determine if a comma has to be added on next append execution.
@@ -45,9 +44,9 @@ class SimpleJsonEncoder implements Closeable {
      */
     private boolean closed;
 
-    SimpleJsonEncoder(final Writer writer) throws IOException {
-        this.writer = writer;
-        writer.write('{');
+    SimpleJsonEncoder(final StringBuilder sb) {
+        this.sb = sb;
+        sb.append('{');
     }
 
     /**
@@ -55,18 +54,18 @@ class SimpleJsonEncoder implements Closeable {
      *
      * @return this
      */
-    SimpleJsonEncoder appendToJSON(final String key, final Object value) throws IOException {
+    SimpleJsonEncoder appendToJSON(final String key, final Object value) {
         if (closed) {
             throw new IllegalStateException("Encoder already closed");
         }
         if (value != null) {
             appendKey(key);
             if (value instanceof Number) {
-                writer.write(value.toString());
+                sb.append(value);
             } else {
-                writer.write(QUOTE);
+                sb.append(QUOTE);
                 escapeString(value.toString());
-                writer.write(QUOTE);
+                sb.append(QUOTE);
             }
         }
         return this;
@@ -78,27 +77,27 @@ class SimpleJsonEncoder implements Closeable {
      *
      * @return this
      */
-    SimpleJsonEncoder appendToJSONUnquoted(final String key, final Object value) throws IOException {
+    SimpleJsonEncoder appendToJSONUnquoted(final String key, final Object value) {
         if (closed) {
             throw new IllegalStateException("Encoder already closed");
         }
         if (value != null) {
             appendKey(key);
-            writer.write(value.toString());
+            sb.append(value);
         }
         return this;
     }
 
-    private void appendKey(final String key) throws IOException {
+    private void appendKey(final String key) {
         if (started) {
-            writer.write(',');
+            sb.append(',');
         } else {
             started = true;
         }
-        writer.write(QUOTE);
+        sb.append(QUOTE);
         escapeString(key);
-        writer.write(QUOTE);
-        writer.write(':');
+        sb.append(QUOTE);
+        sb.append(':');
     }
 
     /**
@@ -111,36 +110,36 @@ class SimpleJsonEncoder implements Closeable {
         "PMD.ImplicitSwitchFallThrough",
         "PMD.AvoidLiteralsInIfCondition"
     })
-    private void escapeString(final String str) throws IOException {
+    private void escapeString(final String str) {
         for (int i = 0; i < str.length(); i++) {
             final char ch = str.charAt(i);
             switch (ch) {
                 case QUOTE:
                 case '\\':
                 case '/':
-                    writer.write('\\');
-                    writer.write(ch);
+                    sb.append('\\');
+                    sb.append(ch);
                     break;
                 case '\b':
-                    writer.write("\\b");
+                    sb.append("\\b");
                     break;
                 case '\f':
-                    writer.write("\\f");
+                    sb.append("\\f");
                     break;
                 case '\n':
-                    writer.write("\\n");
+                    sb.append("\\n");
                     break;
                 case '\r':
                     // Graylog doesn't like carriage-return: https://github.com/Graylog2/graylog2-server/issues/4470
                     break;
                 case '\t':
-                    writer.write("\\t");
+                    sb.append("\\t");
                     break;
                 default:
                     if (ch < ' ') {
-                        writer.write(escapeCharacter(ch));
+                        sb.append(escapeCharacter(ch));
                     } else {
-                        writer.write(ch);
+                        sb.append(ch);
                     }
             }
         }
@@ -170,12 +169,11 @@ class SimpleJsonEncoder implements Closeable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         if (!closed) {
-            writer.write('}');
+            sb.append('}');
             closed = true;
         }
-        writer.close();
     }
 
 }

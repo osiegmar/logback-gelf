@@ -19,12 +19,6 @@
 
 package de.siegmar.logbackgelf;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Map;
@@ -36,6 +30,7 @@ import java.util.Objects;
 public class GelfMessage {
 
     private static final String VERSION = "1.1";
+    private static final int INITIAL_JSON_SIZE = 256;
 
     private final String host;
     private final String shortMessage;
@@ -79,8 +74,10 @@ public class GelfMessage {
         return Collections.unmodifiableMap(additionalFields);
     }
 
-    public void appendJSON(final OutputStream bos) {
-        try (var jsonEncoder = new SimpleJsonEncoder(new OutputStreamWriter(bos, UTF_8))) {
+    public StringBuilder toJSON() {
+        final StringBuilder sb = new StringBuilder(INITIAL_JSON_SIZE);
+
+        try (var jsonEncoder = new SimpleJsonEncoder(sb)) {
             jsonEncoder
                 .appendToJSON("version", VERSION)
                 .appendToJSON("host", host)
@@ -97,9 +94,9 @@ public class GelfMessage {
             for (final Map.Entry<String, Object> entry : additionalFields.entrySet()) {
                 jsonEncoder.appendToJSON('_' + entry.getKey(), entry.getValue());
             }
-        } catch (final IOException e) {
-            throw new UncheckedIOException(e);
         }
+
+        return sb;
     }
 
     @SuppressWarnings("checkstyle:MagicNumber")
