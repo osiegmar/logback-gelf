@@ -19,11 +19,7 @@
 
 package de.siegmar.logbackgelf.custom;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.Map;
 
@@ -49,14 +45,7 @@ public class CustomGelfEncoder extends GelfEncoder {
 
     private static String buildHash(final GelfMessage gelfMessage) {
         final MessageDigest digest = new SHA256.Digest();
-
-        try (DigestOutputStream dos = new DigestOutputStream(OutputStream.nullOutputStream(), digest)) {
-            dos.write(gelfMessage.toJSON().toString().getBytes(StandardCharsets.UTF_8));
-        } catch (final IOException e) {
-            throw new UncheckedIOException(e);
-        }
-
-        return toHex(digest.digest());
+        return toHex(digest.digest(gelfMessage.toJSON().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     private static String toHex(final byte[] data) {
