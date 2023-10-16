@@ -121,11 +121,25 @@ class GelfEncoderTest {
     }
 
     @Test
-    void shortenShortMessage() {
+    void shortenShortMessageDefault() {
         final String expectedShortMessage = "A".repeat(250);
         final String actualShortMessage = "  " + expectedShortMessage + "123\r\n";
 
         assertThat(encoder.normalizeShortMessage(actualShortMessage))
+            .hasSameSizeAs(expectedShortMessage)
+            .isEqualTo(expectedShortMessage);
+    }
+
+    @Test
+    void shortenShortMessageCustomSize() {
+        final String expectedShortMessage = "A".repeat(333);
+        final String actualShortMessage = "  " + expectedShortMessage + "123\r\n";
+
+
+        final GelfEncoder gelfEncoder = new GelfEncoder();
+        gelfEncoder.setMaxShortMessageLength(333);
+
+        assertThat(gelfEncoder.normalizeShortMessage(actualShortMessage))
             .hasSameSizeAs(expectedShortMessage)
             .isEqualTo(expectedShortMessage);
     }

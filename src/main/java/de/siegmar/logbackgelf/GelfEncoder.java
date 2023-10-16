@@ -50,7 +50,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private static final Pattern VALID_ADDITIONAL_FIELD_PATTERN = Pattern.compile("^[\\w.-]*$");
     private static final String DEFAULT_SHORT_PATTERN = "%m%nopex";
     private static final String DEFAULT_FULL_PATTERN = "%m%n";
-    private static final int MAX_SHORT_MESSAGE_LENGTH = 250;
+    private static final int MAX_SHORT_MESSAGE_LENGTH_DEFAULT = 250;
 
     /**
      * Origin hostname - will be auto-detected if not specified.
@@ -136,6 +136,11 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      * Additional, static fields to send to graylog. Defaults: none.
      */
     private final Map<String, Object> staticFields = new HashMap<>();
+
+    /**
+     * Max length for short message.
+     */
+    private int maxShortMessageLength = MAX_SHORT_MESSAGE_LENGTH_DEFAULT;
 
     private final List<GelfFieldMapper<?>> builtInFieldMappers = new ArrayList<>();
 
@@ -284,6 +289,14 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         addStaticField(split[0].trim(), split[1].trim());
     }
 
+    public int getMaxShortMessageLength() {
+        return maxShortMessageLength;
+    }
+
+    public void setMaxShortMessageLength(final int maxShortMessageLength) {
+        this.maxShortMessageLength = maxShortMessageLength;
+    }
+
     public List<GelfFieldMapper<?>> getFieldMappers() {
         return Collections.unmodifiableList(fieldMappers);
     }
@@ -422,12 +435,12 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         return sanitizedShortMessage;
     }
 
-    private static String sanitizeShortMessage(final String sanitizedShortMessage) {
+    private String sanitizeShortMessage(final String sanitizedShortMessage) {
         if (sanitizedShortMessage.isEmpty()) {
             return sanitizedShortMessage;
         }
 
-        final char[] tmp = new char[Math.min(sanitizedShortMessage.length(), MAX_SHORT_MESSAGE_LENGTH)];
+        final char[] tmp = new char[Math.min(sanitizedShortMessage.length(), maxShortMessageLength)];
 
         int iDst = 0;
         boolean whitspaceLast = false;
