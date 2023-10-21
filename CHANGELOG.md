@@ -4,20 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [5.0.0] - 2023-10-21
 ### Added
 - Support for key value pairs
   [\#86](https://github.com/osiegmar/logback-gelf/issues/86)
 - Add another method for adding static field to GelfEncoder
   [\#80](https://github.com/osiegmar/logback-gelf/issues/80)
+- Add support for truncating short messages (`maxShortMessageLength`)
 
 ### Changed
 - Upgrade to Java 11 (Premier Support of Java 8 ended in March 2022).
+- Upgrade to Logback 1.4.11
 - GZIP Compression with GelfUdpAppender
   [\#66](https://github.com/osiegmar/logback-gelf/issues/66)
 - Replace blank hostname and blank log message to prevent Graylog error
   [\#82](https://github.com/osiegmar/logback-gelf/issues/82)
 - Default of `includeMarker` changed to `false`. Serialization format of markers has changed.
+- Improved MessageID creation algorithm
+- Improved JSON serialization performance
+
+### Fixed
+- Fixed build on windows
 
 ## [4.0.2] - 2021-12-22
 ### Changed
@@ -133,7 +140,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[Unreleased]: https://github.com/osiegmar/logback-gelf/compare/v4.0.1...HEAD
+[5.0.0]: https://github.com/osiegmar/logback-gelf/compare/v4.0.2...v5.0.0
+[4.0.2]: https://github.com/osiegmar/logback-gelf/compare/v4.0.1...v4.0.2
 [4.0.1]: https://github.com/osiegmar/logback-gelf/compare/v4.0.0...v4.0.1
 [4.0.0]: https://github.com/osiegmar/logback-gelf/compare/v3.0.0...v4.0.0
 [3.0.0]: https://github.com/osiegmar/logback-gelf/compare/v2.2.0...v3.0.0
