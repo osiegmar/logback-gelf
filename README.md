@@ -1,15 +1,13 @@
 # Logback GELF
 
-[![build](https://github.com/osiegmar/logback-gelf/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/osiegmar/logback-gelf/actions/workflows/build.yml)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/975049eb1352478a89bb6d2e9d43e2be)](https://www.codacy.com/gh/osiegmar/logback-gelf/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=osiegmar/logback-gelf&amp;utm_campaign=Badge_Grade)
-[![codecov](https://codecov.io/gh/osiegmar/logback-gelf/branch/master/graph/badge.svg?token=YfDHBxprtb)](https://codecov.io/gh/osiegmar/logback-gelf)
+[![build](https://github.com/osiegmar/logback-gelf/actions/workflows/build.yml/badge.svg)](https://github.com/osiegmar/logback-gelf/actions/workflows/build.yml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/975049eb1352478a89bb6d2e9d43e2be)](https://app.codacy.com/gh/osiegmar/logback-gelf/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![codecov](https://codecov.io/gh/osiegmar/logback-gelf/graph/badge.svg?token=YfDHBxprtb)](https://codecov.io/gh/osiegmar/logback-gelf)
 [![javadoc](https://javadoc.io/badge2/de.siegmar/logback-gelf/javadoc.svg)](https://javadoc.io/doc/de.siegmar/logback-gelf)
-[![Maven Central](https://img.shields.io/maven-central/v/de.siegmar/logback-gelf.svg)](https://search.maven.org/artifact/de.siegmar/logback-gelf)
-
+[![Maven Central](https://img.shields.io/maven-central/v/de.siegmar/logback-gelf.svg)](https://central.sonatype.com/artifact/de.siegmar/logback-gelf)
 
 Logback appender for sending GELF (Graylog Extended Log Format) messages with zero additional
 dependencies.
-
 
 ## Features
 
@@ -23,12 +21,10 @@ dependencies.
 - Forwarding of exception root cause
 - No runtime dependencies beside Logback
 
-
 ## Requirements
 
 - Java 11
 - Logback 1.4.11
-
 
 ## Examples
 
@@ -97,7 +93,6 @@ Simple TCP with TLS configuration:
 
 Find more advanced examples in the [examples directory](examples).
 
-
 ## Configuration
 
 ### Appender
@@ -114,7 +109,6 @@ Find more advanced examples in the [examples directory](examples).
 * **compressionMethod**: Compression method to use (NONE, GZIP or ZLIB). Default: GZIP.
 * **messageIdSupplier**: The mechanism that supplies unique message ids that are required by the
   GELF UDP protocol. Default: `de.siegmar.logbackgelf.MessageIdSupplier`.
-
 
 `de.siegmar.logbackgelf.GelfTcpAppender`
 
@@ -143,7 +137,6 @@ Find more advanced examples in the [examples directory](examples).
 * Everything from GelfTcpAppender
 * **insecure**: If true, skip the TLS certificate validation.
   You should not use this in production! Default: false.
-
 
 ### Encoder
 
@@ -176,7 +169,6 @@ Find more advanced examples in the [examples directory](examples).
 * **fullPatternLayout**: Full message format (Stacktrace). Default: `"%m%n"`.
 * **numbersAsString**: Log numbers as String. Default: false.
 * **staticFields**: Additional, static fields to send to graylog. Defaults: none.
-
 
 ## Troubleshooting
 
