@@ -50,7 +50,6 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private static final Pattern VALID_ADDITIONAL_FIELD_PATTERN = Pattern.compile("^[\\w.-]*$");
     private static final String DEFAULT_SHORT_PATTERN = "%m%nopex";
     private static final String DEFAULT_FULL_PATTERN = "%m%n";
-    private static final int MAX_SHORT_MESSAGE_LENGTH_DEFAULT = 250;
 
     /**
      * Origin hostname - will be auto-detected if not specified.
@@ -138,9 +137,10 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private final Map<String, Object> staticFields = new HashMap<>();
 
     /**
-     * Max length for short message.
+     * Max length for short message (truncate after this length).
+     * Default: {@code 0} (no truncate).
      */
-    private int maxShortMessageLength = MAX_SHORT_MESSAGE_LENGTH_DEFAULT;
+    private int maxShortMessageLength;
 
     private final List<GelfFieldMapper<?>> builtInFieldMappers = new ArrayList<>();
 
@@ -294,6 +294,9 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     }
 
     public void setMaxShortMessageLength(final int maxShortMessageLength) {
+        if (maxShortMessageLength < 0) {
+            throw new IllegalArgumentException("maxShortMessageLength must not be < 0");
+        }
         this.maxShortMessageLength = maxShortMessageLength;
     }
 
@@ -440,7 +443,10 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
             return sanitizedShortMessage;
         }
 
-        final char[] tmp = new char[Math.min(sanitizedShortMessage.length(), maxShortMessageLength)];
+        final int len = maxShortMessageLength == 0
+            ? sanitizedShortMessage.length()
+            : Math.min(sanitizedShortMessage.length(), maxShortMessageLength);
+        final char[] tmp = new char[len];
 
         int iDst = 0;
         boolean whitspaceLast = false;
