@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    api("ch.qos.logback:logback-classic:1.4.11")
+    api("ch.qos.logback:logback-classic:1.4.14")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.assertj:assertj-core:3.11.1")
