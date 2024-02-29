@@ -135,6 +135,36 @@ class GelfEncoderTest {
     }
 
     @Test
+    void doNotSquashInnerWhitespaces() {
+        final String shortMessage = "unknown operand:\nx=1 § 1\n    ^";
+
+        final GelfEncoder gelfEncoder = new GelfEncoder();
+
+        final String actual = gelfEncoder.normalizeShortMessage(shortMessage);
+        assertThat(actual).isEqualTo(shortMessage);
+    }
+
+    @Test
+    void stripLeadingAndTrailingWhitespaces() {
+        final String shortMessage = "\t [---] \n";
+
+        final GelfEncoder gelfEncoder = new GelfEncoder();
+
+        final String actual = gelfEncoder.normalizeShortMessage(shortMessage);
+        assertThat(actual).isEqualTo("[---]");
+    }
+
+    @Test
+    void shortenAfterStrippingWhitespaces() {
+        final String shortMessage = "\t \n" + "A".repeat(250) + "\t \n";
+
+        final GelfEncoder gelfEncoder = new GelfEncoder();
+
+        final String actual = gelfEncoder.normalizeShortMessage(shortMessage);
+        assertThat(actual).hasSize(250).doesNotContainAnyWhitespaces();
+    }
+
+    @Test
     void exception() {
         encoder.start();
 

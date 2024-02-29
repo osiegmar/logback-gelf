@@ -439,33 +439,12 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     }
 
     private String sanitizeShortMessage(final String sanitizedShortMessage) {
-        if (sanitizedShortMessage.isEmpty()) {
-            return sanitizedShortMessage;
+        String stripped = sanitizedShortMessage.strip();
+        if(getMaxShortMessageLength() != 0 && stripped.length() > getMaxShortMessageLength()) {
+            return stripped.substring(0, getMaxShortMessageLength());
+        } else {
+            return stripped;
         }
-
-        final int len = maxShortMessageLength == 0
-            ? sanitizedShortMessage.length()
-            : Math.min(sanitizedShortMessage.length(), maxShortMessageLength);
-        final char[] tmp = new char[len];
-
-        int iDst = 0;
-        boolean whitspaceLast = false;
-        boolean whitespaceStart = true;
-        for (int iSrc = 0; iSrc < sanitizedShortMessage.length() && iDst < tmp.length; iSrc++) {
-            final char c = sanitizedShortMessage.charAt(iSrc);
-            if (Character.isWhitespace(c)) {
-                if (!whitespaceStart && !whitspaceLast) {
-                    tmp[iDst++] = ' ';
-                }
-                whitspaceLast = true;
-            } else {
-                tmp[iDst++] = c;
-                whitspaceLast = false;
-                whitespaceStart = false;
-            }
-        }
-
-        return new String(tmp, 0, iDst).trim();
     }
 
     protected String buildShortMessage(final ILoggingEvent event) {
