@@ -439,8 +439,8 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     }
 
     private String sanitizeShortMessage(final String sanitizedShortMessage) {
-        String stripped = sanitizedShortMessage.strip();
-        if(getMaxShortMessageLength() != 0 && stripped.length() > getMaxShortMessageLength()) {
+        final String stripped = sanitizedShortMessage.strip();
+        if (getMaxShortMessageLength() != 0 && stripped.length() > getMaxShortMessageLength()) {
             return stripped.substring(0, getMaxShortMessageLength());
         } else {
             return stripped;
