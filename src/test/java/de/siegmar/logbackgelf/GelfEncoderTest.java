@@ -155,6 +155,17 @@ class GelfEncoderTest {
     }
 
     @Test
+    void stripTrailingWhitespacesAfterTrimming() {
+        final String shortMessage = "a          b";
+
+        final GelfEncoder gelfEncoder = new GelfEncoder();
+        gelfEncoder.setMaxShortMessageLength(5);
+
+        final String actual = gelfEncoder.normalizeShortMessage(shortMessage);
+        assertThat(actual).isEqualTo("a");
+    }
+
+    @Test
     void shortenAfterStrippingWhitespaces() {
         final String shortMessage = "\t \n" + "A".repeat(250) + "\t \n";
 

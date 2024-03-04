@@ -438,13 +438,12 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         return sanitizedShortMessage;
     }
 
-    private String sanitizeShortMessage(final String sanitizedShortMessage) {
-        final String stripped = sanitizedShortMessage.strip();
-        if (getMaxShortMessageLength() != 0 && stripped.length() > getMaxShortMessageLength()) {
-            return stripped.substring(0, getMaxShortMessageLength());
-        } else {
-            return stripped;
+    private String sanitizeShortMessage(final String shortMessage) {
+        String sanitized = shortMessage.stripLeading();
+        if (getMaxShortMessageLength() != 0 && sanitized.length() > getMaxShortMessageLength()) {
+            sanitized = sanitized.substring(0, getMaxShortMessageLength());
         }
+        return sanitized.stripTrailing();
     }
 
     protected String buildShortMessage(final ILoggingEvent event) {
