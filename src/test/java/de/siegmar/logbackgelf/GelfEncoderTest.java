@@ -166,6 +166,17 @@ class GelfEncoderTest {
     }
 
     @Test
+    void maxMessageLengthSetAndMessageIsShorter() {
+        final String shortMessage = "abc";
+
+        final GelfEncoder gelfEncoder = new GelfEncoder();
+        gelfEncoder.setMaxShortMessageLength(5);
+
+        final String actual = gelfEncoder.normalizeShortMessage(shortMessage);
+        assertThat(actual).isEqualTo("abc");
+    }
+
+    @Test
     void shortenAfterStrippingWhitespaces() {
         final String shortMessage = "\t \n" + "A".repeat(250) + "\t \n";
 
