@@ -444,7 +444,7 @@ class GelfEncoderTest {
 
     @ParameterizedTest
     @ValueSource(strings = { " \t ", "", "\n" })
-    void blankShortMessage(String message) {
+    void blankShortMessage(final String message) {
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
