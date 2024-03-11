@@ -121,20 +121,6 @@ class GelfEncoderTest {
     }
 
     @Test
-    void shortenShortMessageDefault() {
-        final String expectedShortMessage = "A".repeat(250);
-        final String actualShortMessage = "  " + expectedShortMessage + "123\r\n";
-
-
-        final GelfEncoder gelfEncoder = new GelfEncoder();
-        gelfEncoder.setMaxShortMessageLength(250);
-
-        assertThat(gelfEncoder.normalizeShortMessage(actualShortMessage))
-            .hasSameSizeAs(expectedShortMessage)
-            .isEqualTo(expectedShortMessage);
-    }
-
-    @Test
     void exception() {
         encoder.start();
 
@@ -456,18 +442,19 @@ class GelfEncoderTest {
             .isNotEqualTo("unknown");
     }
 
-    @Test
-    void blankShortmessage() {
+    @ParameterizedTest
+    @ValueSource(strings = { " \t ", "", "\n" })
+    void blankShortMessage(String message) {
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         final Logger logger = lc.getLogger(LOGGER_NAME);
 
-        final LoggingEvent event = new LoggingEvent(LOGGER_NAME, logger, Level.DEBUG, " \t ", null, new Object[]{1});
+        final LoggingEvent event = new LoggingEvent(LOGGER_NAME, logger, Level.DEBUG, message, null, new Object[]{1});
         final String logMsg = encodeToStr(event);
 
         assertThatJson(logMsg).node("short_message")
-            .isEqualTo("Empty message replaced by logback-gelf");
+            .isEqualTo("Blank message replaced by logback-gelf");
     }
 
     @Test
