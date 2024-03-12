@@ -482,4 +482,12 @@ class GelfEncoderTest {
         assertThat(encoder.getFieldMappers()).containsExactly(fieldMapper);
     }
 
+    @Test
+    void hasDefaultPatternLayout() {
+        encoder.start();
+
+        assertThat(encoder.getFullMessageLayout()).isNotNull();
+        assertThat(encoder.getShortMessageLayout()).isNotNull();
+    }
+
 }
