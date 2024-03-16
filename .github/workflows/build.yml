@@ -21,10 +21,11 @@ jobs:
         distribution: 'temurin'
         java-version: '11'
     - uses: gradle/wrapper-validation-action@v1
-    - uses: gradle/gradle-build-action@v2
+    - uses: gradle/actions/setup-gradle@v3
     - name: Build with Gradle
       run: ./gradlew build
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         file: ./build/reports/jacoco/test/jacocoTestReport.xml
