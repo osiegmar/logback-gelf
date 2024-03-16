@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Update dependency to logback 1.5.3
 - Renamed shortPatternLayout to shortMessageLayout, fullPatternLayout to fullMessageLayout
   [\#100](https://github.com/osiegmar/logback-gelf/issues/100)
 
