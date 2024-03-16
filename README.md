@@ -163,8 +163,6 @@ Find more advanced examples in the [examples directory](examples).
 * **appendNewline**: If true, a system dependent newline separator will be added at the end of each message.
   Don't use this in conjunction with TCP or UDP appenders, as this is only reasonable for
   console logging!
-* **maxShortMessageLength**: Maximum length for short message (truncate after this length).
-  Default: 0 (no truncate).
 * **shortMessageLayout**: Short message format. Default: `"%m%nopex"`.
 * **fullMessageLayout**: Full message format (Stacktrace). Default: `"%m%n"`.
 * **numbersAsString**: Log numbers as String. Default: false.
