@@ -33,6 +33,7 @@ import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.util.LevelToSyslogSeverity;
 import ch.qos.logback.core.CoreConstants;
+import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.encoder.EncoderBase;
 import de.siegmar.logbackgelf.mappers.CallerDataFieldMapper;
 import de.siegmar.logbackgelf.mappers.KeyValueFieldMapper;
@@ -117,14 +118,16 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     private boolean appendNewline;
 
     /**
-     * Short message format. Default: {@value DEFAULT_SHORT_PATTERN}.
+     * Short message format.
+     * Default is a {@link PatternLayout} with {@value DEFAULT_SHORT_PATTERN}.
      */
-    private PatternLayout shortPatternLayout;
+    private Layout<ILoggingEvent> shortMessageLayout;
 
     /**
-     * Full message format (Stacktrace). Default: {@value DEFAULT_FULL_PATTERN}.
+     * Full message format (Stacktrace).
+     * Default is a {@link PatternLayout} with {@value DEFAULT_FULL_PATTERN}.
      */
-    private PatternLayout fullPatternLayout;
+    private Layout<ILoggingEvent> fullMessageLayout;
 
     /**
      * Log numbers as String. Default: false.
@@ -135,12 +138,6 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      * Additional, static fields to send to graylog. Defaults: none.
      */
     private final Map<String, Object> staticFields = new HashMap<>();
-
-    /**
-     * Max length for short message (truncate after this length).
-     * Default: {@code 0} (no truncate).
-     */
-    private int maxShortMessageLength;
 
     private final List<GelfFieldMapper<?>> builtInFieldMappers = new ArrayList<>();
 
@@ -250,20 +247,20 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         this.numbersAsString = numbersAsString;
     }
 
-    public PatternLayout getShortPatternLayout() {
-        return shortPatternLayout;
+    public Layout<ILoggingEvent> getShortMessageLayout() {
+        return shortMessageLayout;
     }
 
-    public void setShortPatternLayout(final PatternLayout shortPatternLayout) {
-        this.shortPatternLayout = shortPatternLayout;
+    public void setShortMessageLayout(final Layout<ILoggingEvent> shortMessageLayout) {
+        this.shortMessageLayout = shortMessageLayout;
     }
 
-    public PatternLayout getFullPatternLayout() {
-        return fullPatternLayout;
+    public Layout<ILoggingEvent> getFullMessageLayout() {
+        return fullMessageLayout;
     }
 
-    public void setFullPatternLayout(final PatternLayout fullPatternLayout) {
-        this.fullPatternLayout = fullPatternLayout;
+    public void setFullMessageLayout(final Layout<ILoggingEvent> fullMessageLayout) {
+        this.fullMessageLayout = fullMessageLayout;
     }
 
     public Map<String, Object> getStaticFields() {
@@ -287,17 +284,6 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
 
         addStaticField(split[0].trim(), split[1].trim());
-    }
-
-    public int getMaxShortMessageLength() {
-        return maxShortMessageLength;
-    }
-
-    public void setMaxShortMessageLength(final int maxShortMessageLength) {
-        if (maxShortMessageLength < 0) {
-            throw new IllegalArgumentException("maxShortMessageLength must not be < 0");
-        }
-        this.maxShortMessageLength = maxShortMessageLength;
     }
 
     public List<GelfFieldMapper<?>> getFieldMappers() {
@@ -343,11 +329,11 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         if (originHost == null || originHost.isBlank()) {
             originHost = Optional.ofNullable(context.getProperty(CoreConstants.HOSTNAME_KEY)).orElse("unknown");
         }
-        if (shortPatternLayout == null) {
-            shortPatternLayout = buildPattern(DEFAULT_SHORT_PATTERN);
+        if (shortMessageLayout == null) {
+            shortMessageLayout = buildPattern(DEFAULT_SHORT_PATTERN);
         }
-        if (fullPatternLayout == null) {
-            fullPatternLayout = buildPattern(DEFAULT_FULL_PATTERN);
+        if (fullMessageLayout == null) {
+            fullMessageLayout = buildPattern(DEFAULT_FULL_PATTERN);
         }
         addBuiltInFieldMappers();
 
@@ -426,54 +412,22 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
     }
 
     protected String normalizeShortMessage(final String shortMessage) {
-        // Graylog doesn't like newlines in short messages: https://github.com/Graylog2/graylog2-server/issues/4842
-        final String sanitizedShortMessage = sanitizeShortMessage(shortMessage);
-
         // Short message is mandatory per GELF spec
-        if (sanitizedShortMessage.isEmpty()) {
-            addWarn("Log message was empty - replaced to prevent Graylog error");
-            return "Empty message replaced by logback-gelf";
+        // Graylog doesn't like a single newline as short message: https://github.com/Graylog2/graylog2-server/issues/4842
+        if (shortMessage.isBlank()) {
+            addWarn("Log message was blank - replaced to prevent Graylog error");
+            return "Blank message replaced by logback-gelf";
         }
 
-        return sanitizedShortMessage;
-    }
-
-    private String sanitizeShortMessage(final String sanitizedShortMessage) {
-        if (sanitizedShortMessage.isEmpty()) {
-            return sanitizedShortMessage;
-        }
-
-        final int len = maxShortMessageLength == 0
-            ? sanitizedShortMessage.length()
-            : Math.min(sanitizedShortMessage.length(), maxShortMessageLength);
-        final char[] tmp = new char[len];
-
-        int iDst = 0;
-        boolean whitspaceLast = false;
-        boolean whitespaceStart = true;
-        for (int iSrc = 0; iSrc < sanitizedShortMessage.length() && iDst < tmp.length; iSrc++) {
-            final char c = sanitizedShortMessage.charAt(iSrc);
-            if (Character.isWhitespace(c)) {
-                if (!whitespaceStart && !whitspaceLast) {
-                    tmp[iDst++] = ' ';
-                }
-                whitspaceLast = true;
-            } else {
-                tmp[iDst++] = c;
-                whitspaceLast = false;
-                whitespaceStart = false;
-            }
-        }
-
-        return new String(tmp, 0, iDst).trim();
+        return shortMessage;
     }
 
     protected String buildShortMessage(final ILoggingEvent event) {
-        return shortPatternLayout.doLayout(event);
+        return shortMessageLayout.doLayout(event);
     }
 
     protected String buildFullMessage(final ILoggingEvent event) {
-        return fullPatternLayout.doLayout(event);
+        return fullMessageLayout.doLayout(event);
     }
 
     protected Map<String, Object> collectAdditionalFields(final ILoggingEvent event) {
