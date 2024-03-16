@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- Renamed shortPatternLayout to shortMessageLayout, fullPatternLayout to fullMessageLayout
+  [\#100](https://github.com/osiegmar/logback-gelf/issues/100)
+
+### Removed
+- Removed support for truncating short messages (`maxShortMessageLength`)
+  [\#100](https://github.com/osiegmar/logback-gelf/issues/100)
+
 ## [5.0.1] - 2023-12-10
 ### Changed
 - Update to Logback 1.4.14
@@ -144,6 +153,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
+[Unreleased]: https://github.com/osiegmar/logback-gelf/compare/v5.0.1...master
 [5.0.1]: https://github.com/osiegmar/logback-gelf/compare/v5.0.0...v5.0.1
 [5.0.0]: https://github.com/osiegmar/logback-gelf/compare/v4.0.2...v5.0.0
 [4.0.2]: https://github.com/osiegmar/logback-gelf/compare/v4.0.1...v4.0.2
