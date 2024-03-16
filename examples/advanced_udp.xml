@@ -15,12 +15,12 @@
             <includeCallerData>false</includeCallerData>
             <includeRootCauseData>false</includeRootCauseData>
             <includeLevelName>false</includeLevelName>
-            <shortPatternLayout class="ch.qos.logback.classic.PatternLayout">
+            <shortMessageLayout class="ch.qos.logback.classic.PatternLayout">
                 <pattern>%m%nopex</pattern>
-            </shortPatternLayout>
-            <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
+            </shortMessageLayout>
+            <fullMessageLayout class="ch.qos.logback.classic.PatternLayout">
                 <pattern>%m%n</pattern>
-            </fullPatternLayout>
+            </fullMessageLayout>
             <numbersAsString>false</numbersAsString>
             <staticField>app_name:backend</staticField>
             <staticField>os_arch:${os.arch}</staticField>

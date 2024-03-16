@@ -165,8 +165,8 @@ Find more advanced examples in the [examples directory](examples).
   console logging!
 * **maxShortMessageLength**: Maximum length for short message (truncate after this length).
   Default: 0 (no truncate).
-* **shortPatternLayout**: Short message format. Default: `"%m%nopex"`.
-* **fullPatternLayout**: Full message format (Stacktrace). Default: `"%m%n"`.
+* **shortMessageLayout**: Short message format. Default: `"%m%nopex"`.
+* **fullMessageLayout**: Full message format (Stacktrace). Default: `"%m%n"`.
 * **numbersAsString**: Log numbers as String. Default: false.
 * **staticFields**: Additional, static fields to send to graylog. Defaults: none.
 
