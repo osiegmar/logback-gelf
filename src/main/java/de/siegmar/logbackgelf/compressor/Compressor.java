@@ -19,10 +19,25 @@
 
 package de.siegmar.logbackgelf.compressor;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
+
 public interface Compressor {
 
-    default byte[] compress(byte[] binMessage) {
-        return binMessage;
+    default byte[] compress(final byte[] binMessage) {
+        final var bos = new ByteArrayOutputStream(binMessage.length);
+        try (var wrappedOut = wrap(bos)) {
+            wrappedOut.write(binMessage);
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return bos.toByteArray();
+    }
+
+    default OutputStream wrap(final OutputStream out) throws IOException {
+        return out;
     }
 
 }

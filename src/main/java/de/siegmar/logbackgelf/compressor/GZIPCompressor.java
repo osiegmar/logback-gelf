@@ -19,22 +19,15 @@
 
 package de.siegmar.logbackgelf.compressor;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class GZIPCompressor implements Compressor {
 
     @Override
-    public byte[] compress(final byte[] binMessage) {
-        final var bos = new ByteArrayOutputStream(binMessage.length);
-        try (var gzipOut = new GZIPOutputStream(bos)) {
-            gzipOut.write(binMessage);
-        } catch (final IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        return bos.toByteArray();
+    public OutputStream wrap(final OutputStream out) throws IOException {
+        return new GZIPOutputStream(out);
     }
 
 }

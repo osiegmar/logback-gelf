@@ -19,22 +19,14 @@
 
 package de.siegmar.logbackgelf.compressor;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.OutputStream;
 import java.util.zip.DeflaterOutputStream;
 
 public class ZLIBCompressor implements Compressor {
 
     @Override
-    public byte[] compress(final byte[] binMessage) {
-        final var bos = new ByteArrayOutputStream(binMessage.length);
-        try (var deflaterOut = new DeflaterOutputStream(bos)) {
-            deflaterOut.write(binMessage);
-        } catch (final IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        return bos.toByteArray();
+    public OutputStream wrap(final OutputStream out) {
+        return new DeflaterOutputStream(out);
     }
 
 }
