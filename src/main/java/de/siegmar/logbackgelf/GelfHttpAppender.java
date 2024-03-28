@@ -19,6 +19,9 @@
 
 package de.siegmar.logbackgelf;
 
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -40,8 +43,6 @@ import de.siegmar.logbackgelf.compressor.Compressor;
 @SuppressWarnings("checkstyle:ClassFanOutComplexity")
 public class GelfHttpAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
-    private static final int HTTP_BAD_REQUEST = 400;
-    private static final int HTTP_INTERNAL_SERVER_ERROR = 500;
     private static final int DEFAULT_CONNECT_TIMEOUT = 15_000;
     private static final int DEFAULT_REQUEST_TIMEOUT = 5_000;
     private static final int DEFAULT_MAX_RETRIES = 2;
@@ -260,15 +261,15 @@ public class GelfHttpAppender extends UnsynchronizedAppenderBase<ILoggingEvent> 
         final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         final int statusCode = response.statusCode();
 
-        if (statusCode >= HTTP_INTERNAL_SERVER_ERROR) {
+        if (statusCode >= HTTP_INTERNAL_ERROR) {
             // Throw exception for server errors (retry)
             throw new IllegalStateException(String.format("Error sending message via %s. Code: %s; Message: %s",
                 getUri(), response.statusCode(), response.body()));
         }
 
-        if (statusCode >= HTTP_BAD_REQUEST) {
+        if (statusCode != HTTP_ACCEPTED) {
             // Don't throw exception for client errors (no retry)
-            addError(String.format("Error sending message via %s. Code: %s; Message: %s",
+            addError(String.format("Invalid response from %s. Code: %s; Message: %s",
                 getUri(), response.statusCode(), response.body()));
         }
 

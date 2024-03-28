@@ -19,8 +19,9 @@
 
 package de.siegmar.logbackgelf;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.awaitility.Awaitility.await;
 
@@ -69,7 +70,7 @@ class GelfHttpAppenderTest {
     }
 
     private static RequestPattern gelfRequest() {
-        return WIRE_MOCK.stubFor(post("/gelf").willReturn(ok()))
+        return WIRE_MOCK.stubFor(post("/gelf").willReturn(aResponse().withStatus(HTTP_ACCEPTED)))
             .getRequest();
     }
 
