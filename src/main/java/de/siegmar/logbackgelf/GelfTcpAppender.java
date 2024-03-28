@@ -161,48 +161,25 @@ public class GelfTcpAppender extends AbstractGelfAppender {
         return SocketFactory.getDefault();
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     @Override
     protected void appendMessage(final byte[] messageToSend) {
-        int openRetries = maxRetries;
-        do {
-            if (sendMessage(messageToSend)) {
-                // Message was sent successfully - we're done with it
-                break;
-            }
-
-            if (retryDelay > 0 && openRetries > 0) {
-                try {
-                    Thread.sleep(retryDelay);
-                } catch (final InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
-        } while (openRetries-- > 0 && isStarted());
+        try {
+            RetryUtil.retry(() -> sendMessage(messageToSend), this::isStarted, maxRetries, retryDelay);
+        } catch (final Exception e) {
+            addError(String.format("Error sending message via tcp://%s:%s",
+                getGraylogHost(), getGraylogPort()), e);
+        }
     }
 
     /**
      * Send message to socket's output stream.
      *
      * @param messageToSend message to send.
-     *
-     * @return {@code true} if message was sent successfully, {@code false} otherwise.
      */
-    @SuppressWarnings("checkstyle:illegalcatch")
-    private boolean sendMessage(final byte[] messageToSend) {
-        try {
-            connectionPool.execute(tcpConnection -> tcpConnection.write(messageToSend));
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
-        } catch (final Exception e) {
-            addError(String.format("Error sending message via tcp://%s:%s",
-                getGraylogHost(), getGraylogPort()), e);
-
-            return false;
-        }
-
-        return true;
+    private Void sendMessage(final byte[] messageToSend) throws Exception {
+        connectionPool.execute(tcpConnection -> tcpConnection.write(messageToSend));
+        return null;
     }
 
     @Override

@@ -27,14 +27,25 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
 
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
@@ -124,21 +135,48 @@ class GelfTcpTlsAppenderTest {
         private final SSLServerSocket socket;
         private final Future<byte[]> receivedMessage;
 
-        TlsServer() throws IOException {
+        TlsServer() {
             socket = initSocket();
 
             receivedMessage = Executors.newSingleThreadExecutor()
                 .submit(this::receive);
         }
 
-        private SSLServerSocket initSocket() throws IOException {
-            System.setProperty("javax.net.ssl.keyStore", "src/test/resources/mySrvKeystore");
-            System.setProperty("javax.net.ssl.keyStorePassword", "secret");
+        private SSLServerSocket initSocket() {
+            final var socketFactory = getSSLServerSocketFactory(getFromPath());
+            try {
+                return (SSLServerSocket) socketFactory.createServerSocket(0);
+            } catch (final IOException e) {
+                throw new IllegalStateException(e);
+            }
+        }
 
-            final SSLServerSocketFactory socketFactory =
-                (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+        public static SSLServerSocketFactory getSSLServerSocketFactory(final KeyStore trustKey) {
+            try {
+                final var kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+                kmf.init(trustKey, "secret".toCharArray());
 
-            return (SSLServerSocket) socketFactory.createServerSocket(0);
+                final var tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                tmf.init(trustKey);
+
+                final var context = SSLContext.getInstance("TLS");
+                context.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+
+                return context.getServerSocketFactory();
+            } catch (final UnrecoverableKeyException | NoSuchAlgorithmException | KeyManagementException
+                           | KeyStoreException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        public static KeyStore getFromPath() {
+            try (var keyFile = Files.newInputStream(Path.of("src/test/resources/mySrvKeystore"))) {
+                final var keyStore = KeyStore.getInstance("PKCS12");
+                keyStore.load(keyFile, "secret".toCharArray());
+                return keyStore;
+            } catch (final IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException e) {
+                throw new IllegalStateException(e);
+            }
         }
 
         int getPort() {
