@@ -19,14 +19,32 @@
 
 package de.siegmar.logbackgelf;
 
+import java.net.Socket;
 import java.security.cert.X509Certificate;
 
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.X509ExtendedTrustManager;
 
-class NoopX509TrustManager implements X509TrustManager {
+class NoopX509TrustManager extends X509ExtendedTrustManager {
+
+    @Override
+    public void checkClientTrusted(final X509Certificate[] chain, final String authType, final Socket socket) {
+    }
+
+    @Override
+    public void checkClientTrusted(final X509Certificate[] chain, final String authType, final SSLEngine engine) {
+    }
 
     @Override
     public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
+    }
+
+    @Override
+    public void checkServerTrusted(final X509Certificate[] chain, final String authType, final Socket socket) {
+    }
+
+    @Override
+    public void checkServerTrusted(final X509Certificate[] chain, final String authType, final SSLEngine engine) {
     }
 
     @Override

@@ -9,6 +9,7 @@
         <Or>
             <Class name="de.siegmar.logbackgelf.AbstractGelfAppender"/>
             <Class name="de.siegmar.logbackgelf.GelfEncoder"/>
+            <Class name="de.siegmar.logbackgelf.GelfHttpAppender"/>
         </Or>
     </Match>
 
