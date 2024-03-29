@@ -38,7 +38,7 @@ import javax.net.ssl.X509TrustManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class CustomX509TrustManagerTest {
+final class CustomX509TrustManagerTest {
 
     private static final String HOSTNAME = "graylog.foo.bar";
 

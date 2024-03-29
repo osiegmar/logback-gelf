@@ -26,7 +26,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-public class SimpleObjectPool<T extends BasePooledObject> implements Closeable {
+public final class SimpleObjectPool<T extends BasePooledObject> implements Closeable {
 
     private static final int MILLIS_PER_SECOND = 1000;
 

@@ -79,7 +79,7 @@ public class X509Util {
         return keyGen.genKeyPair();
     }
 
-    static class CABuilder {
+    static final class CABuilder {
 
         private final KeyPair keyPair;
         private final X509Certificate caCertificate;
@@ -127,7 +127,7 @@ public class X509Util {
     }
 
     @SuppressWarnings("PMD.AvoidFieldNameMatchingMethodName")
-    static class CertBuilder {
+    static final class CertBuilder {
 
         private final KeyPair keyPair;
         private LocalDate validFrom = LocalDate.now();

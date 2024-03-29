@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.LongSupplier;
 
-class GelfUdpChunker {
+final class GelfUdpChunker {
 
     /**
      * Maximum number of chunks, as defined per GELF Format Specification.
