@@ -94,12 +94,12 @@ public class GelfHttpAppender extends UnsynchronizedAppenderBase<ILoggingEvent> 
 
     private Compressor compressor;
 
-    public URI getUri() {
-        return uri;
+    public String getUri() {
+        return uri.toString();
     }
 
-    public void setUri(final URI uri) {
-        this.uri = uri;
+    public void setUri(final String uri) {
+        this.uri = URI.create(uri);
     }
 
     public boolean isInsecure() {

@@ -25,8 +25,6 @@ import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.awaitility.Awaitility.await;
 
-import java.net.URI;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.LoggerFactory;
@@ -98,7 +96,7 @@ class GelfHttpAppenderTest {
         final GelfHttpAppender gelfAppender = new GelfHttpAppender();
         gelfAppender.setContext(lc);
         gelfAppender.setName("GELF");
-        gelfAppender.setUri(URI.create(String.format("http://localhost:%d/gelf", WIRE_MOCK.getPort())));
+        gelfAppender.setUri(String.format("http://localhost:%d/gelf", WIRE_MOCK.getPort()));
         gelfAppender.setEncoder(gelfEncoder);
         gelfAppender.start();
         return gelfAppender;

@@ -1,0 +1,37 @@
+<configuration>
+
+    <appender name="GELF" class="de.siegmar.logbackgelf.GelfHttpAppender">
+        <uri>http://localhost/gelf</uri>
+        <insecure>false</insecure>
+        <connectTimeout>15000</connectTimeout>
+        <requestTimeout>5000</requestTimeout>
+        <maxRetries>2</maxRetries>
+        <retryDelay>3000</retryDelay>
+        <compressionMethod>GZIP</compressionMethod>
+        <encoder class="de.siegmar.logbackgelf.GelfEncoder">
+            <originHost>localhost</originHost>
+            <includeRawMessage>false</includeRawMessage>
+            <includeMarker>false</includeMarker>
+            <includeMdcData>true</includeMdcData>
+            <includeCallerData>false</includeCallerData>
+            <includeRootCauseData>false</includeRootCauseData>
+            <includeLevelName>false</includeLevelName>
+            <shortMessageLayout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%m%nopex</pattern>
+            </shortMessageLayout>
+            <fullMessageLayout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%m%n</pattern>
+            </fullMessageLayout>
+            <numbersAsString>false</numbersAsString>
+            <staticField>app_name:backend</staticField>
+            <staticField>os_arch:${os.arch}</staticField>
+            <staticField>os_name:${os.name}</staticField>
+            <staticField>os_version:${os.version}</staticField>
+        </encoder>
+    </appender>
+
+    <root level="debug">
+        <appender-ref ref="GELF" />
+    </root>
+
+</configuration>

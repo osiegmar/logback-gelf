@@ -46,7 +46,7 @@ class XmlConfigurationTest {
     }
 
     static Stream<Path> xmlConfiguration() {
-        return Stream.of("udp-config.xml", "tcp-config.xml", "tcp_tls-config.xml")
+        return Stream.of("udp-config.xml", "tcp-config.xml", "tcp_tls-config.xml", "http-config.xml")
             .map(name -> Path.of("src", "test", "resources", name));
     }
 
