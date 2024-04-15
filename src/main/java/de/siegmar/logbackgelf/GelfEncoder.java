@@ -41,6 +41,7 @@ import de.siegmar.logbackgelf.mappers.MarkerFieldMapper;
 import de.siegmar.logbackgelf.mappers.MdcDataFieldMapper;
 import de.siegmar.logbackgelf.mappers.RootExceptionDataFieldMapper;
 import de.siegmar.logbackgelf.mappers.SimpleFieldMapper;
+import de.siegmar.logbackgelf.mappers.SoloMarkerFieldMapper;
 
 /**
  * This class is responsible for transforming a Logback log event to a GELF message.
@@ -133,6 +134,11 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
      * Log numbers as String. Default: false.
      */
     private boolean numbersAsString;
+
+    /**
+     * Log only the first marker. Default: false.
+     */
+    private boolean soloMarker;
 
     /**
      * Additional, static fields to send to graylog. Defaults: none.
@@ -245,6 +251,14 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
 
     public void setNumbersAsString(final boolean numbersAsString) {
         this.numbersAsString = numbersAsString;
+    }
+
+    public boolean isSoloMarker() {
+        return soloMarker;
+    }
+
+    public void setSoloMarker(boolean soloMarker) {
+        this.soloMarker = soloMarker;
     }
 
     public Layout<ILoggingEvent> getShortMessageLayout() {
@@ -373,7 +387,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
 
         if (includeMarker) {
-            builtInFieldMappers.add(new MarkerFieldMapper("marker"));
+            builtInFieldMappers.add(soloMarker ? new SoloMarkerFieldMapper("marker") : new MarkerFieldMapper("marker"));
         }
 
         if (includeMdcData) {

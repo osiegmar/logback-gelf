@@ -204,6 +204,7 @@ Find more advanced examples in the [examples directory](examples).
 * **shortMessageLayout**: Short message format. Default: `"%m%nopex"`.
 * **fullMessageLayout**: Full message format (Stacktrace). Default: `"%m%n"`.
 * **numbersAsString**: Log numbers as String. Default: false.
+* **soloMarker**: Log only the first marker. Default: false.
 * **staticFields**: Additional, static fields to send to graylog. Defaults: none.
 
 ## Troubleshooting

@@ -26,10 +26,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
@@ -369,10 +372,12 @@ class GelfEncoderTest {
         );
     }
 
-    @Test
-    void singleMarker() {
+    @ParameterizedTest
+    @MethodSource("singleMarkerTestsArgumentsSource")
+    void singleMarker(boolean soloMarker, String expectedMarkerLog) {
         encoder.setLoggerNameKey("Logger");
         encoder.setIncludeMarker(true);
+        encoder.setSoloMarker(soloMarker);
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -385,14 +390,24 @@ class GelfEncoderTest {
 
         coreValidation(logMsg);
         assertThatJson(logMsg).and(
-            j -> j.node("_marker").isString().isEqualTo("[SINGLE]")
+            j -> j.node("_marker").isString().isEqualTo(expectedMarkerLog)
         );
     }
 
-    @Test
-    void multipleMarker() {
+
+    private static Stream<Arguments> singleMarkerTestsArgumentsSource() {
+        return Stream.of(
+                Arguments.of(false, "[SINGLE]"),
+                Arguments.of(true, "SINGLE")
+                        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("multipleMarkerTestsArgumentsSource")
+    void multipleMarker(boolean soloMarker, String expectedMarkerLog) {
         encoder.setLoggerNameKey("Logger");
         encoder.setIncludeMarker(true);
+        encoder.setSoloMarker(soloMarker);
         encoder.start();
 
         final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -408,8 +423,15 @@ class GelfEncoderTest {
 
         coreValidation(logMsg);
         assertThatJson(logMsg).and(
-            j -> j.node("_marker").isString().isEqualTo("[FIRST [ SECOND ], THIRD]")
+            j -> j.node("_marker").isString().isEqualTo(expectedMarkerLog)
         );
+    }
+
+    private static Stream<Arguments> multipleMarkerTestsArgumentsSource() {
+        return Stream.of(
+                Arguments.of(false, "[FIRST [ SECOND ], THIRD]"),
+                Arguments.of(true, "FIRST")
+                        );
     }
 
     private String encodeToStr(final LoggingEvent event) {
