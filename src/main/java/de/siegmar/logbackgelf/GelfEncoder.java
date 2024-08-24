@@ -312,16 +312,33 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         }
     }
 
+    @SuppressWarnings("checkstyle:ReturnCount")
     private Object convertToNumberIfNeeded(final Object value) {
         if (numbersAsString || !(value instanceof String)) {
             return value;
         }
 
+        // Simple check if the string could be a number to avoid the performance overhead of exception handling
+        final char[] ca = ((String) value).toCharArray();
+        for (char c : ca) {
+            if (!isBigDecimalChar(c)) {
+                return value;
+            }
+        }
+
         try {
-            return new BigDecimal((String) value);
+            return new BigDecimal(ca, 0, ca.length);
         } catch (final NumberFormatException e) {
             return value;
         }
+    }
+
+    @SuppressWarnings("checkstyle:BooleanExpressionComplexity")
+    private static boolean isBigDecimalChar(final char c) {
+        return c >= '0' && c <= '9'
+               || c == '.'
+               || c == '+' || c == '-'
+               || c == 'E' || c == 'e';
     }
 
     @Override
