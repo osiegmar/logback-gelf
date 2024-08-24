@@ -20,8 +20,7 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '11'
-    - uses: gradle/actions/wrapper-validation@v3
-    - uses: gradle/actions/setup-gradle@v3
+    - uses: gradle/actions/setup-gradle@v4
     - name: Build with Gradle
       run: ./gradlew build
     - name: Upload coverage to Codecov
