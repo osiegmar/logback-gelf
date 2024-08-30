@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
+import ch.qos.logback.core.encoder.Encoder;
 
 public abstract class AbstractGelfAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
@@ -38,7 +39,7 @@ public abstract class AbstractGelfAppender extends UnsynchronizedAppenderBase<IL
      */
     private int graylogPort = DEFAULT_GELF_PORT;
 
-    private GelfEncoder encoder;
+    private Encoder<ILoggingEvent> encoder;
 
     public String getGraylogHost() {
         return graylogHost;
@@ -56,11 +57,11 @@ public abstract class AbstractGelfAppender extends UnsynchronizedAppenderBase<IL
         this.graylogPort = graylogPort;
     }
 
-    public GelfEncoder getEncoder() {
+    public Encoder<ILoggingEvent> getEncoder() {
         return encoder;
     }
 
-    public void setEncoder(final GelfEncoder encoder) {
+    public void setEncoder(final Encoder<ILoggingEvent> encoder) {
         this.encoder = encoder;
     }
 
@@ -76,7 +77,7 @@ public abstract class AbstractGelfAppender extends UnsynchronizedAppenderBase<IL
             encoder = new GelfEncoder();
             encoder.setContext(getContext());
             encoder.start();
-        } else if (encoder.isAppendNewline()) {
+        } else if (encoder instanceof GelfEncoder && ((GelfEncoder) encoder).isAppendNewline()) {
             addError("Newline separator must not be enabled in layout");
             return;
         }

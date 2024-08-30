@@ -38,6 +38,7 @@ import javax.net.ssl.TrustManager;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
+import ch.qos.logback.core.encoder.Encoder;
 import de.siegmar.logbackgelf.compressor.Compressor;
 
 @SuppressWarnings("checkstyle:ClassFanOutComplexity")
@@ -90,7 +91,7 @@ public class GelfHttpAppender extends UnsynchronizedAppenderBase<ILoggingEvent> 
     /**
      * The encoder to use for encoding log messages.
      */
-    private GelfEncoder encoder;
+    private Encoder<ILoggingEvent> encoder;
 
     private Compressor compressor;
 
@@ -158,11 +159,11 @@ public class GelfHttpAppender extends UnsynchronizedAppenderBase<ILoggingEvent> 
         this.httpClient = httpClient;
     }
 
-    public GelfEncoder getEncoder() {
+    public Encoder<ILoggingEvent> getEncoder() {
         return encoder;
     }
 
-    public void setEncoder(final GelfEncoder encoder) {
+    public void setEncoder(final Encoder<ILoggingEvent> encoder) {
         this.encoder = encoder;
     }
 
@@ -177,7 +178,7 @@ public class GelfHttpAppender extends UnsynchronizedAppenderBase<ILoggingEvent> 
             encoder = new GelfEncoder();
             encoder.setContext(getContext());
             encoder.start();
-        } else if (encoder.isAppendNewline()) {
+        } else if (encoder instanceof GelfEncoder && ((GelfEncoder) encoder).isAppendNewline()) {
             addError("Newline separator must not be enabled in layout");
             return;
         }
