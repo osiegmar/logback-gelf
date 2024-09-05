@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "de.siegmar"
-version = "6.1.0-SNAPSHOT"
+version = "6.1.0"
 
 java {
     toolchain {
