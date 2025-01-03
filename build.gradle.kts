@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "de.siegmar"
-version = "6.1.0"
+version = "6.1.1"
 
 java {
     toolchain {
@@ -114,5 +114,8 @@ publishing {
 }
 
 signing {
+    val signingKey: String? by project
+    val signingPassword: String? by project
+    useInMemoryPgpKeys(signingKey, signingPassword)
     sign(publishing.publications["maven"])
 }
