@@ -8,6 +8,10 @@
         <maxRetries>2</maxRetries>
         <retryDelay>3000</retryDelay>
         <compressionMethod>GZIP</compressionMethod>
+        <basicAuthUsername>testUser</basicAuthUsername>
+        <basicAuthPassword>testPassword</basicAuthPassword>
+        <authorizationHeaderName>X-API-TOKEN</authorizationHeaderName>
+        <authorizationHeaderValue>X-API-TOKEN-VALUE</authorizationHeaderValue>
         <encoder class="de.siegmar.logbackgelf.GelfEncoder">
             <originHost>localhost</originHost>
             <includeRawMessage>false</includeRawMessage>
