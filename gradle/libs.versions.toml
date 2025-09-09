@@ -10,3 +10,4 @@ awaitility = { module = "org.awaitility:awaitility", version = "4.3.0" }
 
 [plugins]
 spotbugs = { id = "com.github.spotbugs", version = "6.3.0" }
+jreleaser = { id = "org.jreleaser", version = "1.20.0" }

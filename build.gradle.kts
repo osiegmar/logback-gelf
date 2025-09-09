@@ -6,10 +6,11 @@ plugins {
     checkstyle
     jacoco
     alias(libs.plugins.spotbugs)
+    alias(libs.plugins.jreleaser)
 }
 
 group = "de.siegmar"
-version = "6.1.1"
+version = "6.1.2"
 
 java {
     toolchain {
@@ -70,52 +71,45 @@ tasks.jacocoTestCoverageVerification {
     }
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            artifactId = "logback-gelf"
-            from(components["java"])
-
-            pom {
-                name = "Logback GELF"
-                description = "Logback appender for sending GELF messages with zero additional dependencies."
-                url = "https://github.com/osiegmar/logback-gelf"
-                licenses {
-                    license {
-                        name = "GNU Lesser General Public License version 2.1"
-                        url = "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt"
-                    }
-                }
-                scm {
-                    url = "https://github.com/osiegmar/logback-gelf"
-                    connection = "scm:git:https://github.com/osiegmar/logback-gelf.git"
-                }
-                developers {
-                    developer {
-                        id = "osiegmar"
-                        name = "Oliver Siegmar"
-                        email = "oliver@siegmar.de"
-                    }
-                }
-            }
+jreleaser {
+    project {
+        gitRootSearch.set(true)
+        name.set("Logback GELF")
+        description.set("Logback appender for sending GELF messages with zero additional dependencies.")
+        authors.set(listOf("Oliver Siegmar"))
+        license.set("LGPL-2.1")
+        links {
+            homepage.set("https://github.com/osiegmar/logback-gelf")
+            license.set("https://opensource.org/license/lgpl-2-1")
         }
     }
-    repositories {
+    signing {
+        active.set(org.jreleaser.model.Active.ALWAYS)
+        armored.set(true)
+    }
+    deploy {
         maven {
-            name = "ossrh"
-            credentials(PasswordCredentials::class)
-            url = if (version.toString().endsWith("SNAPSHOT")) {
-                uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-            } else {
-                uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            mavenCentral {
+                create("sonatype") {
+                    active.set(org.jreleaser.model.Active.ALWAYS)
+                    url.set("https://central.sonatype.com/api/v1/publisher")
+                    stagingRepositories.add("build/staging-deploy")
+                }
             }
         }
     }
-}
-
-signing {
-    val signingKey: String? by project
-    val signingPassword: String? by project
-    useInMemoryPgpKeys(signingKey, signingPassword)
-    sign(publishing.publications["maven"])
+    release {
+        github {
+            changelog {
+                formatted.set(org.jreleaser.model.Active.ALWAYS)
+                preset.set("conventional-commits")
+                append {
+                    enabled.set(true)
+                    target.set(file("CHANGELOG.md"))
+                    title = "## [{{tagName}}] - {{#f_now}}YYYY-MM-dd{{/f_now}}"
+                    content = "{{changelogTitle}}\n{{changelogContent}}"
+                }
+            }
+        }
+    }
 }
