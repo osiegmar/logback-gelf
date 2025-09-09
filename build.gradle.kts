@@ -5,7 +5,7 @@ plugins {
     pmd
     checkstyle
     jacoco
-    id("com.github.spotbugs") version "6.0.20"
+    alias(libs.plugins.spotbugs)
 }
 
 group = "de.siegmar"
@@ -24,15 +24,15 @@ repositories {
 }
 
 dependencies {
-    api("ch.qos.logback:logback-classic:1.5.15")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.11.0")
+    api(libs.logback.classic)
+    testImplementation(libs.junit.jupiter)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("org.assertj:assertj-core:3.26.3")
-    testImplementation("net.javacrumbs.json-unit:json-unit-assertj:2.40.1")
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
-    testImplementation("org.bouncycastle:bcpkix-jdk18on:1.78.1")
-    testImplementation("org.wiremock:wiremock:3.9.1")
-    testImplementation("org.awaitility:awaitility:4.2.2")
+    testImplementation(libs.assertj.core)
+    testImplementation(libs.json.unit.assertj)
+    testImplementation(libs.jackson.databind)
+    testImplementation(libs.bcpkix.jdk18on)
+    testImplementation(libs.wiremock)
+    testImplementation(libs.awaitility)
 }
 
 tasks.test {
