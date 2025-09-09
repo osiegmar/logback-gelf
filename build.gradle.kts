@@ -71,6 +71,44 @@ tasks.jacocoTestCoverageVerification {
     }
 }
 
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            artifactId = "logback-gelf"
+            from(components["java"])
+
+            pom {
+                name = "Logback GELF"
+                description = "Logback appender for sending GELF messages with zero additional dependencies."
+                url = "https://github.com/osiegmar/logback-gelf"
+                licenses {
+                    license {
+                        name = "GNU Lesser General Public License version 2.1"
+                        url = "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt"
+                    }
+                }
+                scm {
+                    url = "https://github.com/osiegmar/logback-gelf"
+                    connection = "scm:git:https://github.com/osiegmar/logback-gelf.git"
+                }
+                developers {
+                    developer {
+                        id = "osiegmar"
+                        name = "Oliver Siegmar"
+                        email = "oliver@siegmar.de"
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "staging"
+            url = uri(layout.buildDirectory.dir("staging-deploy"))
+        }
+    }
+}
+
 jreleaser {
     project {
         gitRootSearch.set(true)
