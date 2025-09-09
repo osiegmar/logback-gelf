@@ -9,6 +9,13 @@
 Logback appender for sending GELF (Graylog Extended Log Format) messages with zero additional
 dependencies.
 
+> [!IMPORTANT]
+> I created this library in 2016 when I needed a simple GELF appender for Logback.
+> Since then, I have maintained it in my spare time, even though I have not used it for quite some time.
+> I think it is time to hand it over to someone who actively uses Graylog, Logback, and this library, and has the
+> time and capacity to maintain it.
+> If you are interested, please contact me via email.
+
 ## Features
 
 - UDP (with chunking)
