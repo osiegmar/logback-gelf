@@ -66,13 +66,17 @@ final class CustomX509TrustManagerTest {
     }
 
     @Test
-    void validCert() throws Exception {
+    void validCert() {
         tm = new CustomX509TrustManager(new NoopX509TrustManager(), HOSTNAME);
 
-        validate(c.build(null, HOSTNAME));
-        validate(c.build(null, "x.foo.bar", HOSTNAME));
-        validate(c.build(null, "x.foo.bar", "*.foo.bar"));
-        validate(c.build(HOSTNAME));
+        assertThatCode(() -> validate(c.build(null, HOSTNAME)))
+            .doesNotThrowAnyException();
+        assertThatCode(() -> validate(c.build(null, "x.foo.bar", HOSTNAME)))
+            .doesNotThrowAnyException();
+        assertThatCode(() -> validate(c.build(null, "x.foo.bar", "*.foo.bar")))
+            .doesNotThrowAnyException();
+        assertThatCode(() -> validate(c.build(HOSTNAME)))
+            .doesNotThrowAnyException();
     }
 
     @Test
@@ -98,7 +102,8 @@ final class CustomX509TrustManagerTest {
         final X509Certificate cert = prepareCaSigned(caBuilder)
             .build(HOSTNAME);
 
-        validate(cert, caBuilder.getCaCertificate());
+        assertThatCode(() -> validate(cert, caBuilder.getCaCertificate()))
+            .doesNotThrowAnyException();
     }
 
     @Test

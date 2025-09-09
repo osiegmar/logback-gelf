@@ -119,6 +119,7 @@ class CustomX509TrustManager implements X509TrustManager {
             + "Tried to verify %s against common name: %s", hostname, commonName));
     }
 
+    @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
     private static String getCommonName(final X509Certificate cert) throws InvalidNameException {
         final LdapName ldapName = new LdapName(cert.getSubjectDN().getName());
         for (final Rdn rdn : ldapName.getRdns()) {

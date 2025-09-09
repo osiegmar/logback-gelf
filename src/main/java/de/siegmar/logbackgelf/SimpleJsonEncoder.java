@@ -96,8 +96,7 @@ class SimpleJsonEncoder implements Closeable {
         }
         sb.append(QUOTE);
         escapeString(key);
-        sb.append(QUOTE);
-        sb.append(':');
+        sb.append(QUOTE).append(':');
     }
 
     /**
@@ -117,8 +116,7 @@ class SimpleJsonEncoder implements Closeable {
                 case QUOTE:
                 case '\\':
                 case '/':
-                    sb.append('\\');
-                    sb.append(ch);
+                    sb.append('\\').append(ch);
                     break;
                 case '\b':
                     sb.append("\\b");

@@ -239,6 +239,7 @@ public class GelfHttpAppender extends UnsynchronizedAppenderBase<ILoggingEvent> 
             .build();
     }
 
+    @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
     private Optional<String> contentEncoding() {
         switch (compressionMethod) {
             case GZIP:

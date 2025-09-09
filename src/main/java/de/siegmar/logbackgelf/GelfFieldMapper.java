@@ -26,6 +26,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 /**
  * Field mapper that can be used to add fields to resulting GELF message, using {@link ILoggingEvent} as input.
  */
+@FunctionalInterface
 public interface GelfFieldMapper<T> {
 
     /**

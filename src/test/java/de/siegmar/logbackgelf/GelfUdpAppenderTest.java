@@ -168,6 +168,7 @@ class GelfUdpAppenderTest {
 
     private static final class Decompressor {
 
+        @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
         static byte[] decompress(final byte[] bytesIn, final CompressionMethod compressionMethod) {
             switch (compressionMethod) {
                 case NONE:

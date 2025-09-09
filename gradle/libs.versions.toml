@@ -1,12 +1,12 @@
 [libraries]
-logback-classic = { module = "ch.qos.logback:logback-classic", version = "1.5.15" }
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.11.0" }
-assertj-core = { module = "org.assertj:assertj-core", version = "3.26.3" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version = "1.5.18" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.13.4" }
+assertj-core = { module = "org.assertj:assertj-core", version = "3.27.4" }
 json-unit-assertj = { module = "net.javacrumbs.json-unit:json-unit-assertj", version = "2.40.1" }
-jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.17.2" }
-bcpkix-jdk18on = { module = "org.bouncycastle:bcpkix-jdk18on", version = "1.78.1" }
-wiremock = { module = "org.wiremock:wiremock", version = "3.9.1" }
-awaitility = { module = "org.awaitility:awaitility", version = "4.2.2" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.20.0" }
+bcpkix-jdk18on = { module = "org.bouncycastle:bcpkix-jdk18on", version = "1.81" }
+wiremock = { module = "org.wiremock:wiremock", version = "3.13.1" }
+awaitility = { module = "org.awaitility:awaitility", version = "4.3.0" }
 
 [plugins]
-spotbugs = { id = "com.github.spotbugs", version = "6.0.20" }
+spotbugs = { id = "com.github.spotbugs", version = "6.3.0" }

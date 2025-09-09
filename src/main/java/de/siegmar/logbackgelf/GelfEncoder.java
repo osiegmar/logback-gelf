@@ -294,6 +294,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
         fieldMappers.add(fieldMapper);
     }
 
+    @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
     private void addField(final Map<String, Object> dst, final String fieldName, final Object fieldValue) {
         if (fieldName.isEmpty()) {
             throw new IllegalArgumentException("fieldName key must not be empty");

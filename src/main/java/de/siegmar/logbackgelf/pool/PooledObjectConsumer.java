@@ -19,6 +19,7 @@
 
 package de.siegmar.logbackgelf.pool;
 
+@FunctionalInterface
 public interface PooledObjectConsumer<T extends BasePooledObject> {
 
     void accept(T pooledObject) throws Exception;
