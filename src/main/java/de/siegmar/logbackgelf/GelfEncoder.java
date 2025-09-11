@@ -415,13 +415,7 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
             collectAdditionalFields(event)
         );
 
-        final var sb = gelfMessage.toJSON();
-
-        if (appendNewline) {
-            sb.append(System.lineSeparator());
-        }
-
-        return sb.toString().getBytes(StandardCharsets.UTF_8);
+        return gelfMessageToJson(gelfMessage);
     }
 
     protected GelfMessage buildGelfMessage(final long timestamp, final int logLevel, final String shortMessage,
@@ -471,6 +465,23 @@ public class GelfEncoder extends EncoderBase<ILoggingEvent> {
                 addError("Exception in field mapper", e);
             }
         }
+    }
+
+
+    /**
+     * Allow subclasses to customize the message before it is converted to String.
+     *
+     * @param gelfMessage the GELF message to serialize.
+     * @return the serialized GELF message (in JSON format).
+     */
+    protected byte[] gelfMessageToJson(final GelfMessage gelfMessage) {
+        final var sb = gelfMessage.toJSON();
+
+        if (appendNewline) {
+            sb.append(System.lineSeparator());
+        }
+
+        return sb.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     @SuppressWarnings({"PMD.ReturnEmptyArrayRatherThanNull", "PMD.ReturnEmptyCollectionRatherThanNull"})
