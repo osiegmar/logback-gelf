@@ -19,8 +19,7 @@
 
 package de.siegmar.logbackgelf;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.awaitility.Awaitility.await;
@@ -68,7 +67,13 @@ class GelfHttpAppenderTest {
     }
 
     private static RequestPattern gelfRequest() {
-        return WIRE_MOCK.stubFor(post("/gelf").willReturn(aResponse().withStatus(HTTP_ACCEPTED)))
+        String username = "testUser";
+        String password = "testPassword";
+
+        return WIRE_MOCK.stubFor(post("/gelf")
+                .withBasicAuth(username, password)
+                .withHeader("X-API-TOKEN", equalTo("X-API-TOKEN-VALUE"))
+                .willReturn(aResponse().withStatus(HTTP_ACCEPTED)))
             .getRequest();
     }
 
@@ -98,6 +103,10 @@ class GelfHttpAppenderTest {
         gelfAppender.setName("GELF");
         gelfAppender.setUri(String.format("http://localhost:%d/gelf", WIRE_MOCK.getPort()));
         gelfAppender.setEncoder(gelfEncoder);
+        gelfAppender.setBasicAuthUsername("testUser");
+        gelfAppender.setBasicAuthPassword("testPassword");
+        gelfAppender.setAuthorizationHeaderName("X-API-TOKEN");
+        gelfAppender.setAuthorizationHeaderValue("X-API-TOKEN-VALUE");
         gelfAppender.start();
         return gelfAppender;
     }

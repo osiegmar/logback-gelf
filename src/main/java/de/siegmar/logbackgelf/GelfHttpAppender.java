@@ -31,6 +31,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.Optional;
 
 import javax.net.ssl.SSLContext;
@@ -91,6 +92,29 @@ public class GelfHttpAppender extends UnsynchronizedAppenderBase<ILoggingEvent> 
     /**
      * The encoder to use for encoding log messages.
      */
+
+    /**
+     * Username for HTTP Basic Authentication.
+     */
+    private String basicAuthUsername;
+
+    /**
+     * Password for HTTP Basic Authentication.
+     */
+    private String basicAuthPassword;
+
+    /**
+     * The name for the authorization header to use.
+     */
+
+    private String authorizationHeaderName;
+
+    /**
+     * The secret authorization header value.
+     */
+
+    private String authorizationHeaderValue;
+
     private Encoder<ILoggingEvent> encoder;
 
     private Compressor compressor;
@@ -141,6 +165,38 @@ public class GelfHttpAppender extends UnsynchronizedAppenderBase<ILoggingEvent> 
 
     public void setRetryDelay(final int retryDelay) {
         this.retryDelay = retryDelay;
+    }
+
+    public String getBasicAuthUsername() {
+        return basicAuthUsername;
+    }
+
+    public void setBasicAuthUsername(final String basicAuthUsername) {
+        this.basicAuthUsername = basicAuthUsername;
+    }
+
+    public String getBasicAuthPassword() {
+        return basicAuthPassword;
+    }
+
+    public void setBasicAuthPassword(final String basicAuthPassword) {
+        this.basicAuthPassword = basicAuthPassword;
+    }
+
+    public String getAuthorizationHeaderName() {
+        return authorizationHeaderName;
+    }
+
+    public void setAuthorizationHeaderName(final String authorizationHeaderName) {
+        this.authorizationHeaderName = authorizationHeaderName;
+    }
+
+    public String getAuthorizationHeaderValue() {
+        return authorizationHeaderValue;
+    }
+
+    public void setAuthorizationHeaderValue(final String authorizationHeaderValue) {
+        this.authorizationHeaderValue = authorizationHeaderValue;
     }
 
     public CompressionMethod getCompressionMethod() {
@@ -233,6 +289,18 @@ public class GelfHttpAppender extends UnsynchronizedAppenderBase<ILoggingEvent> 
 
         contentEncoding()
             .ifPresent(encoding -> reqB.header("Content-Encoding", encoding));
+
+        // Add Basic Authentication if username and password are provided
+        if (basicAuthUsername != null && basicAuthPassword != null) {
+            final String auth = basicAuthUsername + ":" + basicAuthPassword;
+            final String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
+            reqB.header("Authorization", "Basic " + encodedAuth);
+        }
+
+        // Add Authentication Header if name and value are provided
+        if (authorizationHeaderName != null && authorizationHeaderValue != null) {
+            reqB.header(authorizationHeaderName, authorizationHeaderValue);
+        }
 
         return reqB
             .POST(HttpRequest.BodyPublishers.ofByteArray(data))
