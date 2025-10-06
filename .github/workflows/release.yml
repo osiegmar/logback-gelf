@@ -23,7 +23,7 @@ jobs:
           distribution: 'temurin'
           java-version: '24'
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+        uses: gradle/actions/setup-gradle@cd4b95f1dffd155d6d8f6b8c195a3ff2f9f77a5d # v4.4.3
       - name: Run JReleaser
         run: ./gradlew publish jreleaserRelease
         env:
