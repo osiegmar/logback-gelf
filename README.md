@@ -11,6 +11,7 @@ dependencies.
 
 - UDP (with chunking)
 - TCP (with or without TLS encryption)
+- HTTP (POST)
 - Deflate compression in UDP mode
 - Client side load balancing (round robin)
 - Forwarding of MDC (Mapped Diagnostic Context)
@@ -89,6 +90,27 @@ Simple TCP with TLS configuration:
 </configuration>
 ```
 
+Simple HTTP configuration:
+
+```xml
+<configuration>
+
+    <appender name="GELF" class="de.siegmar.logbackgelf.GelfHttpAppender">
+        <url>http://localhost:12201/gelf</url>
+    </appender>
+
+    <!-- Use AsyncAppender to prevent slowdowns -->
+    <appender name="ASYNC GELF" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="GELF" />
+    </appender>
+
+    <root level="debug">
+        <appender-ref ref="ASYNC GELF" />
+    </root>
+
+</configuration>
+```
+
 Find more advanced examples in the [examples directory](examples).
 
 
@@ -133,6 +155,25 @@ Find more advanced examples in the [examples directory](examples).
 * Everything from GelfTcpAppender
 * **insecure**: If true, skip the TLS certificate validation.
   You should not use this in production! Default: false.
+
+
+`de.siegmar.logbackgelf.GelfHttpAppender`
+
+* **graylogHost**: IP or hostname of graylog server.
+* **graylogPort**: Port of graylog server. Default: 12201.
+* **url**: Full URL to the GELF HTTP input. If set, overrides graylogHost and graylogPort.
+  Default: http://graylogHost:graylogPort/gelf
+* **encoder**: See Encoder configuration below.
+* **connectTimeout**: Maximum time (in milliseconds) to wait for establishing a connection.
+  Default: 15,000 milliseconds.
+* **readTimeout**: Maximum time (in milliseconds) to wait for reading data.
+  Default: 5,000 milliseconds.
+* **insecure**: If true, skip the TLS certificate validation.
+  You should not use this in production! Default: false.
+* **maxRetries**: Number of retries. A value of 0 disables retry attempts. Default: 2.
+* **retryDelay**: Time (in milliseconds) between retry attempts. Ignored if maxRetries is 0.
+  Default: 3,000 milliseconds.
+* **compressionMethod**: Compression method used (NONE, GZIP or ZLIB). Default: GZIP.
 
 
 ### Encoder
