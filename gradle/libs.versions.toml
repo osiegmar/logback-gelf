@@ -3,8 +3,8 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version = "1.5.18
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.13.4" }
 assertj-core = { module = "org.assertj:assertj-core", version = "3.27.4" }
 json-unit-assertj = { module = "net.javacrumbs.json-unit:json-unit-assertj", version = "2.40.1" }
-jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.20.0" }
-bcpkix-jdk18on = { module = "org.bouncycastle:bcpkix-jdk18on", version = "1.81" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.22.1" }
+bcpkix-jdk18on = { module = "org.bouncycastle:bcpkix-jdk18on", version = "1.85" }
 wiremock = { module = "org.wiremock:wiremock", version = "3.13.1" }
 awaitility = { module = "org.awaitility:awaitility", version = "4.3.0" }
 
