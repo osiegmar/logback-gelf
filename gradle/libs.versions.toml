@@ -1,5 +1,5 @@
 [libraries]
-logback-classic = { module = "ch.qos.logback:logback-classic", version = "1.5.18" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version = "1.5.38" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.13.4" }
 assertj-core = { module = "org.assertj:assertj-core", version = "3.27.4" }
 json-unit-assertj = { module = "net.javacrumbs.json-unit:json-unit-assertj", version = "2.40.1" }
